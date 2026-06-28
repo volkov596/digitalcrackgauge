@@ -43,4 +43,4 @@ Two tiers are available, unlocked by the access code:
 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) —
 you may share with attribution but may not modify or use commercially.
 
-For commercial licensing or organisational deployment: **egor.volkov@tuta.io*
+For commercial licensing or organisational deployment: **egor.volkov@tuta.io**
