@@ -527,85 +527,18 @@ function extractAllProfiles(pixels,p1,p2,nLines){
   return profiles;
 }
 
-function edgeMean(profile,frac=0.1){
-  const n=profile.length,end=Math.max(1,Math.floor(n*frac));
-  let s=0,c=0;
-  for(let i=0;i<end;i++){s+=profile[i];c++;}
-  for(let i=n-end;i<n;i++){s+=profile[i];c++;}
-  return c?s/c:128;
-}
-
-function findPeak(profile){
-  const n=profile.length,bg=edgeMean(profile);
-  const s=Math.floor(n*0.2),e=Math.ceil(n*0.8);
-  let maxR=0,idx=Math.floor(n/2);
-  for(let i=s;i<e;i++){const r=Math.abs(bg-profile[i]);if(r>maxR){maxR=r;idx=i;}}
-  return idx;
-}
-
-function shiftProfile(profile,shift){
-  const n=profile.length;
-  return profile.map((_,i)=>{const src=i-shift,i0=Math.floor(src),i1=i0+1,f=src-i0;const cl=v=>Math.max(0,Math.min(n-1,v));return profile[cl(i0)]*(1-f)+profile[cl(i1)]*f;});
-}
-
-function alignProfiles(profiles){
-  if(profiles.length<2)return profiles;
-  const pos=profiles.map(findPeak);
-  const sorted=[...pos].sort((a,b)=>a-b);
-  const ref=sorted[Math.floor(sorted.length/2)];
-  const maxShift=profiles[0].length*0.2;
-  return profiles.map((p,i)=>{const sh=ref-pos[i];return(Math.abs(sh)<0.5||Math.abs(sh)>maxShift)?p:shiftProfile(p,sh);});
-}
-
-function scoreLine(profile){
-  const n=profile.length,bg=edgeMean(profile);
-  const s=Math.floor(n*0.2),e=Math.ceil(n*0.8);
-  let max=0;for(let i=s;i<e;i++)max=Math.max(max,Math.abs(bg-profile[i]));return max;
-}
-
-function selectLines(profiles,keepFrac=0.7){
-  if(profiles.length<3)return profiles;
-  const scored=profiles.map((p,i)=>({i,s:scoreLine(p)}));
-  scored.sort((a,b)=>b.s-a.s);
-  const keep=new Set(scored.slice(0,Math.max(2,Math.round(profiles.length*keepFrac))).map(x=>x.i));
-  return profiles.filter((_,i)=>keep.has(i));
-}
-
-function meanCombine(profiles){
-  if(!profiles.length)return[];
-  const n=profiles[0].length,m=profiles.length,r=new Float64Array(n);
-  profiles.forEach(p=>{for(let i=0;i<n;i++)r[i]+=p[i];});
-  return Array.from(r,v=>v/m);
-}
-
-function medianCombine(profiles){
-  if(!profiles.length)return[];
-  const n=profiles[0].length;
-  return Array.from({length:n},(_,i)=>{const v=profiles.map(p=>p[i]).sort((a,b)=>a-b);const mid=Math.floor(v.length/2);return v.length%2===0?(v[mid-1]+v[mid])/2:v[mid];});
-}
-
-function gaussianCombine(profiles,useAdaptive,keepFrac=0.7){
-  if(!profiles.length)return[];
-  const m=profiles.length,half=Math.floor(m/2),sigma=Math.max(1,half/2);
-  let weights=profiles.map((_,k)=>{const o=k-half;return Math.exp(-o*o/(2*sigma*sigma));});
-  if(useAdaptive){
-    const sc=profiles.map(scoreLine);
-    const ix=sc.map((s,i)=>({i,s})).sort((a,b)=>b.s-a.s);
-    const keep=new Set(ix.slice(0,Math.max(2,Math.round(m*keepFrac))).map(x=>x.i));
-    weights=weights.map((w,i)=>keep.has(i)?w:0);
-  }
-  const tw=weights.reduce((a,b)=>a+b,0);
-  if(tw===0)return meanCombine(profiles);
-  const n=profiles[0].length,r=new Float64Array(n);
-  profiles.forEach((p,k)=>{if(weights[k]>0){const w=weights[k]/tw;for(let i=0;i<n;i++)r[i]+=p[i]*w;}});
-  return Array.from(r);
-}
-
-function combinePipeline(profiles,{doAlign,method,doAdaptive}){
-  let profs=doAlign?alignProfiles(profiles):profiles;
-  if(method==='gaussian')return gaussianCombine(profs,doAdaptive);
-  if(doAdaptive)profs=selectLines(profs);
-  return method==='median'?medianCombine(profs):meanCombine(profs);
+async function combineViaWorker(profiles, opts){
+  let remembered=null;
+  try{remembered=sessionStorage.getItem('dcg_tier');}catch(e){}
+  const pin=sessionStorage.getItem('dcg_pin')||'';
+  const resp=await fetch(WORKER_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'combine',pin,profiles,options:opts}),
+  });
+  const data=await resp.json();
+  if(!data.ok||!Array.isArray(data.combined)) throw new Error('combine service unavailable');
+  return data.combined;
 }
 
 function integrateArea(profile,base,pxPerMm){
@@ -686,7 +619,7 @@ async function checkPin(){
     });
     const data = await resp.json();
     if (data.ok) {
-      try { sessionStorage.setItem('dcg_tier', data.tier); } catch(e){}
+      try { sessionStorage.setItem('dcg_tier', data.tier); sessionStorage.setItem('dcg_pin', pin); } catch(e){}
       applyInterfaceMode(data.tier);
     } else {
       msg.style.color = '#f87171'; msg.textContent = 'Invalid code.';
@@ -1452,7 +1385,7 @@ function runAnalysis(){
   if(!S.measLine||!S.pxMm||!S.pixels||S.busy)return;
   S.busy=true;clearErr();
   $('btn-analyze').textContent='Analyzing…';$('btn-analyze').disabled=true;
-  setTimeout(()=>{
+  setTimeout(async ()=>{
     try{
       const p1={x:S.measLine.p1.x/S.dispScale,y:S.measLine.p1.y/S.dispScale};
       const p2={x:S.measLine.p2.x/S.dispScale,y:S.measLine.p2.y/S.dispScale};
@@ -1462,7 +1395,7 @@ function runAnalysis(){
       S.doAlign=doAlign;S.avgMethod=avgMethod;S.doAdaptive=doAdaptive;
       const allProfiles=extractAllProfiles(S.pixels,p1,p2,S.nLines);
       if(!allProfiles||!allProfiles.length){showErr('Line too short — draw it longer.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
-      const prof=combinePipeline(allProfiles,{doAlign,method:avgMethod,doAdaptive});
+      const prof=await combineViaWorker(allProfiles,{doAlign,method:avgMethod,doAdaptive});
       if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
       const base=fitBaseline(prof);
       const pxMm_pd=S.pxMm*S.resizeFactor;
