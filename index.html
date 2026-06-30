@@ -346,8 +346,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
             <label>Known object width (mm):</label>
             <input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000">
           </div>
-          <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Click the two edges of that object on the image</div>
-          <div id="wiz-span-hint">Click <strong>point A</strong> on one edge of the known object.</div>
+          <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Load this shot's photo, then click the two edges of the object</div>
+          <div class="wiz-btns" style="margin-bottom:8px">
+            <button class="btn-ghost btn-small" id="btn-wiz-load-img" onclick="loadCalibImageClick()">📷 Load calibration photo</button>
+            <input type="file" id="wiz-image-file" accept="image/*" style="display:none" onchange="loadCalibImage(event)">
+          </div>
+          <div id="wiz-span-hint">Load this shot's calibration photo first.</div>
           <div class="wiz-btns">
             <button class="btn btn-primary btn-small" id="btn-wiz-add" onclick="addCalibShot()">Add this shot</button>
             <button class="btn-ghost btn-small" onclick="resetWizShot()">Clear points</button>
@@ -709,6 +713,8 @@ const S={
   scaleDist:'',                    // distance (m) entered in distance+profile scale mode
   calibShots:[],                   // in-progress calibration shots during the wizard
   calibActive:false,               // whether the calibration wizard is capturing
+  savedImageState:null,            // backup of the crack image while wizard swaps images
+  calibImageLoaded:false,          // whether a calibration photo is currently loaded in the wizard
   touchMode:'navigate',
   live:null,         // live recalculation output
   chartGeom:null,    // chart coordinate system
@@ -1220,27 +1226,68 @@ function deleteScaleProfile(){
 }
 
 /* ── Calibration wizard ── */
+function backupCrackImage(){
+  S.savedImageState={
+    imgEl:S.imgEl,pixels:S.pixels,dispW:S.dispW,dispH:S.dispH,
+    dispScale:S.dispScale,resizeFactor:S.resizeFactor,imgMeta:S.imgMeta,
+    zoom:S.zoom,panX:S.panX,panY:S.panY
+  };
+}
+function restoreCrackImage(){
+  const b=S.savedImageState;if(!b)return;
+  S.imgEl=b.imgEl;S.pixels=b.pixels;S.dispW=b.dispW;S.dispH=b.dispH;
+  S.dispScale=b.dispScale;S.resizeFactor=b.resizeFactor;S.imgMeta=b.imgMeta;
+  S.zoom=b.zoom;S.panX=b.panX;S.panY=b.panY;
+  S.savedImageState=null;
+  updateMetaBar();updateScaleDisplay();
+}
 function openCalibWizard(){
   S.calibActive=true;S.calibShots=[];S.scalePts=[];
-  // Capture uses the standard two-point click mechanism
-  S.scaleMode='distance';   // stays in distance tab; wizard manages its own points
+  S.calibImageLoaded=false;
+  backupCrackImage();          // preserve the crack-measurement image
+  S.scaleMode='distance';      // stays in distance tab; wizard manages its own points
   $('calib-wizard').className='show';
-  if($('wiz-dist-inp'))$('wiz-dist-inp').value='';
-  if($('wiz-width-inp'))$('wiz-width-inp').value='';
-  if($('wiz-name-inp'))$('wiz-name-inp').value='';
-  if($('wiz-note-inp'))$('wiz-note-inp').value='';
-  renderWizShots();updateWizSpanHint();paintCanvas();
+  ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
+  renderWizShots();updateWizSpanHint();updateWizImageState();paintCanvas();
 }
 function closeCalibWizard(){
-  S.calibActive=false;S.calibShots=[];S.scalePts=[];
+  const wasActive=S.calibActive;
+  S.calibActive=false;S.calibShots=[];S.scalePts=[];S.calibImageLoaded=false;
   const w=$('calib-wizard');if(w)w.className='';
+  if(wasActive)restoreCrackImage();   // bring back the crack image
   paintCanvas();
+}
+function loadCalibImageClick(){$('wiz-image-file').click();}
+function loadCalibImage(ev){
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  clearErr();
+  decodeImage(file,d=>{
+    S.imgEl=d.imgEl;S.pixels=d.pixels;
+    S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
+    S.imgMeta=d.imgMeta;
+    S.zoom=1;S.panX=0;S.panY=0;S.scalePts=[];
+    S.calibImageLoaded=true;
+    updateMetaBar();updateWizImageState();updateWizSpanHint();
+    requestAnimationFrame(paintCanvas);
+  });
+  ev.target.value='';
+}
+function updateWizImageState(){
+  const hint=$('wiz-span-hint');
+  const loadBtn=$('btn-wiz-load-img');
+  if(loadBtn)loadBtn.textContent=S.calibImageLoaded?'↻ Load a different photo':'📷 Load calibration photo';
+  // Disable the edge-click hint until an image is present
+  if(!S.calibImageLoaded&&hint){
+    hint.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot\u2019s calibration photo first.</span>';
+  }
 }
 function resetWizShot(){
   S.scalePts=[];updateWizSpanHint();paintCanvas();
 }
 function updateWizSpanHint(){
   const h=$('wiz-span-hint');if(!h)return;
+  if(!S.calibImageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot\u2019s calibration photo first.</span>';return;}
   if(S.scalePts.length===0)h.innerHTML='Click <strong>point A</strong> on one edge of the known object.';
   else if(S.scalePts.length===1)h.innerHTML='Now click <strong>point B</strong> on the opposite edge.';
   else{
@@ -1250,6 +1297,7 @@ function updateWizSpanHint(){
   }
 }
 function addCalibShot(){
+  if(!S.calibImageLoaded){showErr('Load this shot\u2019s calibration photo first.');return;}
   const d=parseFloat($('wiz-dist-inp').value);
   const w=parseFloat($('wiz-width-inp').value);
   if(!(d>0)){showErr('Enter this shot\u2019s distance (m).');return;}
@@ -1262,9 +1310,9 @@ function addCalibShot(){
   if(S.calibShots.length>=5){showErr('Maximum 5 shots. Delete one to add another.');return;}
   S.calibShots.push({d,w,span:+spanOrig.toFixed(2),r});
   clearErr();
-  S.scalePts=[];
+  S.scalePts=[];S.calibImageLoaded=false;   // require a fresh photo for the next shot
   $('wiz-dist-inp').value='';$('wiz-width-inp').value='';
-  renderWizShots();updateWizSpanHint();paintCanvas();
+  renderWizShots();updateWizImageState();updateWizSpanHint();paintCanvas();
 }
 function deleteCalibShot(i){
   S.calibShots.splice(i,1);
@@ -1702,10 +1750,11 @@ function importProfiles(ev){
 
 function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();paintCanvas();}
 
-function loadFile(file){
+// Decode an image file into working pixels + geometry, without touching app flow.
+// Calls cb({imgEl, pixels, dispW, dispH, dispScale, resizeFactor, imgMeta}) on success.
+function decodeImage(file, cb){
   if(!file)return;
   if(!file.type.startsWith('image/')){showErr('Please upload a JPEG, PNG or WebP file.');return;}
-  clearErr();
   const fmt=file.type.replace('image/','').toUpperCase().replace('JPG','JPEG');
   const reader=new FileReader();
   reader.onerror=()=>showErr('Could not read this file. Please try again.');
@@ -1721,20 +1770,31 @@ function loadFile(file){
       const oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
       oc.getContext('2d').drawImage(img,0,0,pw,ph);
       let pd;try{pd=oc.getContext('2d').getImageData(0,0,pw,ph);}catch(e){showErr('Cannot read pixel data from this image.');return;}
-      S.imgEl=img;S.pixels={data:pd.data,width:pw,height:ph};
-      S.dispW=dw;S.dispH=dh;S.dispScale=ds;S.resizeFactor=rf;
-      S.imgMeta={origW,origH,mp:(origW*origH/1e6).toFixed(1),format:fmt,resized:totalPx>MAX_MP};
-      S.zoom=1;S.panX=0;S.panY=0;
-      S.iMode='scale';S.scalePts=[];S.measLine=null;S.results=null;
-      resetAdjustments();
-      const canvas=$('img-canvas');
-      canvas.style.cursor='crosshair';
-      showStep(2);updateMetaBar();updateScaleHint();updateScaleDisplay();
-      requestAnimationFrame(paintCanvas);
+      cb({
+        imgEl:img,pixels:{data:pd.data,width:pw,height:ph},
+        dispW:dw,dispH:dh,dispScale:ds,resizeFactor:rf,
+        imgMeta:{origW,origH,mp:(origW*origH/1e6).toFixed(1),format:fmt,resized:totalPx>MAX_MP}
+      });
     };
     img.src=evt.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+function loadFile(file){
+  clearErr();
+  decodeImage(file,d=>{
+    S.imgEl=d.imgEl;S.pixels=d.pixels;
+    S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
+    S.imgMeta=d.imgMeta;
+    S.zoom=1;S.panX=0;S.panY=0;
+    S.iMode='scale';S.scalePts=[];S.measLine=null;S.results=null;
+    resetAdjustments();
+    const canvas=$('img-canvas');
+    canvas.style.cursor='crosshair';
+    showStep(2);updateMetaBar();updateScaleHint();updateScaleDisplay();
+    requestAnimationFrame(paintCanvas);
+  });
 }
 
 function confirmScale(){
@@ -2047,7 +2107,7 @@ imgCanvas.addEventListener('mousedown',e=>{
       }
       updateScaleHint();paintCanvas();
     }
-  } else if(S.iMode==='scale'&&S.calibActive){
+  } else if(S.iMode==='scale'&&S.calibActive&&S.calibImageLoaded){
     if(S.scalePts.length<2){
       S.scalePts.push(pos);
       updateWizSpanHint();paintCanvas();
@@ -2174,7 +2234,7 @@ imgCanvas.addEventListener('touchend',e=>{
         const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
       }
       updateScaleHint();paintCanvas();
-    } else if(S.step===2&&S.iMode==='scale'&&S.calibActive&&S.scalePts.length<2){
+    } else if(S.step===2&&S.iMode==='scale'&&S.calibActive&&S.calibImageLoaded&&S.scalePts.length<2){
       const pos=getImgTouchPos(e.changedTouches[0]);
       S.scalePts.push(pos);
       updateWizSpanHint();paintCanvas();
