@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Digital Crack Gauge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Raleway',-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(160deg,#0d4f5c 0%,#0a3540 40%,#081a1e 100%);background-attachment:fixed;color:#e8f8f9;min-height:100vh;padding:1.5rem 1rem}
+#app{max-width:680px;margin:0 auto}
+h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-transform:uppercase;margin-bottom:.35rem;text-align:center}
+#version-tag{text-align:center;font-size:10px;letter-spacing:.18em;color:rgba(12,187,204,0.45);text-transform:uppercase;margin-bottom:1.5rem;font-weight:400}
+
+#step-bar{display:flex;align-items:flex-start;margin-bottom:1.25rem}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center}
+.step-row{display:flex;align-items:center;width:100%}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,0.12);transition:background .3s}
+.step-line.done{background:#0cbbcc}
+.step-line.invis{background:transparent}
+.step-circle{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(232,248,249,0.4);transition:all .3s}
+.step-circle.active{background:#0cbbcc;border-color:#0cbbcc;color:#081a1e}
+.step-circle.done{background:#0a9aab;border-color:#0a9aab;color:#fff}
+.step-lbl{font-size:11px;margin-top:4px;color:rgba(232,248,249,0.35);font-weight:400;transition:color .2s}
+.step-lbl.active{color:#e8f8f9;font-weight:500}
+
+#err-bar{margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(239,68,68,0.12);color:#fca5a5;font-size:13px;border:1px solid rgba(239,68,68,0.25);display:none}
+#err-bar.show{display:flex;justify-content:space-between;align-items:center}
+#err-close{background:none;border:none;cursor:pointer;color:#fca5a5;font-size:16px;margin-left:10px}
+
+.panel{display:none}.panel.show{display:block}
+.card{padding:12px 16px;border-radius:9px;margin-bottom:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.2);font-size:13px;color:rgba(232,248,249,0.75);line-height:1.5}
+.card.success-bg{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)}
+.card.blue-bg{background:rgba(12,187,204,0.08);border-color:rgba(12,187,204,0.3)}
+
+#info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:14px;font-size:12px;color:rgba(232,248,249,0.6);line-height:1.7}
+.info-head{font-weight:600;color:#0cbbcc;margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+#drop-zone{border:2px dashed rgba(12,187,204,0.35);border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.03);transition:border-color .15s,background .15s;margin-bottom:12px}
+#drop-zone.dragover{border-color:#0cbbcc;background:rgba(12,187,204,0.08)}
+#drop-zone p.big{color:#e8f8f9;font-weight:500;font-size:15px;margin-bottom:6px}
+#drop-zone p.small{color:rgba(232,248,249,0.45);font-size:13px;margin-bottom:20px}
+
+#canvas-wrap{display:none;margin-bottom:0}
+#canvas-wrap.show{display:block}
+#img-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none}
+#zoom-bar{display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.15);font-size:11px;color:rgba(232,248,249,0.4);flex-wrap:wrap;margin-bottom:12px}
+#zoom-label{font-family:monospace;color:#e8f8f9}
+#img-meta{margin-left:auto;color:rgba(12,187,204,0.2)}#img-meta.show{color:rgba(232,248,249,0.45)}
+#img-meta span{margin-left:6px}
+
+.btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s,background .15s}
+.btn-primary{background:#0cbbcc;color:#081a1e}
+.btn-success{background:#10b981;color:#fff}
+.btn-nav{background:rgba(255,255,255,0.1);color:#e8f8f9;border:1px solid rgba(255,255,255,0.18)}
+.btn-outline{background:transparent;color:rgba(232,248,249,0.7);border:1px solid rgba(255,255,255,0.25)}
+.btn-small{padding:4px 12px;font-size:12px;border-radius:6px}
+.btn:disabled{background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.25);cursor:not-allowed}
+.btn-ghost{background:none;border:1px solid rgba(12,187,204,0.3);color:rgba(232,248,249,0.65);cursor:pointer;padding:6px 12px;border-radius:6px;font-size:12px}
+
+.tab-row{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:400;background:transparent;color:rgba(232,248,249,0.55);border:1px solid rgba(255,255,255,0.18);transition:all .15s}
+.tab.active{background:#0cbbcc;color:#081a1e;border-color:#0cbbcc;font-weight:500}
+.tab.amber{background:#d97706;color:#fff;border-color:#d97706}
+
+input[type=text],input[type=number]{padding:5px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px}
+input[type=text].mono,input[type=number].mono{font-family:monospace}
+input[type=range]{accent-color:#0cbbcc}
+.input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:rgba(232,248,249,0.6)}
+
+.q-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.q-segs{display:inline-flex;gap:2px;align-items:center}
+.q-seg{display:inline-block;width:4px;height:10px;border-radius:2px;background:rgba(255,255,255,0.15)}
+
+.avg-section{padding:14px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:14px}
+.avg-title{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.chk-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer;user-select:none}
+.chk-row input{margin-top:2px}
+.chk-main{font-size:13px;color:#e8f8f9;font-weight:500}
+.chk-sub{font-size:11px;color:rgba(232,248,249,0.4);margin-top:1px}
+.chk-warn{font-size:11px;color:#fbbf24;margin-top:3px}
+.radio-group{display:flex;flex-direction:column;gap:7px}
+.radio-row{display:flex;align-items:flex-start;gap:6px;cursor:pointer;user-select:none}
+.radio-label{font-size:13px;color:#e8f8f9;font-weight:500}
+.radio-desc{font-size:11px;color:rgba(232,248,249,0.4);margin-left:6px}
+.method-label{font-size:12px;font-weight:500;color:rgba(232,248,249,0.55);margin-bottom:8px}
+
+#result-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.result-card{padding:16px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.2)}
+.result-card.b{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)}
+.result-card.a-active{background:rgba(12,187,204,0.1);border-color:rgba(12,187,204,0.35)}
+.r-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;color:rgba(232,248,249,0.45)}
+.r-method{font-size:11px;margin-bottom:12px;color:rgba(232,248,249,0.45)}
+.r-val{font-size:38px;font-weight:500;line-height:1;font-family:monospace;color:rgba(232,248,249,0.35)}
+.r-unit{font-size:18px;font-weight:400;margin-left:5px}
+.r-hint{font-size:11px;margin-top:8px;color:rgba(232,248,249,0.4)}
+.b .r-tag,.b .r-method,.b .r-val,.b .r-hint{color:#34d399}
+.a-active .r-tag,.a-active .r-method,.a-active .r-val{color:#0cbbcc}
+
+#stats-row{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.15);margin-bottom:14px;font-size:11px;color:rgba(232,248,249,0.5);font-family:monospace;line-height:1.8}
+
+#chart-wrap{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+#chart-title{font-size:13px;font-weight:500;color:#e8f8f9;margin-bottom:2px}
+#chart-subtitle{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px}
+#chart-canvas{display:block;width:100%;height:220px;cursor:default;touch-action:none}
+
+#touch-mode-bar{display:none;margin-bottom:8px;gap:8px;align-items:center;flex-wrap:wrap}
+#btn-touch-mode{min-width:130px}
+
+.nav-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+@media(max-width:520px){
+  body{padding:.9rem .65rem}
+  h1{font-size:.95rem;margin-bottom:.9rem}
+  #info-grid{grid-template-columns:1fr;gap:6px}
+  #result-cards{grid-template-columns:1fr}
+  .r-val{font-size:32px}
+  .nav-row .btn{flex:1 1 40%;min-width:0;text-align:center;padding:10px 8px;font-size:12px}
+  .tab{padding:8px 10px;font-size:11px;min-height:44px}
+  .tab-row{gap:6px}
+  .chk-row{padding:5px 0;min-height:44px}
+  .chk-row input[type=checkbox]{width:20px;height:20px;flex-shrink:0;margin-top:2px}
+  .radio-row{padding:5px 0;min-height:44px}
+  .radio-row input[type=radio]{width:20px;height:20px;flex-shrink:0;margin-top:2px}
+  input[type=range]{height:36px}
+  .slider-lbl{width:36px;font-size:12px}
+  #stats-row{font-size:10px;line-height:1.7}
+  #chart-canvas{height:200px}
+  #calib-panel .input-row{flex-wrap:wrap;gap:6px}
+  #acc-note{font-size:11px}
+  #drop-zone .btn{width:100%;box-sizing:border-box}
+}
+
+#crop-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+.panel-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.panel-title{font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+.panel-badge{font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#0cbbcc;font-size:12px}
+#crop-auto-hint{font-size:11px;color:rgba(232,248,249,0.35)}
+
+#base-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}#btn-base-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.slider-lbl{width:32px;font-size:13px;color:rgba(232,248,249,0.55);flex-shrink:0}
+.slider-row input[type=range]{flex:1}
+.slider-val{font-family:monospace;font-size:12px;width:42px;text-align:right;flex-shrink:0;color:#e8f8f9}
+.base-sub{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px;line-height:1.5}
+
+#formula-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+#btn-formula-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+.formula-eq{font-family:monospace;font-size:13px;color:#0cbbcc;background:rgba(0,0,0,0.25);padding:8px 12px;border-radius:6px;margin-bottom:12px;text-align:center;letter-spacing:.02em}
+.formula-input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.formula-input-row label{font-size:13px;color:rgba(232,248,249,0.7);min-width:130px}
+.formula-input-row input[type=number]{width:90px}
+.formula-default{font-size:11px;color:rgba(232,248,249,0.35);font-family:monospace}
+
+.profile-divider{border-top:1px solid rgba(12,187,204,0.15);margin:14px 0 12px}
+.profile-label{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.profile-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+#profile-select{flex:1;min-width:140px;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
+#profile-select option{background:#0a3540;color:#e8f8f9}
+.profile-btns{display:flex;gap:6px;flex-wrap:wrap}
+.profile-note{font-size:11px;color:rgba(232,248,249,0.4);font-style:italic;margin-top:2px;min-height:14px}
+#profile-save-form{display:none;margin-top:8px;padding:10px;border-radius:7px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2)}
+#profile-save-form.show{display:block}
+#profile-save-form input[type=text]{width:100%;margin-bottom:6px}
+#profile-name-inp{font-size:13px}
+.profile-meta-row{display:flex;gap:8px;align-items:center;font-size:11px;color:rgba(232,248,249,0.45);margin-top:4px}
+
+/* ── Distance + camera profile scale mode (Pro) ── */
+#scale-distance-panel{margin-bottom:12px}
+.dist-input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.dist-input-row label{font-size:13px;color:rgba(232,248,249,0.7);min-width:120px}
+.dist-input-row input[type=number]{width:110px}
+.dist-input-row select{flex:1;min-width:150px;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
+.dist-input-row select option{background:#0a3540;color:#e8f8f9}
+#dist-result{font-family:monospace;font-size:14px;color:#0cbbcc;margin-top:4px;min-height:18px}
+#dist-zoom-caution{font-size:11px;color:rgba(251,191,36,0.8);font-style:italic;margin-top:6px;line-height:1.45}
+
+/* ── Calibration wizard ── */
+#calib-wizard{display:none;margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.3)}
+#calib-wizard.show{display:block}
+.wiz-title{font-size:13px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.wiz-tip{font-size:11px;color:rgba(232,248,249,0.55);line-height:1.5;margin-bottom:6px;padding-left:18px;position:relative}
+.wiz-tip::before{content:'💡';position:absolute;left:0;top:0}
+.wiz-tips-box{background:rgba(12,187,204,0.07);border:1px solid rgba(12,187,204,0.15);border-radius:7px;padding:10px 12px;margin-bottom:14px}
+.wiz-shot-form{border:1px solid rgba(12,187,204,0.2);border-radius:8px;padding:12px;margin-bottom:12px;background:rgba(255,255,255,0.03)}
+.wiz-shot-form .dist-input-row label{min-width:140px}
+.wiz-step-num{display:inline-block;background:#0cbbcc;color:#081a1e;font-weight:600;font-size:11px;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;margin-right:6px}
+#wiz-span-hint{font-size:12px;color:rgba(232,248,249,0.6);margin:8px 0;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,0.25);min-height:16px}
+#wiz-span-hint strong{color:#0cbbcc}
+.wiz-shots-list{margin-bottom:12px}
+.wiz-shot-item{display:flex;align-items:center;gap:8px;font-size:12px;font-family:monospace;color:rgba(232,248,249,0.75);padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.04);margin-bottom:5px}
+.wiz-shot-item .shot-resid{margin-left:auto;font-size:11px}
+.wiz-shot-del{background:none;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:0 4px}
+.wiz-fit-summary{font-size:12px;color:rgba(232,248,249,0.7);padding:10px 12px;border-radius:7px;background:rgba(12,187,204,0.08);border:1px solid rgba(12,187,204,0.2);margin-bottom:12px;line-height:1.6}
+.wiz-fit-summary .fit-good{color:#34d399}
+.wiz-fit-summary .fit-warn{color:#fbbf24}
+.wiz-fit-summary .fit-bad{color:#f87171}
+.wiz-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+#calib-panel{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+.calib-title{font-size:12px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.calib-sub{font-size:12px;color:rgba(232,248,249,0.45);margin-bottom:10px;line-height:1.5}
+
+#acc-note{padding:10px 14px;border-radius:8px;background:rgba(251,191,36,0.07);color:rgba(251,191,36,0.85);font-size:12px;line-height:1.55;margin-bottom:14px;border:1px solid rgba(251,191,36,0.2)}
+
+.simple-only{display:none}
+body.simple .pro-only{display:none}
+body.simple span.simple-only{display:inline}
+body.simple div.simple-only{display:block}
+#calib-mode-toggle,#calib-mode-toggle-pro{display:inline-flex;border:1px solid rgba(12,187,204,0.35);border-radius:8px;overflow:hidden;margin-bottom:12px}
+#calib-mode-toggle button,#calib-mode-toggle-pro button{background:rgba(255,255,255,0.04);color:rgba(232,248,249,0.6);border:none;padding:7px 16px;cursor:pointer;font-family:inherit;font-size:12px;transition:all .15s}
+#calib-mode-toggle button.active,#calib-mode-toggle-pro button.active{background:#0cbbcc;color:#081a1e;font-weight:600}
+input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight:600;cursor:not-allowed}
+#mode-badge{font-size:0.5em;vertical-align:middle;padding:3px 10px;border-radius:6px;letter-spacing:.1em;font-weight:600;margin-left:8px;border:1px solid rgba(12,187,204,0.5);color:#0cbbcc;background:rgba(12,187,204,0.1)}
+
+#pin-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#0a1416;padding:24px}
+#pin-box{width:100%;max-width:340px;text-align:center}
+#pin-box h2{font-size:1.1rem;font-weight:300;letter-spacing:.1em;color:#0cbbcc;text-transform:uppercase;margin:0 0 6px}
+#pin-box p{font-size:12px;color:rgba(232,248,249,0.5);margin:0 0 22px;line-height:1.6}
+#pin-input{width:100%;box-sizing:border-box;text-align:center;font-family:monospace;font-size:28px;letter-spacing:.4em;padding:14px;border-radius:10px;border:1px solid rgba(12,187,204,0.35);background:rgba(255,255,255,0.04);color:#e8f8f9;outline:none;margin-bottom:14px}
+#pin-input:focus{border-color:#0cbbcc}
+#pin-btn{width:100%;padding:13px;border-radius:10px;border:none;background:#0cbbcc;color:#081a1e;font-family:inherit;font-weight:600;font-size:14px;letter-spacing:.08em;cursor:pointer;transition:background .15s}
+#pin-btn:hover{background:#0aa6b5}
+#pin-btn:disabled{opacity:.5;cursor:wait}
+#pin-msg{min-height:18px;margin-top:14px;font-size:12px;color:#f87171}
+#app{display:none}
+/* ── Footer (social links + licence line) ── */
+#app-footer{margin-top:48px;padding:32px 0 20px;text-align:center;border-top:1px solid rgba(255,255,255,0.07)}
+.social-row{display:flex;gap:18px;justify-content:center;margin-bottom:22px}
+.social-row a{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;border:1px solid rgba(232,248,249,0.45);color:rgba(232,248,249,0.85);transition:all .15s;text-decoration:none}
+.social-row a:hover{border-color:#0cbbcc;color:#0cbbcc;transform:translateY(-2px)}
+.social-row svg{width:20px;height:20px;display:block}
+.footer-note{font-size:12px;color:rgba(232,248,249,0.4);line-height:1.6;max-width:560px;margin:0 auto;padding:0 16px}
+/* social row also on the pin screen */
+#pin-social{margin-top:30px}   
+</style>
+</head>
+<body>
+<div id="pin-overlay">
+  <div id="pin-box">
+    <h2>Digital Crack Gauge</h2>
+    <p>Enter your access code to continue.</p>
+    <input id="pin-input" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off">
+    <button id="pin-btn" onclick="checkPin()">Enter</button>
+    <div id="pin-msg"></div>
+    <div class="social-row" id="pin-social">
+      <a href="mailto:okroge@tuta.com" title="Email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/in/egorv/" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.3c0-1.26-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21h-4z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@byegorvolkov" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.3-.42-4.88a2.55 2.55 0 0 0-1.8-1.8C19.2 5 12 5 12 5s-7.2 0-8.78.42a2.55 2.55 0 0 0-1.8 1.8C1 8.7 1 12 1 12s0 3.3.42 4.88a2.55 2.55 0 0 0 1.8 1.8C4.8 19 12 19 12 19s7.2 0 8.78-.42a2.55 2.55 0 0 0 1.8-1.8C23 15.3 23 12 23 12zM9.75 15.02v-6.04L15.5 12z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+<div id="app">
+  <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
+  <div id="version-tag">v1.2.1-beta</div>
+
+  
+  <div id="step-bar"></div>
+
+  
+  <div id="err-bar"><span id="err-msg"></span><button id="err-close">✕</button></div>
+
+  
+  <div id="panel-1" class="panel show">
+    <div id="info-grid">
+      <div><div class="info-head">Formats</div>JPEG · PNG · WebP</div>
+      <div><div class="info-head">Resolution</div>Up to 50 MP<br>Larger images auto-resized</div>
+      <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting</div>
+    </div>
+    <div id="drop-zone">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p class="big">Drop a crack photo here</p>
+      <p class="small">or click the button below</p>
+      <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files…</button>
+      <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
+    </div>
+  </div>
+
+  
+  <div id="canvas-wrap">
+    <div id="touch-mode-bar">
+      <button id="btn-touch-mode" class="btn btn-nav" onclick="toggleTouchMode()">✋ Navigate</button>
+      <span id="touch-mode-hint" style="font-size:12px;color:#94a3b8">Single finger: pan · Two fingers: pinch zoom</span>
+    </div>
+    <canvas id="img-canvas"></canvas>
+    <div id="zoom-bar">
+      <span id="zoom-label">1.0×</span>
+      <button class="btn-ghost" id="btn-reset-view">Reset view</button>
+      <span id="nav-hint" style="color:#cbd5e1">Scroll to zoom · Right-drag to pan</span>
+      <span id="img-meta"></span>
+    </div>
+  </div>
+
+  
+  <div id="panel-2" class="panel">
+    <div class="tab-row">
+      <button class="tab active" id="tab-twopoint" onclick="switchScaleMode('twopoint')">Click two reference points</button>
+      <button class="tab" id="tab-direct" title="Use this if previously measured" onclick="switchScaleMode('direct')">Enter pixels/mm directly</button>
+      <button class="tab pro-only" id="tab-distance" title="Use a saved camera calibration + distance" onclick="switchScaleMode('distance')">Distance + camera</button>
+    </div>
+    <div class="card" id="scale-hint">Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size</div>
+
+    <div id="scale-distance-panel" class="pro-only" style="display:none">
+      <div class="card" style="margin-bottom:12px">Enter the camera-to-crack distance and pick a saved camera profile. Resolution is predicted from the camera's calibration — no reference object needed in the crack photo.</div>
+      <div class="dist-input-row">
+        <label>Distance to crack (m):</label>
+        <input type="number" id="dist-inp" step="0.001" min="0" placeholder="e.g. 4.000" oninput="onDistanceInput()">
+      </div>
+      <div class="dist-input-row">
+        <label>Camera profile:</label>
+        <select id="scale-profile-select" onchange="onScaleProfileSelect()">
+          <option value="">— Select a calibrated camera —</option>
+        </select>
+      </div>
+      <div id="dist-result"></div>
+      <div id="dist-zoom-caution">A profile is only valid at the same zoom/focal length it was calibrated at. Use the lens/zoom the profile name refers to.</div>
+      <div class="profile-btns" style="margin-top:12px">
+        <button class="btn-ghost btn-small" onclick="openCalibWizard()">+ Calibrate new camera…</button>
+        <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" style="display:none">Delete profile</button>
+        <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export</button>
+        <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
+        <input type="file" id="scale-import-file" accept=".json,application/json" style="display:none" onchange="importScaleProfiles(event)">
+      </div>
+
+      <div id="calib-wizard">
+        <div class="wiz-title">Calibrate a camera</div>
+        <div class="wiz-tips-box">
+          <div class="wiz-tip">Calibrate across the distance range you expect to actually use the camera at.</div>
+          <div class="wiz-tip">Photograph from far away first, then halve the distance each shot — e.g. 8 m, then 4 m, then 2 m. This spreads the points evenly for a robust fit.</div>
+          <div class="wiz-tip">Use the same zoom/focal length for every shot and for real measurements later.</div>
+        </div>
+
+        <div class="wiz-shot-form">
+          <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin-bottom:10px"><span class="wiz-step-num">1</span>Enter this shot's distance and the known object's width</div>
+          <div class="dist-input-row">
+            <label>Distance (m):</label>
+            <input type="number" id="wiz-dist-inp" step="0.001" min="0" placeholder="e.g. 8.000">
+          </div>
+          <div class="dist-input-row">
+            <label>Known object width (mm):</label>
+            <input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000">
+          </div>
+          <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Click the two edges of that object on the image</div>
+          <div id="wiz-span-hint">Click <strong>point A</strong> on one edge of the known object.</div>
+          <div class="wiz-btns">
+            <button class="btn btn-primary btn-small" id="btn-wiz-add" onclick="addCalibShot()">Add this shot</button>
+            <button class="btn-ghost btn-small" onclick="resetWizShot()">Clear points</button>
+          </div>
+        </div>
+
+        <div class="wiz-shots-list" id="wiz-shots-list"></div>
+        <div class="wiz-fit-summary" id="wiz-fit-summary" style="display:none"></div>
+
+        <div class="wiz-btns">
+          <input type="text" id="wiz-name-inp" placeholder="Camera name — e.g. iPhone 15 main 1×" maxlength="60" style="width:100%;margin-bottom:6px">
+          <input type="text" id="wiz-note-inp" placeholder="Optional note — lens, settings, date" maxlength="120" style="width:100%;margin-bottom:8px">
+        </div>
+        <div class="wiz-btns">
+          <button class="btn btn-success btn-small" id="btn-wiz-save" onclick="saveCalibProfile()">Save camera profile</button>
+          <button class="btn-ghost btn-small" onclick="closeCalibWizard()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-primary" id="btn-confirm-scale" onclick="confirmScale()">Confirm scale →</button>
+      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+      <span id="scale-display" style="font-family:monospace;font-size:13px;color:#94a3b8"></span>
+    </div>
+  </div>
+
+  
+  <div id="panel-3" class="panel">
+    <div class="card" id="draw-hint"><strong>Click and drag across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.</div>
+
+    <div class="input-row" style="margin-bottom:14px">
+      <label style="font-size:13px;color:#64748b" title="More lines = better sampling and noise reduction, but only over a uniform section of the crack">Scan lines:</label>
+      <input type="range" id="nlines-slider" min="5" max="200" value="40" style="width:140px" oninput="onNlinesChange()">
+      <strong id="nlines-val" style="font-family:monospace;font-size:13px;min-width:28px">40</strong>
+      <span id="band-width" style="font-size:12px;color:#94a3b8"></span>
+      <span id="q-badge"></span>
+    </div>
+
+    <div class="avg-section pro-only">
+      <div class="avg-title">Profile Averaging</div>
+      <label class="chk-row">
+        <input type="checkbox" id="chk-align">
+        <div><div class="chk-main">Align profiles before averaging</div>
+        <div class="chk-sub">Compensates for cracks that aren't perfectly straight</div></div>
+      </label>
+      <div class="method-label">Combining method</div>
+      <div class="radio-group" style="margin-bottom:12px">
+        <label class="radio-row"><input type="radio" name="avgMethod" value="mean" checked>
+          <span class="radio-label">Mean</span><span class="radio-desc">Lowest noise — all lines weighted equally</span></label>
+        <label class="radio-row"><input type="radio" name="avgMethod" value="median">
+          <span class="radio-label">Median</span><span class="radio-desc">Robust to outliers, debris, and staining</span></label>
+        <label class="radio-row"><input type="radio" name="avgMethod" value="gaussian">
+          <span class="radio-label">Gaussian weighted</span><span class="radio-desc">Emphasises central scan lines</span></label>
+      </div>
+      <label class="chk-row" style="margin-bottom:0">
+        <input type="checkbox" id="chk-adaptive">
+        <div><div class="chk-main">Adaptive line selection <span style="font-weight:400;font-size:11px;color:#94a3b8">keep top 70%, drop lowest quality</span></div>
+        <div class="chk-sub">Scores each scan line by depression clarity; discards contaminated lines</div>
+        <div class="chk-warn" id="adaptive-warn" style="display:none">⚠ Works best with alignment enabled</div></div>
+      </label>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
+      <button class="btn btn-nav" onclick="goBack()">← Back</button>
+      <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
+    </div>
+  </div>
+
+  
+  <div id="panel-4" class="panel">
+    <div id="result-cards">
+      <div class="result-card b">
+        <div class="r-tag">Approach B</div>
+        <div class="r-method">Empirical Formula</div>
+        <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
+      </div>
+      <div class="result-card" id="card-a">
+        <div class="r-tag" id="a-tag">Approach A</div>
+        <div class="r-method" id="a-method">Physical Reference</div>
+        <div class="r-val" id="r-a">—.— <span class="r-unit">mm</span></div>
+        <div class="r-hint" id="a-hint">↓ Enter calibration data below</div>
+      </div>
+    </div>
+
+    <div id="stats-row" class="pro-only"></div>
+
+    <div id="chart-wrap" class="pro-only">
+      <div id="chart-title">Luminance profile across crack</div>
+      <div id="chart-subtitle">Blue = profile · red dashed = baseline · amber = crack centre · blue shading = integration region · drag blue handles to adjust</div>
+      <canvas id="chart-canvas"></canvas>
+    </div>
+
+    <div id="crop-panel" class="pro-only">
+      <div class="panel-hdr">
+        <div class="panel-title">Integration window<span class="panel-badge" id="crop-badge" style="display:none">· custom</span></div>
+        <button class="btn-ghost" id="btn-reset-crop" style="display:none" onclick="resetCrop()">Reset to auto</button>
+      </div>
+      <div class="input-row">
+        <label>From:</label>
+        <input type="text" id="crop-l-inp" class="mono" style="width:90px">
+        <span>mm</span>
+        <label style="margin-left:8px">To:</label>
+        <input type="text" id="crop-r-inp" class="mono" style="width:90px">
+        <span>mm</span>
+        <span id="crop-auto-hint" style="font-size:11px;color:#94a3b8">auto-detected</span>
+      </div>
+    </div>
+
+    <div id="base-panel" class="pro-only">
+      <div class="panel-hdr" style="margin-bottom:0">
+        <button id="btn-base-toggle" onclick="toggleBaseCorr()"><span id="base-toggle-txt">▸ Baseline correction</span><span id="base-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#2563eb;display:none">· active</span></button>
+        <button class="btn-ghost" id="btn-base-reset" style="display:none" onclick="resetBaseCorr()">Reset</button>
+      </div>
+      <div id="base-controls" style="display:none;margin-top:12px">
+        <div class="base-sub">Tilt rotates the baseline around the crack centre. Bow adds curvature anchored at the crack centre, preventing it from curving into the depression.</div>
+        <div class="slider-row">
+          <span class="slider-lbl">Shift:</span>
+          <input type="range" id="shift-slider" min="-50" max="50" step="0.5" value="0" oninput="onShiftChange()">
+          <span class="slider-val" id="shift-val">0.0</span>
+          <button class="btn-ghost btn-small" onclick="setShift(0)">×</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Tilt:</span>
+          <input type="range" id="tilt-slider" min="-50" max="50" step="0.5" value="0" oninput="onTiltChange()">
+          <span class="slider-val" id="tilt-val">0.0</span>
+          <button class="btn-ghost btn-small" onclick="setTilt(0)">×</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Bow:</span>
+          <input type="range" id="bow-slider" min="-30" max="30" step="0.5" value="0" oninput="onBowChange()">
+          <span class="slider-val" id="bow-val">0.0</span>
+          <button class="btn-ghost btn-small" onclick="setBow(0)">×</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="formula-panel" class="pro-only">
+      <div class="panel-hdr" style="margin-bottom:0">
+        <button id="btn-formula-toggle" onclick="toggleFormula()"><span id="formula-toggle-txt">▸ Approach B formula</span><span id="formula-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#0cbbcc;display:none">· modified</span></button>
+        <button class="btn-ghost" id="btn-formula-reset" style="display:none" onclick="resetFormula()">Reset</button>
+      </div>
+      <div id="formula-controls" style="display:none;margin-top:12px">
+        <div class="base-sub">Approach B estimates width from a calibrated power-law. The default constants suit general use, but a specific camera may perform better with tuned values. Changes affect the Approach B result only.</div>
+        <div class="formula-eq">calib = c × 256 × (px/mm)<sup>α</sup></div>
+        <div class="formula-input-row">
+          <label>Coefficient (c):</label>
+          <input type="number" id="bcoeff-inp" step="0.001" value="0.357" oninput="onFormulaChange()">
+          <span class="formula-default">default 0.357</span>
+        </div>
+        <div class="formula-input-row">
+          <label>Exponent (α):</label>
+          <input type="number" id="bexp-inp" step="0.01" value="0.16" oninput="onFormulaChange()">
+          <span class="formula-default">default 0.16</span>
+        </div>
+
+        <div class="profile-divider"></div>
+        <div class="profile-label">Camera profiles</div>
+        <div class="profile-row">
+          <select id="profile-select" onchange="onProfileSelect()">
+            <option value="">— Default (0.357, 0.16) —</option>
+          </select>
+          <div class="profile-btns">
+            <button class="btn-ghost btn-small" id="btn-profile-save" onclick="showProfileSaveForm()">Save current…</button>
+            <button class="btn-ghost btn-small" id="btn-profile-delete" onclick="deleteProfile()" style="display:none">Delete</button>
+          </div>
+        </div>
+        <div class="profile-note" id="profile-note"></div>
+        <div id="profile-save-form">
+          <input type="text" id="profile-name-inp" placeholder="Profile name — e.g. Sony a6700 (105 mm)" maxlength="60">
+          <input type="text" id="profile-desc-inp" placeholder="Optional note — e.g. calibrated 1–32 m, white background" maxlength="120">
+          <div class="profile-meta-row">
+            <span>Will store: c=<span id="pf-c">0.357</span>, α=<span id="pf-a">0.16</span>, scan lines=<span id="pf-n">40</span></span>
+          </div>
+          <div class="profile-btns" style="margin-top:8px">
+            <button class="btn btn-primary btn-small" onclick="saveProfile()">Save profile</button>
+            <button class="btn-ghost btn-small" onclick="hideProfileSaveForm()">Cancel</button>
+          </div>
+        </div>
+        <div class="profile-btns" style="margin-top:10px">
+          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export profiles</button>
+          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import profiles</button>
+          <input type="file" id="profile-import-file" accept=".json,application/json" style="display:none" onchange="importProfiles(event)">
+        </div>
+      </div>
+    </div>
+
+      <div id="calib-panel">
+      <div class="calib-title">Approach A — Physical Reference Calibration</div>
+      <div class="calib-sub pro-only">Photograph a reference line of known width under the same conditions, run this tool on it, note the profile area, then enter below.</div>
+      <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
+      
+      <div class="pro-only">
+        <div id="calib-mode-toggle-pro">
+          <button id="cmode-calibrate-pro" onclick="setCalibMode('calibrate')">Calibrate</button>
+          <button id="cmode-measure-pro" class="active" onclick="setCalibMode('measure')">Measure</button>
+        </div>
+        <div class="input-row">
+          <span>Reference width:</span>
+          <input type="number" id="calib-width" value="" placeholder="e.g. 0.30" style="width:84px" oninput="onProWidthInput()">
+          <span>mm</span>
+          <span style="margin-left:10px">Reference area:</span>
+          <input type="number" id="calib-area" placeholder="e.g. 118.5" style="width:105px" oninput="onProAreaInput()">
+          <span>lum·mm</span>
+        </div>
+      </div>
+      
+      <div class="simple-only">
+        <div id="calib-mode-toggle">
+          <button id="cmode-calibrate" onclick="setCalibMode('calibrate')">Calibrate</button>
+          <button id="cmode-measure" class="active" onclick="setCalibMode('measure')">Measure</button>
+        </div>
+        <div class="input-row">
+          <span>Actual width:</span>
+          <input type="number" id="simp-width" placeholder="e.g. 0.30" style="width:100px" oninput="onSimpWidthInput()">
+          <span>mm</span>
+          <span style="margin-left:10px">Adjustment coefficient:</span>
+          <input type="number" id="simp-coeff" placeholder="—" style="width:110px" oninput="onSimpCoeffInput()">
+        </div>
+      </div>
+    </div>
+
+    <div id="acc-note"><strong>Approach B accuracy note:</strong> The empirical formula was calibrated for high-contrast printed lines. For concrete cracks, treat this as an estimate — typical accuracy ±0.05–0.1 mm. Use Approach A (physical reference) for critical measurements.</div>
+
+    <div class="nav-row">
+      <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
+      <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
+      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+    </div>
+  </div>
+  <footer id="app-footer">
+    <div class="social-row">
+      <a href="mailto:okroge@tuta.com" title="Email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/in/egorv/" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.3c0-1.26-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21h-4z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@byegorvolkov" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.3-.42-4.88a2.55 2.55 0 0 0-1.8-1.8C19.2 5 12 5 12 5s-7.2 0-8.78.42a2.55 2.55 0 0 0-1.8 1.8C1 8.7 1 12 1 12s0 3.3.42 4.88a2.55 2.55 0 0 0 1.8 1.8C4.8 19 12 19 12 19s7.2 0 8.78-.42a2.55 2.55 0 0 0 1.8-1.8C23 15.3 23 12 23 12zM9.75 15.02v-6.04L15.5 12z"/></svg>
+      </a>
+    </div>
+    <div class="footer-note">Patent pending. All rights reserved — please get in touch for licensing.</div>
+  </footer>
+</div>
+
+<script>
+
+const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+
+function bilinearLum(data,x,y,W,H){
+  x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));
+  const x0=Math.floor(x),x1=Math.min(x0+1,W-1),y0=Math.floor(y),y1=Math.min(y0+1,H-1);
+  const fx=x-x0,fy=y-y0;
+  const lum=(px,py)=>{const i=(py*W+px)*4;return 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];};
+  return lum(x0,y0)*(1-fx)*(1-fy)+lum(x1,y0)*fx*(1-fy)+lum(x0,y1)*(1-fx)*fy+lum(x1,y1)*fx*fy;
+}
+
+function fitBaseline(profile,frac=0.25){
+  const n=profile.length;
+  const medOf=arr=>{const s=[...arr].sort((a,b)=>a-b);return s[Math.floor(s.length/2)];};
+
+  const left=[],right=[];
+  for(let i=0;i<Math.floor(n*frac);i++)left.push({i,v:profile[i]});
+  for(let i=Math.ceil(n*(1-frac));i<n;i++)right.push({i,v:profile[i]});
+
+  const lMed=medOf(left.map(p=>p.v)),rMed=medOf(right.map(p=>p.v));
+  let pts=[...left.filter(p=>p.v>=lMed).map(p=>[p.i,p.v]),...right.filter(p=>p.v>=rMed).map(p=>[p.i,p.v])];
+
+  if(pts.length<4)pts=[...left.map(p=>[p.i,p.v]),...right.map(p=>[p.i,p.v])];
+  const m=pts.length;let sx=0,sy=0,sxy=0,sx2=0;
+  for(const[x,y]of pts){sx+=x;sy+=y;sxy+=x*y;sx2+=x*x;}
+  const d=m*sx2-sx*sx;
+  if(Math.abs(d)<1e-10){const a=sy/m;return profile.map(()=>a);}
+  const sl=(m*sxy-sx*sy)/d,ic=(sy-sl*sx)/m;
+  return profile.map((_,i)=>sl*i+ic);
+}
+
+function smoothArray(arr,win=5){
+  const h=Math.floor(win/2);
+  return arr.map((_,i)=>{let s=0,c=0;for(let k=Math.max(0,i-h);k<=Math.min(arr.length-1,i+h);k++){s+=arr[k];c++;}return s/c;});
+}
+
+function findBounds(residuals,win=5){
+  const sm=smoothArray(residuals,win);
+  let pi=0,pv=-Infinity;
+  for(let i=0;i<sm.length;i++)if(sm[i]>pv){pv=sm[i];pi=i;}
+  if(pv<=0)return{left:0,right:residuals.length-1};
+  const thr=Math.max(0.5,pv*0.02);
+  let L=pi;while(L>0&&sm[L-1]>thr)L--;
+  let R=pi;while(R<sm.length-1&&sm[R+1]>thr)R++;
+  return{left:L,right:R};
+}
+
+function extractAllProfiles(pixels,p1,p2,nLines){
+  const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<4)return null;
+  const px=-dy/len,py=dx/len,n=Math.ceil(len),half=Math.floor(nLines/2);
+  const profiles=[];
+  for(let k=-half;k<=half;k++){
+    const line=[];
+    for(let i=0;i<n;i++){const t=n>1?i/(n-1):0;line.push(bilinearLum(pixels.data,p1.x+t*dx+k*px,p1.y+t*dy+k*py,pixels.width,pixels.height));}
+    profiles.push(line);
+  }
+  return profiles;
+}
+
+async function combineViaWorker(profiles, opts){
+  let remembered=null;
+  try{remembered=sessionStorage.getItem('dcg_tier');}catch(e){}
+  const pin=sessionStorage.getItem('dcg_pin')||'';
+  const resp=await fetch(WORKER_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'combine',pin,profiles,options:opts}),
+  });
+  const data=await resp.json();
+  if(!data.ok||!Array.isArray(data.combined)) throw new Error('combine service unavailable');
+  return data.combined;
+}
+
+function integrateArea(profile,base,pxPerMm){
+  const dx=1/pxPerMm,n=profile.length;
+
+  let peakRes=0;
+  const midS=Math.floor(n*0.1),midE=Math.ceil(n*0.9);
+  for(let i=midS;i<midE;i++){const r=base[i]-profile[i];if(Math.abs(r)>Math.abs(peakRes))peakRes=r;}
+  const sign=peakRes>=0?1:-1;
+  const raw=profile.map((_,i)=>sign*(base[i]-profile[i]));
+  const{left,right}=findBounds(raw);
+  let area=0;
+  for(let i=left;i<Math.min(right,n-1);i++){
+    const r1=Math.max(0,raw[i]),r2=Math.max(0,raw[i+1]);
+    area+=0.5*(r1+r2)*dx;
+  }
+  return{area,isDep:sign===1,left,right};
+}
+
+function approachB(area,pxMmOrig){
+  const calib=S.bCoeff*256*Math.pow(pxMmOrig,S.bExp);
+  return{width:area/calib,calib};
+}
+
+const S={
+  step:1,
+  imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
+  zoom:1,panX:0,panY:0,isPanning:false,panAnchor:null,
+  iMode:null,scaleMode:'twopoint',scalePts:[],realDist:'',directPx:'',pxMm:null,
+  drawStart:null,drawCur:null,measLine:null,nLines:40,
+  doAlign:false,avgMethod:'mean',doAdaptive:false,
+  results:null,busy:false,
+  cropLeft:null,cropRight:null,cropLeftStr:'',cropRightStr:'',
+  tilt:0,bow:0,shift:0,showBaseCorr:false,
+  bCoeff:0.357,bExp:0.16,    // Approach B empirical formula constants (overridable)
+  profiles:[],activeProfile:'',   // saved camera profiles + currently selected id
+  scaleProfiles:[],activeScaleProfile:'',   // distance-scale profiles (Pro) + selected id
+  scaleDist:'',                    // distance (m) entered in distance+profile scale mode
+  calibShots:[],                   // in-progress calibration shots during the wizard
+  calibActive:false,               // whether the calibration wizard is capturing
+  touchMode:'navigate',
+  live:null,         // live recalculation output
+  chartGeom:null,    // chart coordinate system
+  chartDrag:null,    // 'left' | 'right' | null
+};
+
+const $=id=>document.getElementById(id);
+
+let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
+
+const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
+
+function applyInterfaceMode(tier){
+  INTERFACE_MODE = (tier === 'lite') ? 'simple' : 'pro';
+  const badge = $('mode-badge');
+  if (badge) badge.textContent = (INTERFACE_MODE === 'simple') ? 'LITE' : 'PRO';
+  if (INTERFACE_MODE === 'simple') {
+    document.body.classList.add('simple');
+
+    S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false;
+    const a=$('chk-align'); if(a)a.checked=true;
+    const ad=$('chk-adaptive'); if(ad)ad.checked=false;
+    const med=document.querySelector('input[name="avgMethod"][value="median"]');
+    if(med)med.checked=true;
+  }
+  setCalibMode('measure');
+
+  $('pin-overlay').style.display = 'none';
+  $('app').style.display = 'block';
+}
+
+async function checkPin(){
+  const input = $('pin-input'), btn = $('pin-btn'), msg = $('pin-msg');
+  const pin = input.value.trim();
+  if (!/^\d{6}$/.test(pin)) { msg.textContent = 'Enter a 6-digit code.'; return; }
+  btn.disabled = true; msg.style.color = 'rgba(232,248,249,0.5)'; msg.textContent = 'Checking…';
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      try { sessionStorage.setItem('dcg_tier', data.tier); sessionStorage.setItem('dcg_pin', pin); } catch(e){}
+      applyInterfaceMode(data.tier);
+    } else {
+      msg.style.color = '#f87171'; msg.textContent = 'Invalid code.';
+      btn.disabled = false; input.select();
+    }
+  } catch (e) {
+    msg.style.color = '#f87171';
+    msg.textContent = 'Could not verify code. Check your connection.';
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = $('pin-input');
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+  let remembered = null;
+  try { remembered = sessionStorage.getItem('dcg_tier'); } catch(e){}
+  if (remembered === 'lite' || remembered === 'pro') applyInterfaceMode(remembered);
+});
+
+let calibMode = 'measure';   // Measure is the default
+
+function calibFields(){
+  return INTERFACE_MODE==='simple'
+    ? {widthId:'simp-width',  coeffId:'simp-coeff',  coeffDp:2, toggle:['cmode-calibrate','cmode-measure']}
+    : {widthId:'calib-width', coeffId:'calib-area',  coeffDp:2, toggle:['cmode-calibrate-pro','cmode-measure-pro']};
+}
+
+function setCalibMode(mode){
+  calibMode = mode;
+  const f = calibFields();
+  const [calBtn,measBtn] = f.toggle;
+  if($(calBtn))  $(calBtn).classList.toggle('active',  mode==='calibrate');
+  if($(measBtn)) $(measBtn).classList.toggle('active', mode==='measure');
+  const widthInp=$(f.widthId), coeffInp=$(f.coeffId);
+  if(!widthInp||!coeffInp) return;
+  if(mode==='calibrate'){
+    widthInp.readOnly=false; widthInp.classList.remove('readonly-field');
+    coeffInp.readOnly=true;  coeffInp.classList.add('readonly-field');
+  } else {
+    coeffInp.readOnly=false; coeffInp.classList.remove('readonly-field');
+    widthInp.readOnly=true;  widthInp.classList.add('readonly-field');
+  }
+  recomputeCalib();
+}
+
+function onSimpWidthInput(){ if(calibMode!=='calibrate')setCalibMode('calibrate'); recomputeCalib(); }
+function onSimpCoeffInput(){ if(calibMode!=='measure')  setCalibMode('measure');   recomputeCalib(); }
+function onProWidthInput(){  if(calibMode!=='calibrate')setCalibMode('calibrate'); recomputeCalib(); }
+function onProAreaInput(){   if(calibMode!=='measure')  setCalibMode('measure');   recomputeCalib(); }
+
+function currentArea(){
+  const dv=(S.live&&(S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0))?S.live:S.results;
+  return dv?dv.area:null;
+}
+
+function recomputeCalib(){
+  const f=calibFields(), area=currentArea();
+  const widthInp=$(f.widthId), coeffInp=$(f.coeffId);
+  if(!widthInp||!coeffInp) return;
+  if(calibMode==='calibrate'){
+    const w=parseFloat(widthInp.value);
+    const coeff=(area&&w&&w>0)?(area/w):null;
+    coeffInp.value = coeff!==null?coeff.toFixed(f.coeffDp):'';
+  } else {
+    const coeff=parseFloat(coeffInp.value);
+    const w=(area&&coeff&&coeff>0)?(area/coeff):null;
+    widthInp.value = w!==null?w.toFixed(4):'';
+  }
+  const aw=calibAWidth(area);
+  updateAResult(aw!==null?parseFloat(aw):null);
+}
+
+function calibAWidth(area){
+  const f=calibFields();
+  if(calibMode==='calibrate'){
+    const w=parseFloat($(f.widthId).value);
+    return (area&&w&&w>0)?w.toFixed(4):null;       // calibrate: A = the known width
+  } else {
+    const coeff=parseFloat($(f.coeffId).value);
+    return (area&&coeff&&coeff>0)?(area/coeff).toFixed(4):null;
+  }
+}
+
+function updateAResult(width){
+  const el=$('r-a'); if(!el) return;
+  if(width!==null&&isFinite(width)){
+    el.innerHTML=`${width.toFixed(3)} <span class="r-unit">mm</span>`;
+    $('a-hint').style.display='none';
+    $('card-a').className='result-card a-active';
+    $('a-tag').style.color='#0cbbcc';$('a-method').style.color='rgba(12,187,204,0.75)';
+    el.style.color='#0cbbcc';
+  } else {
+    el.innerHTML=`—.— <span class="r-unit">mm</span>`;
+    $('a-hint').style.display='';
+    $('card-a').className='result-card';
+    $('a-tag').style.color='';$('a-method').style.color='';
+    el.style.color='rgba(232,248,249,0.3)';
+  }
+}
+
+function resetCalibPanel(){
+  setCalibMode('measure');
+}
+
+function paintCanvas(){
+  const canvas=$('img-canvas');
+  if(!canvas||!S.imgEl||S.dispW===0)return;
+  canvas.width=S.dispW;canvas.height=S.dispH;
+  const ctx=canvas.getContext('2d');
+  ctx.save();
+  ctx.translate(S.panX,S.panY);ctx.scale(S.zoom,S.zoom);
+  ctx.drawImage(S.imgEl,0,0,S.dispW,S.dispH);
+  const iZ=1/S.zoom;
+
+  const drawBand=(p1,p2)=>{
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,l=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(l<2)return;
+    const nx=-ddy/l,ny=ddx/l,bh=(S.nLines/2)*S.dispScale;
+    ctx.save();
+    ctx.fillStyle='rgba(12,187,204,0.12)';ctx.strokeStyle='rgba(12,187,204,0.30)';ctx.lineWidth=iZ;
+    ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(12,187,204,0.50)';ctx.setLineDash([2*iZ,2*iZ]);
+    ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+    ctx.setLineDash([6*iZ,3*iZ]);ctx.strokeStyle='#0cbbcc';ctx.lineWidth=2*iZ;
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+    [p1,p2].forEach(pt=>{ctx.fillStyle='#081a1e';ctx.strokeStyle='#0cbbcc';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,5*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();});
+    ctx.restore();
+  };
+
+  if(S.measLine)drawBand(S.measLine.p1,S.measLine.p2);
+  else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
+
+  if(S.scalePts.length>0){
+    ctx.save();
+    if(S.scalePts.length===2){ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*iZ;ctx.setLineDash([4*iZ,3*iZ]);ctx.beginPath();ctx.moveTo(S.scalePts[0].x,S.scalePts[0].y);ctx.lineTo(S.scalePts[1].x,S.scalePts[1].y);ctx.stroke();ctx.setLineDash([]);}
+    S.scalePts.forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,8*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*iZ}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawChart(){
+  if(INTERFACE_MODE==='simple')return;   // chart hidden in simple mode
+  const canvas=$('chart-canvas');
+  if(!canvas||!S.results)return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const cssW=canvas.offsetWidth,cssH=canvas.offsetHeight||220;
+  if(cssW===0)return;
+  canvas.width=cssW*dpr;canvas.height=cssH*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=cssW,H=cssH;
+
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+  const chartData=isAdj&&S.live?.corrChartData?S.live.corrChartData:S.results.chartData;
+  const crackMm=isAdj&&S.live?S.live.crackMm:S.results.crackMm;
+  const cLmm=isAdj&&S.live?S.live.cropLeftMm:S.results.boundLeft;
+  const cRmm=isAdj&&S.live?S.live.cropRightMm:S.results.boundRight;
+  const baseChanged=isAdj&&(S.live?.baselineChanged||false);
+
+  if(!chartData||!chartData.length)return;
+
+  const ml=48,mr=14,mt=16,mb=38;
+  const pw=W-ml-mr,ph=H-mt-mb;
+
+  const allY=chartData.flatMap(d=>{const v=[d.Profile,d.Baseline];if(d.OrigBaseline!==undefined)v.push(d.OrigBaseline);return v;});
+  const xMin=chartData[0].mm,xMax=chartData[chartData.length-1].mm;
+  const yMin=Math.floor(Math.min(...allY)-3),yMax=Math.ceil(Math.max(...allY)+3);
+
+  const xPx=mm=>ml+(mm-xMin)/(xMax-xMin)*pw;
+  const yPx=lum=>mt+(1-(lum-yMin)/(yMax-yMin))*ph;
+  const pxToMm=px=>xMin+(px-ml)/pw*(xMax-xMin);
+
+  S.chartGeom={ml,mr,mt,mb,pw,ph,xMin,xMax,yMin,yMax,xPx,yPx,pxToMm,cssW,cssH};
+
+  ctx.fillStyle='rgba(6,20,24,0.9)';ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+  const xTicks=niceTicks(xMin,xMax,6),yTicks=niceTicks(yMin,yMax,5);
+  xTicks.forEach(v=>{const x=xPx(v);ctx.beginPath();ctx.moveTo(x,mt);ctx.lineTo(x,mt+ph);ctx.stroke();});
+  yTicks.forEach(v=>{const y=yPx(v);ctx.beginPath();ctx.moveTo(ml,y);ctx.lineTo(ml+pw,y);ctx.stroke();});
+
+  const cLpx=Math.max(ml,xPx(cLmm)),cRpx=Math.min(ml+pw,xPx(cRmm));
+  ctx.fillStyle='rgba(12,187,204,0.08)';ctx.fillRect(cLpx,mt,cRpx-cLpx,ph);
+
+  ctx.strokeStyle='rgba(12,187,204,0.2)';ctx.lineWidth=1;
+  ctx.strokeRect(ml,mt,pw,ph);
+
+  ctx.fillStyle='rgba(232,248,249,0.45)';ctx.font='10px monospace';ctx.textAlign='center';
+  xTicks.forEach(v=>{ctx.fillText(v.toFixed(1),xPx(v),mt+ph+14);});
+  ctx.textAlign='right';
+  yTicks.forEach(v=>{ctx.fillText(v.toFixed(0),ml-4,yPx(v)+3);});
+
+  ctx.fillStyle='rgba(232,248,249,0.45)';ctx.font='11px sans-serif';
+  ctx.textAlign='center';ctx.fillText('Distance (mm)',ml+pw/2,H-4);
+  ctx.save();ctx.translate(12,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Luminance',0,0);ctx.restore();
+
+  ctx.save();ctx.beginPath();ctx.rect(ml,mt,pw,ph);ctx.clip();
+
+  if(baseChanged&&chartData[0].OrigBaseline!==undefined){
+    ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();chartData.forEach((d,i)=>{const x=xPx(d.mm),y=yPx(d.OrigBaseline);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);
+  }
+
+  ctx.strokeStyle='#f87171';ctx.lineWidth=1.5;
+  ctx.setLineDash(baseChanged?[]:[5,3]);
+  ctx.beginPath();chartData.forEach((d,i)=>{const x=xPx(d.mm),y=yPx(d.Baseline);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);
+
+  ctx.strokeStyle='#2563eb';ctx.lineWidth=1.5;
+  ctx.beginPath();chartData.forEach((d,i)=>{const x=xPx(d.mm),y=yPx(d.Profile);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+
+  const cxPx=xPx(crackMm);
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(cxPx,mt);ctx.lineTo(cxPx,mt+ph);ctx.stroke();ctx.setLineDash([]);
+
+  ctx.restore(); // end clip
+
+  const drawHandle=(xmm,side)=>{
+    const x=Math.max(ml,Math.min(ml+pw,xPx(xmm)));
+    ctx.strokeStyle='#0cbbcc';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x,mt);ctx.lineTo(x,mt+ph);ctx.stroke();
+
+    ctx.fillStyle='#0cbbcc';
+    ctx.beginPath();
+    if(side==='left'){ctx.moveTo(x,mt);ctx.lineTo(x+7,mt-6);ctx.lineTo(x,mt-6);}
+    else{ctx.moveTo(x,mt);ctx.lineTo(x-7,mt-6);ctx.lineTo(x,mt-6);}
+    ctx.closePath();ctx.fill();
+  };
+  drawHandle(cLmm,'left');drawHandle(cRmm,'right');
+
+  $('chart-subtitle').textContent=`Blue = profile · ${baseChanged?'red = corrected baseline · gray dashed = original':'red dashed = baseline'} · amber = crack centre · blue shading = integration region · drag handles to adjust`;
+}
+
+function niceTicks(min,max,count=5){
+  const range=max-min;
+  const step=Math.pow(10,Math.floor(Math.log10(range/count)));
+  const nice=[1,2,5,10].find(s=>range/(step*s)<=count+1)*step;
+  const start=Math.ceil(min/nice)*nice;
+  const ticks=[];for(let v=start;v<=max+1e-10;v+=nice)ticks.push(+v.toFixed(8));
+  return ticks;
+}
+
+function recompute(){
+  if(!S.results?.prof)return;
+  const{prof,baseArr,pxMm_pd,midIdx,boundLeftIdx,boundRightIdx}=S.results;
+  const n=prof.length,half=n/2;
+
+  const cL=Math.max(0,Math.min(n-1,S.cropLeft!==null?Math.round(S.cropLeft*pxMm_pd):boundLeftIdx));
+  const cR=Math.max(0,Math.min(n-1,S.cropRight!==null?Math.round(S.cropRight*pxMm_pd):boundRightIdx));
+
+  let pre=0;const ms=Math.floor(n*0.1),me=Math.ceil(n*0.9);
+  for(let i=ms;i<me;i++){const r=baseArr[i]-prof[i];if(Math.abs(r)>Math.abs(pre))pre=r;}
+  const preSign=pre>=0?1:-1;
+  let pivotIdx=midIdx,pivotVal=-Infinity;
+  for(let i=cL;i<=Math.min(cR,n-1);i++){const r=preSign*(baseArr[i]-prof[i]);if(r>pivotVal){pivotVal=r;pivotIdx=i;}}
+
+  const corrBase=baseArr.map((b,i)=>{const t=(i-pivotIdx)/half;return b+S.tilt*t+S.bow*t*t+S.shift;});
+
+  let peakRes=0;
+  const midS=Math.floor(n*0.1),midE=Math.ceil(n*0.9);
+  for(let i=midS;i<midE;i++){const r=corrBase[i]-prof[i];if(Math.abs(r)>Math.abs(peakRes))peakRes=r;}
+  const sign=peakRes>=0?1:-1;
+  const dx=1/pxMm_pd;
+  let area=0;
+  for(let i=cL;i<Math.min(cR,n-1);i++){
+    const r1=Math.max(0,sign*(corrBase[i]-prof[i]));
+    const r2=Math.max(0,sign*(corrBase[i+1]-prof[i+1]));
+    area+=0.5*(r1+r2)*dx;
+  }
+
+  const{width}=approachB(area,S.pxMm);
+  const cA=parseFloat($('calib-area').value),cW=parseFloat($('calib-width').value);
+  const awLive=(cA&&cW&&cA>0&&cW>0)?(area/(cA/cW)).toFixed(4):null;
+
+  let peakIdx=cL,peakVal=-Infinity;
+  for(let i=cL;i<=Math.min(cR,n-1);i++){const r=sign*(corrBase[i]-prof[i]);if(r>peakVal){peakVal=r;peakIdx=i;}}
+
+  const stride=Math.max(1,Math.floor(n/300));
+  const baselineChanged=S.tilt!==0||S.bow!==0||S.shift!==0;
+  const corrChartData=prof.reduce((acc,v,i)=>{
+    if(i%stride===0){const pt={mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+corrBase[i].toFixed(1)};if(baselineChanged)pt.OrigBaseline=+baseArr[i].toFixed(1);acc.push(pt);}
+    return acc;
+  },[]);
+
+  S.live={area:+area.toFixed(4),width:+width.toFixed(4),awLive,crackMm:+(peakIdx/pxMm_pd).toFixed(3),cropLeftMm:S.cropLeft!==null?S.cropLeft:S.results.boundLeft,cropRightMm:S.cropRight!==null?S.cropRight:S.results.boundRight,baselineChanged,corrChartData};
+
+  updateResultsDisplay();
+  drawChart();
+}
+
+function formulaModified(){
+  return Math.abs(S.bCoeff-0.357)>1e-9||Math.abs(S.bExp-0.16)>1e-9;
+}
+function getDisplayValues(){
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+
+  const useLive=(isAdj||formulaModified())&&S.live;
+  const base = !useLive
+    ? {bWidth:S.results.width,area:S.results.area,cL:S.results.boundLeft,cR:S.results.boundRight}
+    : {bWidth:S.live.width,area:S.live.area,cL:S.live.cropLeftMm,cR:S.live.cropRightMm};
+
+  const aWidth = calibAWidth(base.area);
+  return {bWidth:base.bWidth, aWidth, area:base.area, cL:base.cL, cR:base.cR};
+}
+
+function buildStepBar(){
+  const labels=['Upload','Scale','Measure','Results'];
+  const bar=$('step-bar');bar.innerHTML='';
+  labels.forEach((label,i)=>{
+    const n=i+1;
+    const item=document.createElement('div');item.className='step-item';
+    const row=document.createElement('div');row.className='step-row';
+    const lLine=document.createElement('div');lLine.className='step-line'+(i===0?' invis':'');lLine.id=`sl-${n}`;
+    const circle=document.createElement('div');circle.className='step-circle';circle.id=`sc-${n}`;circle.textContent=n;
+    const rLine=document.createElement('div');rLine.className='step-line'+(i===3?' invis':'');rLine.id=`sr-${n}`;
+    row.append(lLine,circle,rLine);
+    const lbl=document.createElement('span');lbl.className='step-lbl';lbl.id=`sl-lbl-${n}`;lbl.textContent=label;
+    item.append(row,lbl);bar.append(item);
+  });
+}
+
+function updateStepBar(){
+  for(let n=1;n<=4;n++){
+    const circle=$(`sc-${n}`),lbl=$(`sl-lbl-${n}`);
+    const lLine=$(`sl-${n}`),rLine=$(`sr-${n}`);
+    if(S.step>n){circle.className='step-circle done';circle.textContent='✓';}
+    else if(S.step===n){circle.className='step-circle active';circle.textContent=n;}
+    else{circle.className='step-circle';circle.textContent=n;}
+    lbl.className='step-lbl'+(S.step===n?' active':'');
+    if(lLine&&n>1)lLine.style.background=S.step>n-1?'#0cbbcc':'rgba(255,255,255,0.12)';
+    if(rLine&&n<4)rLine.style.background=S.step>n?'#0cbbcc':'rgba(255,255,255,0.12)';
+  }
+}
+
+function showStep(n){
+  S.step=n;
+  [1,2,3,4].forEach(i=>{const p=$(`panel-${i}`);if(p)p.className='panel'+(i===n?' show':'');});
+  const showCanvas=n>=2&&S.dispW>0;
+  $('canvas-wrap').className=showCanvas?'show':'';
+
+  if(isTouch){
+    if(n===4){S.touchMode='navigate';}
+    else if(n===2||n===3){S.touchMode='draw';}
+    updateTouchModeBtn();
+  }
+  updateStepBar();
+}
+
+function showErr(msg){
+  $('err-msg').textContent=msg;
+  $('err-bar').className='show';
+}
+function clearErr(){$('err-bar').className='';}
+
+function updateZoom(){$('zoom-label').textContent=S.zoom.toFixed(1)+'×';}
+
+function updateMetaBar(){
+  if(!S.imgMeta)return;
+  const m=S.imgMeta;
+  const el=$('img-meta');
+  el.innerHTML=`<span>|</span><span>${m.origW}×${m.origH}</span><span>${m.mp} MP</span><span>${m.format}</span><span>8-bit RGBA</span>`+(m.resized?'<span style="color:#d97706">⚠ resized</span>':'');
+  el.className='show';
+}
+
+function updateQualityIndicator(){
+  if(!S.pxMm){$('q-badge').innerHTML='';return;}
+  const q=S.pxMm*Math.sqrt(S.nLines);
+  const tier=q>100?{l:"Can't be any better",segs:5,col:'#34d399',bg:'rgba(52,211,153,.12)',br:'rgba(52,211,153,.3)'}:
+              q>=51?{l:'Good',segs:4,col:'#6ee7b7',bg:'rgba(110,231,183,.10)',br:'rgba(110,231,183,.28)'}:
+              q>=26?{l:'Should be fine',segs:3,col:'#0cbbcc',bg:'rgba(12,187,204,.10)',br:'rgba(12,187,204,.28)'}:
+              q>=13?{l:'Acceptable',segs:2,col:'#fbbf24',bg:'rgba(251,191,36,.10)',br:'rgba(251,191,36,.28)'}:
+                    {l:'Better than nothing',segs:1,col:'#f87171',bg:'rgba(248,113,113,.10)',br:'rgba(248,113,113,.28)'};
+  const segs=[1,2,3,4,5].map(s=>`<span class="q-seg" style="background:${s<=tier.segs?tier.col:'rgba(255,255,255,0.15)'}"></span>`).join('');
+  $('q-badge').innerHTML=`<span class="q-badge" style="background:${tier.bg};border:1px solid ${tier.br};color:${tier.col}"><span class="q-segs">${segs}</span><span style="font-family:monospace;font-size:11px">${q.toFixed(0)}</span><span style="font-size:11px;font-weight:500">${tier.l}</span></span>`;
+}
+
+function updateBandWidth(){
+  const bw=$('band-width');
+  if(S.pxMm)bw.textContent=`≈ ±${(S.nLines/2/S.pxMm).toFixed(1)} mm band`;
+  else bw.textContent='';
+}
+
+function updateScaleHint(){
+  const hint=$('scale-hint');
+  if(S.scaleMode==='direct'){
+    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px" placeholder="e.g. 5.2"><span>pixels / mm</span></div>';
+    const inp=$('direct-px-inp');if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;};}
+    return;
+  }
+  const intro='The tool needs a known distance in the image to convert pixels to millimetres. ';
+  if(S.scalePts.length===0)hint.innerHTML=intro+'Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size';
+  else if(S.scalePts.length===1)hint.innerHTML='Now click <strong>point B</strong> at the other end of that known distance';
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px" placeholder="e.g. 100"><span>mm</span><button class="btn-ghost btn-small" onclick="resetScalePts()">↺ Reset</button></div>`;
+  const inp=$('real-dist-inp');if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;};}
+}
+
+function switchScaleMode(mode){
+  S.scaleMode=mode;S.scalePts=[];S.realDist='';S.directPx='';
+  const tw=$('tab-twopoint');
+  tw.className='tab'+(mode==='twopoint'?' active':'');
+  tw.textContent='Click two reference points';
+  $('tab-direct').className='tab'+(mode==='direct'?' active':'');
+  const td=$('tab-distance');if(td)td.className='tab pro-only'+(mode==='distance'?' active':'');
+  // The distance panel and the standard hint card are mutually exclusive
+  const distPanel=$('scale-distance-panel');
+  const hintCard=$('scale-hint');
+  if(mode==='distance'){
+    if(distPanel)distPanel.style.display='';
+    if(hintCard)hintCard.style.display='none';
+    closeCalibWizard();
+    renderScaleProfileSelect();
+    onDistanceInput();
+  } else {
+    if(distPanel)distPanel.style.display='none';
+    if(hintCard)hintCard.style.display='';
+    // Leaving distance mode: ensure any open wizard is fully torn down
+    if(S.calibActive)closeCalibWizard();
+    updateScaleHint();
+  }
+  paintCanvas();
+}
+
+function resetScalePts(){S.scalePts=[];updateScaleHint();paintCanvas();}
+
+/* ═══════════════════════════════════════════════════════════
+   DISTANCE + CAMERA PROFILE scale mode (Pro)
+═══════════════════════════════════════════════════════════ */
+function renderScaleProfileSelect(){
+  const sel=$('scale-profile-select');if(!sel)return;
+  const cur=S.activeScaleProfile;
+  sel.innerHTML='<option value="">— Select a calibrated camera —</option>'+
+    S.scaleProfiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  sel.value=cur;
+  $('btn-scale-prof-delete').style.display=cur?'':'none';
+}
+function onScaleProfileSelect(){
+  S.activeScaleProfile=$('scale-profile-select').value;
+  $('btn-scale-prof-delete').style.display=S.activeScaleProfile?'':'none';
+  onDistanceInput();
+}
+function onDistanceInput(){
+  S.scaleDist=$('dist-inp')?$('dist-inp').value:'';
+  const out=$('dist-result');if(!out)return;
+  const d=parseFloat(S.scaleDist);
+  const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+  if(!prof){out.textContent='';return;}
+  if(!(d>0)){out.innerHTML='<span style="color:rgba(232,248,249,0.4)">Enter a distance to compute resolution.</span>';return;}
+  const r=resolutionFromProfile(prof,d);
+  if(r&&r>0){
+    out.innerHTML=`Predicted resolution: <strong>${r.toFixed(3)} px/mm</strong>`;
+  } else {
+    out.innerHTML='<span style="color:#f87171">Could not compute resolution.</span>';
+  }
+}
+function deleteScaleProfile(){
+  const id=S.activeScaleProfile;if(!id)return;
+  S.scaleProfiles=S.scaleProfiles.filter(p=>p.id!==id);
+  S.activeScaleProfile='';
+  persistScaleProfiles();
+  renderScaleProfileSelect();
+  onDistanceInput();
+}
+
+/* ── Calibration wizard ── */
+function openCalibWizard(){
+  S.calibActive=true;S.calibShots=[];S.scalePts=[];
+  // Capture uses the standard two-point click mechanism
+  S.scaleMode='distance';   // stays in distance tab; wizard manages its own points
+  $('calib-wizard').className='show';
+  if($('wiz-dist-inp'))$('wiz-dist-inp').value='';
+  if($('wiz-width-inp'))$('wiz-width-inp').value='';
+  if($('wiz-name-inp'))$('wiz-name-inp').value='';
+  if($('wiz-note-inp'))$('wiz-note-inp').value='';
+  renderWizShots();updateWizSpanHint();paintCanvas();
+}
+function closeCalibWizard(){
+  S.calibActive=false;S.calibShots=[];S.scalePts=[];
+  const w=$('calib-wizard');if(w)w.className='';
+  paintCanvas();
+}
+function resetWizShot(){
+  S.scalePts=[];updateWizSpanHint();paintCanvas();
+}
+function updateWizSpanHint(){
+  const h=$('wiz-span-hint');if(!h)return;
+  if(S.scalePts.length===0)h.innerHTML='Click <strong>point A</strong> on one edge of the known object.';
+  else if(S.scalePts.length===1)h.innerHTML='Now click <strong>point B</strong> on the opposite edge.';
+  else{
+    const dx=S.scalePts[1].x-S.scalePts[0].x,dy=S.scalePts[1].y-S.scalePts[0].y;
+    const spanOrig=Math.hypot(dx,dy)/S.dispScale/S.resizeFactor;
+    h.innerHTML=`Object spans <strong>${spanOrig.toFixed(1)} px</strong>. Enter distance &amp; width above, then “Add this shot”.`;
+  }
+}
+function addCalibShot(){
+  const d=parseFloat($('wiz-dist-inp').value);
+  const w=parseFloat($('wiz-width-inp').value);
+  if(!(d>0)){showErr('Enter this shot\u2019s distance (m).');return;}
+  if(!(w>0)){showErr('Enter the known object width (mm).');return;}
+  if(S.scalePts.length<2){showErr('Click the two edges of the object on the image.');return;}
+  const dx=S.scalePts[1].x-S.scalePts[0].x,dy=S.scalePts[1].y-S.scalePts[0].y;
+  const spanOrig=Math.hypot(dx,dy)/S.dispScale/S.resizeFactor;  // original-camera pixels
+  const r=spanOrig/w;                       // px per mm for this shot (original-camera scale)
+  if(!(r>0)){showErr('Measured span is zero — re-click the edges.');return;}
+  if(S.calibShots.length>=5){showErr('Maximum 5 shots. Delete one to add another.');return;}
+  S.calibShots.push({d,w,span:+spanOrig.toFixed(2),r});
+  clearErr();
+  S.scalePts=[];
+  $('wiz-dist-inp').value='';$('wiz-width-inp').value='';
+  renderWizShots();updateWizSpanHint();paintCanvas();
+}
+function deleteCalibShot(i){
+  S.calibShots.splice(i,1);
+  renderWizShots();
+}
+function renderWizShots(){
+  const list=$('wiz-shots-list');if(!list)return;
+  if(!S.calibShots.length){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">No shots yet. Add 3–5 across your expected distance range.</div>';}
+  else{
+    // Sort display by distance descending (matches the far→near workflow)
+    const fit=fitScalePowerLaw(S.calibShots);
+    list.innerHTML=S.calibShots.map((s,i)=>{
+      let resid='';
+      if(fit){const pred=fit.k*Math.pow(s.d,fit.p);const rp=Math.abs(pred-s.r)/s.r*100;
+        const col=rp<5?'#34d399':rp<12?'#fbbf24':'#f87171';
+        resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(1)}%</span>`;}
+      return `<div class="wiz-shot-item"><span>${s.d.toFixed(3)} m · ${s.w.toFixed(1)} mm · ${s.span.toFixed(0)} px → <strong>${s.r.toFixed(3)} px/mm</strong></span>${resid}<button class="wiz-shot-del" onclick="deleteCalibShot(${i})" title="Remove">✕</button></div>`;
+    }).join('');
+  }
+  updateWizFitSummary();
+}
+function updateWizFitSummary(){
+  const box=$('wiz-fit-summary');if(!box)return;
+  const n=S.calibShots.length;
+  if(n<2){box.style.display='none';return;}
+  const fit=fitScalePowerLaw(S.calibShots);
+  if(!fit){box.style.display='block';box.innerHTML='<span class="fit-bad">Fit failed — distances must differ between shots.</span>';return;}
+  box.style.display='block';
+  let quality='';
+  if(n<3){
+    quality='<span class="fit-warn">Add a 3rd shot to get a fit-quality estimate.</span>';
+  } else {
+    const e=fit.rmsePct;
+    const cls=e<5?'fit-good':e<12?'fit-warn':'fit-bad';
+    const word=e<5?'excellent':e<12?'acceptable':'poor — check for an outlier or zoom change';
+    quality=`Fit quality: <span class="${cls}">±${e.toFixed(1)}% (${word})</span>`;
+  }
+  box.innerHTML=`Power-law fit from ${n} shot${n>1?'s':''}: <strong>r = ${fit.k.toFixed(3)} · d<sup>${fit.p.toFixed(3)}</sup></strong><br>${quality}`;
+}
+function saveCalibProfile(){
+  if(S.calibShots.length<3){showErr('Add at least 3 shots before saving.');return;}
+  const fit=fitScalePowerLaw(S.calibShots);
+  if(!fit){showErr('Fit failed — shots must be at different distances.');return;}
+  const name=$('wiz-name-inp').value.trim();
+  if(!name){showErr('Give the camera profile a name.');$('wiz-name-inp').focus();return;}
+  const note=$('wiz-note-inp').value.trim();
+  let p=S.scaleProfiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  const data={name,note,k:fit.k,p:fit.p,rmsePct:fit.rmsePct,points:S.calibShots.map(s=>({...s})),date:new Date().toISOString().slice(0,10)};
+  if(p){Object.assign(p,data);}
+  else{p={id:'sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),...data};S.scaleProfiles.push(p);}
+  S.activeScaleProfile=p.id;
+  persistScaleProfiles();
+  clearErr();
+  closeCalibWizard();
+  renderScaleProfileSelect();
+  onDistanceInput();
+}
+
+/* ── Scale-profile export / import ── */
+function exportScaleProfiles(){
+  if(!S.scaleProfiles.length){showErr('No camera profiles to export yet.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:S.scaleProfiles},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
+  else{const a=document.createElement('a');a.href=url;a.download='crack_gauge_camera_profiles.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+}
+function importScaleProfilesClick(){$('scale-import-file').click();}
+function importScaleProfiles(ev){
+  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const incoming=Array.isArray(obj)?obj:(obj.profiles||[]);
+      const valid=incoming.filter(p=>p&&p.name&&isFinite(p.k)&&isFinite(p.p));
+      if(!valid.length){showErr('No valid camera profiles in that file.');ev.target.value='';return;}
+      let added=0;
+      valid.forEach(p=>{
+        const exists=S.scaleProfiles.find(x=>x.name.toLowerCase()===String(p.name).toLowerCase());
+        const clean={
+          id:exists?exists.id:('sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+          name:String(p.name).slice(0,60),k:+p.k,p:+p.p,
+          rmsePct:isFinite(p.rmsePct)?+p.rmsePct:null,
+          points:Array.isArray(p.points)?p.points.filter(s=>isFinite(s.d)&&isFinite(s.r)):[],
+          note:p.note?String(p.note).slice(0,120):'',date:p.date||''
+        };
+        if(exists){Object.assign(exists,clean);}else{S.scaleProfiles.push(clean);added++;}
+      });
+      persistScaleProfiles();
+      renderScaleProfileSelect();
+      clearErr();
+    }catch(err){showErr('Could not read that file — is it a valid camera-profiles export?');}
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function updateDrawHint(){
+  const verb=isTouch?'Tap and drag':'Click and drag';
+  $('draw-hint').innerHTML=S.measLine?
+    '<span style="color:#059669">✓ Line set. Adjust options below, then click Analyze.</span>':
+    `<strong>${verb} across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.`;
+  $('btn-analyze').disabled=!S.measLine||S.busy;
+}
+
+function updateScaleDisplay(){
+  const txt=S.pxMm?`${S.pxMm.toFixed(3)} px/mm`:'';
+  $('scale-display').textContent=txt;
+  $('scale-display-3').textContent=txt;
+}
+
+function updateResultsDisplay(){
+  if(!S.results)return;
+  if(INTERFACE_MODE==='simple'){
+
+    const{bWidth}=getDisplayValues();
+    const bStr=bWidth<0.001?'<0.001':bWidth.toFixed(3);
+    if($('r-b'))$('r-b').innerHTML=`${bStr}<span class="r-unit">mm</span>`;
+    recomputeCalib();
+    return;
+  }
+  const{bWidth,aWidth,area,cL,cR}=getDisplayValues();
+  const bStr=bWidth<0.001?'<0.001':bWidth.toFixed(3);
+  $('r-b').innerHTML=`${bStr}<span class="r-unit">mm</span>`;
+  if(aWidth){
+    $('r-a').innerHTML=`${(+aWidth).toFixed(3)}<span class="r-unit">mm</span>`;
+    $('a-hint').style.display='none';
+    $('card-a').className='result-card a-active';
+    $('a-tag').style.color='#0cbbcc';$('a-method').style.color='rgba(12,187,204,0.75)';
+    $('r-a').style.color='#0cbbcc';
+  } else {
+    $('r-a').innerHTML='—.—<span class="r-unit"> mm</span>';
+    $('a-hint').style.display='';
+    $('card-a').className='result-card';
+    $('a-tag').style.color='';$('a-method').style.color='';
+    $('r-a').style.color='rgba(232,248,249,0.3)';
+  }
+  const r=S.results;
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+  $('stats-row').innerHTML=
+    `<div>scale: ${S.pxMm.toFixed(3)} px/mm · area: ${area} lum·mm${isAdj?' (adjusted)':''} · calib 1mm: ${r.calib} lum·mm</div>`+
+    `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}</div>`+
+    `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?' (auto-bounded)':''}</div>`;
+  updateCropUI();
+}
+
+function updateCropUI(){
+  const isCustom=S.cropLeft!==null||S.cropRight!==null;
+  $('crop-badge').style.display=isCustom?'':'none';
+  $('btn-reset-crop').style.display=isCustom?'':'none';
+  $('crop-auto-hint').style.display=isCustom?'none':'';
+}
+
+function resetCrop(){
+  S.cropLeft=null;S.cropRight=null;
+  if(S.results){S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);}
+  $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
+  S.live=null;updateResultsDisplay();drawChart();
+}
+
+function commitCropLeft(str){
+  const v=parseFloat(str);
+  const cR=S.cropRight!==null?S.cropRight:S.results?.boundRight??Infinity;
+  if(!isNaN(v)&&v>=0&&v<cR){S.cropLeft=+v.toFixed(3);S.cropLeftStr=v.toFixed(3);}
+  else{S.cropLeftStr=(S.cropLeft??S.results?.boundLeft??0).toFixed(3);}
+  $('crop-l-inp').value=S.cropLeftStr;recompute();
+}
+function commitCropRight(str){
+  const v=parseFloat(str);
+  const cL=S.cropLeft!==null?S.cropLeft:S.results?.boundLeft??0;
+  const max=S.results?.prof?(S.results.prof.length/S.results.pxMm_pd):999;
+  if(!isNaN(v)&&v>cL){const cv=Math.min(max,v);S.cropRight=+cv.toFixed(3);S.cropRightStr=cv.toFixed(3);}
+  else{S.cropRightStr=(S.cropRight??S.results?.boundRight??0).toFixed(3);}
+  $('crop-r-inp').value=S.cropRightStr;recompute();
+}
+
+function toggleTouchMode(){
+  S.touchMode=S.touchMode==='navigate'?'draw':'navigate';
+  updateTouchModeBtn();
+}
+function updateTouchModeBtn(){
+  const btn=$('btn-touch-mode'),hint=$('touch-mode-hint');
+  if(!btn)return;
+  if(S.touchMode==='navigate'){
+    btn.textContent='✋ Navigate';btn.style.background='';btn.style.color='';
+    if(hint)hint.textContent='Single finger: pan  ·  Two fingers: pinch zoom';
+  } else {
+    btn.textContent='✏️ Measure';btn.style.background='#2563eb';btn.style.color='#fff';
+    if(hint)hint.textContent=S.step===2?'Tap to place A / B points  ·  Two fingers: pinch zoom':'Single finger: draw line  ·  Two fingers: pinch zoom';
+  }
+}
+function toggleBaseCorr(){
+  S.showBaseCorr=!S.showBaseCorr;
+  $('base-controls').style.display=S.showBaseCorr?'block':'none';
+  $('base-toggle-txt').textContent=(S.showBaseCorr?'▾':'▸')+' Baseline correction';
+}
+function resetBaseCorr(){S.tilt=0;S.bow=0;S.shift=0;$('tilt-slider').value=0;$('bow-slider').value=0;$('shift-slider').value=0;$('tilt-val').textContent='0.0';$('bow-val').textContent='0.0';$('shift-val').textContent='0.0';$('base-active-badge').style.display='none';$('btn-base-reset').style.display='none';recompute();}
+function setTilt(v){S.tilt=v;$('tilt-slider').value=v;$('tilt-val').textContent=(v>0?'+':'')+v.toFixed(1);updateBaseActive();recompute();}
+function setBow(v){S.bow=v;$('bow-slider').value=v;$('bow-val').textContent=(v>0?'+':'')+v.toFixed(1);updateBaseActive();recompute();}
+function setShift(v){S.shift=v;$('shift-slider').value=v;$('shift-val').textContent=(v>0?'+':'')+v.toFixed(1);updateBaseActive();recompute();}
+function updateBaseActive(){const on=S.tilt!==0||S.bow!==0||S.shift!==0;$('base-active-badge').style.display=on?'':'none';$('btn-base-reset').style.display=on?'':'none';}
+function onTiltChange(){S.tilt=parseFloat($('tilt-slider').value);$('tilt-val').textContent=(S.tilt>0?'+':'')+S.tilt.toFixed(1);updateBaseActive();recompute();}
+function onBowChange(){S.bow=parseFloat($('bow-slider').value);$('bow-val').textContent=(S.bow>0?'+':'')+S.bow.toFixed(1);updateBaseActive();recompute();}
+function onShiftChange(){S.shift=parseFloat($('shift-slider').value);$('shift-val').textContent=(S.shift>0?'+':'')+S.shift.toFixed(1);updateBaseActive();recompute();}
+function onCalibChange(){if(S.results){recompute();updateResultsDisplay();}}
+
+function toggleFormula(){
+  const open=$('formula-controls').style.display==='none';
+  $('formula-controls').style.display=open?'block':'none';
+  $('formula-toggle-txt').textContent=(open?'▾':'▸')+' Approach B formula';
+}
+function onFormulaChange(){
+  const c=parseFloat($('bcoeff-inp').value),e=parseFloat($('bexp-inp').value);
+  if(isFinite(c)&&c>0)S.bCoeff=c;
+  if(isFinite(e))S.bExp=e;
+
+  if(S.activeProfile){
+    const p=S.profiles.find(x=>x.id===S.activeProfile);
+    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
+      S.activeProfile='';
+      if($('profile-select'))$('profile-select').value='';
+      $('btn-profile-delete').style.display='none';
+      $('profile-note').textContent='';
+    }
+  }
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+function resetFormula(){
+  S.bCoeff=0.357;S.bExp=0.16;
+  $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+  S.activeProfile='';
+  if($('profile-select'))$('profile-select').value='';
+  if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
+  if($('profile-note'))$('profile-note').textContent='';
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+function updateFormulaActive(){
+  const on=formulaModified();
+  $('formula-active-badge').style.display=on?'':'none';
+  $('btn-formula-reset').style.display=on?'':'none';
+}
+
+const PROFILE_KEY='dcg_camera_profiles_v1';
+const SCALE_PROFILE_KEY='dcg_scale_profiles_v1';
+
+function storageGet(key){
+  try{return window.localStorage.getItem(key);}catch(e){return null;}
+}
+function storageSet(key,val){
+  try{window.localStorage.setItem(key,val);return true;}catch(e){return false;}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DISTANCE-SCALE PROFILES  (Pro only) — separate from Approach B
+   Power law: resolution r (px/mm) = k · d^p   (d in metres)
+   Fitted in log-log space from 3–5 calibration shots.
+═══════════════════════════════════════════════════════════ */
+function fitScalePowerLaw(points){
+  const pts=points.filter(p=>p.d>0&&p.r>0);
+  if(pts.length<2)return null;
+  const xs=pts.map(p=>Math.log(p.d)),ys=pts.map(p=>Math.log(p.r)),n=pts.length;
+  const sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0);
+  const sxy=xs.reduce((a,x,i)=>a+x*ys[i],0),sx2=xs.reduce((a,x)=>a+x*x,0);
+  const denom=n*sx2-sx*sx;
+  if(Math.abs(denom)<1e-12)return null;
+  const p=(n*sxy-sx*sy)/denom;
+  const k=Math.exp((sy-p*sx)/n);
+  let rmsePct=null;
+  if(pts.length>=3){
+    let ss=0;pts.forEach(pt=>{const pred=k*Math.pow(pt.d,p);ss+=Math.pow((pred-pt.r)/pt.r,2);});
+    rmsePct=Math.sqrt(ss/pts.length)*100;
+  }
+  return{k,p,rmsePct};
+}
+function resolutionFromProfile(profile,distance){
+  if(!profile||!isFinite(profile.k)||!isFinite(profile.p)||!(distance>0))return null;
+  return profile.k*Math.pow(distance,profile.p);
+}
+function loadScaleProfiles(){
+  const raw=storageGet(SCALE_PROFILE_KEY);
+  if(raw){
+    try{
+      const arr=JSON.parse(raw);
+      if(Array.isArray(arr))S.scaleProfiles=arr.filter(p=>p&&p.id&&p.name&&isFinite(p.k)&&isFinite(p.p));
+    }catch(e){S.scaleProfiles=[];}
+  }
+}
+function persistScaleProfiles(){
+  storageSet(SCALE_PROFILE_KEY,JSON.stringify(S.scaleProfiles));
+}
+
+function loadProfiles(){
+  const raw=storageGet(PROFILE_KEY);
+  if(raw){
+    try{
+      const arr=JSON.parse(raw);
+      if(Array.isArray(arr))S.profiles=arr.filter(p=>p&&p.id&&p.name&&isFinite(p.c)&&isFinite(p.a));
+    }catch(e){S.profiles=[];}
+  }
+  renderProfileList();
+}
+function persistProfiles(){
+  storageSet(PROFILE_KEY,JSON.stringify(S.profiles));
+}
+function renderProfileList(){
+  const sel=$('profile-select');
+  if(!sel)return;
+  const cur=S.activeProfile;
+  sel.innerHTML='<option value="">— Default (0.357, 0.16) —</option>'+
+    S.profiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  sel.value=cur;
+  $('btn-profile-delete').style.display=cur?'':'none';
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function onProfileSelect(){
+  const id=$('profile-select').value;
+  S.activeProfile=id;
+  if(!id){
+
+    S.bCoeff=0.357;S.bExp=0.16;
+    $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+    $('profile-note').textContent='';
+  } else {
+    const p=S.profiles.find(x=>x.id===id);
+    if(p){
+      S.bCoeff=p.c;S.bExp=p.a;
+      $('bcoeff-inp').value=String(p.c);$('bexp-inp').value=String(p.a);
+      if(isFinite(p.n)&&p.n>0){
+        S.nLines=p.n;
+        if($('nlines-slider')){$('nlines-slider').value=p.n;$('nlines-val').textContent=p.n;}
+        updateBandWidth();updateQualityIndicator();
+        if(S.step<4)paintCanvas();
+      }
+      $('profile-note').textContent=p.desc?p.desc:'';
+    }
+  }
+  $('btn-profile-delete').style.display=id?'':'none';
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+
+function showProfileSaveForm(){
+  $('pf-c').textContent=(+S.bCoeff).toString();
+  $('pf-a').textContent=(+S.bExp).toString();
+  $('pf-n').textContent=String(S.nLines);
+  const active=S.profiles.find(x=>x.id===S.activeProfile);
+  $('profile-name-inp').value=active?active.name:'';
+  $('profile-desc-inp').value=active?(active.desc||''):'';
+  $('profile-save-form').className='show';
+  $('profile-name-inp').focus();
+}
+function hideProfileSaveForm(){$('profile-save-form').className='';}
+
+function saveProfile(){
+  const name=$('profile-name-inp').value.trim();
+  if(!name){$('profile-name-inp').focus();return;}
+  const desc=$('profile-desc-inp').value.trim();
+
+  let p=S.profiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(p){
+    p.c=+S.bCoeff;p.a=+S.bExp;p.n=S.nLines;p.desc=desc;
+  } else {
+    p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,c:+S.bCoeff,a:+S.bExp,n:S.nLines,desc};
+    S.profiles.push(p);
+  }
+  S.activeProfile=p.id;
+  persistProfiles();
+  renderProfileList();
+  hideProfileSaveForm();
+  $('profile-note').textContent=desc||'';
+}
+
+function deleteProfile(){
+  const id=S.activeProfile;
+  if(!id)return;
+  S.profiles=S.profiles.filter(p=>p.id!==id);
+  S.activeProfile='';
+  persistProfiles();
+  renderProfileList();
+  $('profile-note').textContent='';
+
+  S.bCoeff=0.357;S.bExp=0.16;
+  $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+
+function exportProfiles(){
+  if(!S.profiles.length){showErr('No profiles to export yet.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',version:1,profiles:S.profiles},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
+    window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
+  } else {
+    const a=document.createElement('a');a.href=url;a.download='crack_gauge_profiles.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  }
+}
+function importProfilesClick(){$('profile-import-file').click();}
+function importProfiles(ev){
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const incoming=Array.isArray(obj)?obj:(obj.profiles||[]);
+      const valid=incoming.filter(p=>p&&p.name&&isFinite(p.c)&&isFinite(p.a));
+      if(!valid.length){showErr('No valid profiles found in that file.');ev.target.value='';return;}
+      let added=0;
+      valid.forEach(p=>{
+        const exists=S.profiles.find(x=>x.name.toLowerCase()===String(p.name).toLowerCase());
+        const clean={
+          id:exists?exists.id:('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+          name:String(p.name).slice(0,60),c:+p.c,a:+p.a,
+          n:(isFinite(p.n)&&p.n>0)?Math.round(p.n):40,
+          desc:p.desc?String(p.desc).slice(0,120):''
+        };
+        if(exists){Object.assign(exists,clean);}else{S.profiles.push(clean);added++;}
+      });
+      persistProfiles();
+      renderProfileList();
+      clearErr();
+      $('profile-note').textContent=`Imported ${valid.length} profile${valid.length>1?'s':''} (${added} new).`;
+    }catch(err){showErr('Could not read that file — is it a valid profiles export?');}
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();paintCanvas();}
+
+function loadFile(file){
+  if(!file)return;
+  if(!file.type.startsWith('image/')){showErr('Please upload a JPEG, PNG or WebP file.');return;}
+  clearErr();
+  const fmt=file.type.replace('image/','').toUpperCase().replace('JPG','JPEG');
+  const reader=new FileReader();
+  reader.onerror=()=>showErr('Could not read this file. Please try again.');
+  reader.onload=evt=>{
+    const img=new Image();
+    img.onerror=()=>showErr('This file does not appear to be a valid image.');
+    img.onload=()=>{
+      const origW=img.width,origH=img.height,totalPx=origW*origH,MAX_MP=50e6;
+      let pw=origW,ph=origH,rf=1;
+      if(totalPx>MAX_MP){rf=Math.sqrt(MAX_MP/totalPx);pw=Math.round(origW*rf);ph=Math.round(origH*rf);}
+      const MAX_DISP=640;
+      const dw=Math.min(pw,MAX_DISP),dh=Math.round(dw*ph/pw),ds=dw/pw;
+      const oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
+      oc.getContext('2d').drawImage(img,0,0,pw,ph);
+      let pd;try{pd=oc.getContext('2d').getImageData(0,0,pw,ph);}catch(e){showErr('Cannot read pixel data from this image.');return;}
+      S.imgEl=img;S.pixels={data:pd.data,width:pw,height:ph};
+      S.dispW=dw;S.dispH=dh;S.dispScale=ds;S.resizeFactor=rf;
+      S.imgMeta={origW,origH,mp:(origW*origH/1e6).toFixed(1),format:fmt,resized:totalPx>MAX_MP};
+      S.zoom=1;S.panX=0;S.panY=0;
+      S.iMode='scale';S.scalePts=[];S.measLine=null;S.results=null;
+      resetAdjustments();
+      const canvas=$('img-canvas');
+      canvas.style.cursor='crosshair';
+      showStep(2);updateMetaBar();updateScaleHint();updateScaleDisplay();
+      requestAnimationFrame(paintCanvas);
+    };
+    img.src=evt.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function confirmScale(){
+  clearErr();let px=null;
+  if(S.scaleMode==='twopoint'){
+    if(S.scalePts.length<2){showErr('Click two reference points on the image first.');return;}
+    const dx=S.scalePts[1].x-S.scalePts[0].x,dy=S.scalePts[1].y-S.scalePts[0].y;
+    const imgDist=Math.sqrt(dx*dx+dy*dy)/S.dispScale/S.resizeFactor;
+    const mm=parseFloat(S.realDist);
+    if(!mm||mm<=0){showErr('Enter the real-world distance between A and B in mm.');return;}
+    px=imgDist/mm;
+  } else if(S.scaleMode==='distance'){
+    const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+    if(!prof){showErr('Select a calibrated camera profile.');return;}
+    const d=parseFloat(S.scaleDist);
+    if(!(d>0)){showErr('Enter the camera-to-crack distance in metres.');return;}
+    const rOrig=resolutionFromProfile(prof,d);   // original-camera px/mm
+    if(!rOrig||rOrig<=0){showErr('Could not compute resolution from that profile.');return;}
+    // S.pxMm is stored in ORIGINAL-image px/mm (runAnalysis multiplies by resizeFactor
+    // to reach the working image). The profile already yields original-camera px/mm.
+    px=rOrig;
+    S.scalePts=[];                                 // no A/B markers belong on the crack image
+  } else {
+    px=parseFloat(S.directPx);
+    if(!px||px<=0){showErr('Enter a valid pixels/mm value.');return;}
+  }
+  S.pxMm=px;updateScaleDisplay();updateQualityIndicator();updateBandWidth();
+  S.iMode='draw';$('img-canvas').style.cursor='crosshair';
+  showStep(3);updateDrawHint();
+}
+
+function runAnalysis(){
+  if(!S.measLine||!S.pxMm||!S.pixels||S.busy)return;
+  S.busy=true;clearErr();
+  $('btn-analyze').textContent='Analyzing…';$('btn-analyze').disabled=true;
+  setTimeout(async ()=>{
+    try{
+      const p1={x:S.measLine.p1.x/S.dispScale,y:S.measLine.p1.y/S.dispScale};
+      const p2={x:S.measLine.p2.x/S.dispScale,y:S.measLine.p2.y/S.dispScale};
+      const doAlign=$('chk-align').checked;
+      const avgMethod=document.querySelector('input[name="avgMethod"]:checked')?.value||'mean';
+      const doAdaptive=$('chk-adaptive').checked;
+      S.doAlign=doAlign;S.avgMethod=avgMethod;S.doAdaptive=doAdaptive;
+      const allProfiles=extractAllProfiles(S.pixels,p1,p2,S.nLines);
+      if(!allProfiles||!allProfiles.length){showErr('Line too short — draw it longer.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
+      const prof=await combineViaWorker(allProfiles,{doAlign,method:avgMethod,doAdaptive});
+      if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
+      const base=fitBaseline(prof);
+      const pxMm_pd=S.pxMm*S.resizeFactor;
+      const{area,isDep,left,right}=integrateArea(prof,base,pxMm_pd);
+      const{width,calib}=approachB(area,S.pxMm);
+      const stride=Math.max(1,Math.floor(prof.length/300));
+      const chartData=prof.reduce((acc,v,i)=>{if(i%stride===0)acc.push({mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+base[i].toFixed(1)});return acc;},[]);
+      let minIdx=0;
+      if(isDep){let mv=Infinity;prof.forEach((v,i)=>{if(v<mv){mv=v;minIdx=i;}});}
+      else{let mv=-Infinity;prof.forEach((v,i)=>{if(v>mv){mv=v;minIdx=i;}});}
+      const opts=[];
+      if(doAlign)opts.push('aligned');
+      opts.push({mean:'mean',median:'median',gaussian:'gaussian weighted'}[avgMethod]);
+      if(doAdaptive)opts.push('adaptive');
+      S.results={
+        area:+area.toFixed(4),width:+width.toFixed(4),calib:+calib.toFixed(2),
+        chartData,isDep,crackMm:+(minIdx/pxMm_pd).toFixed(3),
+        boundLeft:+(left/pxMm_pd).toFixed(3),boundRight:+(right/pxMm_pd).toFixed(3),
+        boundLeftIdx:left,boundRightIdx:right,
+        prof:[...prof],baseArr:[...base],pxMm_pd,midIdx:minIdx,
+        optsLabel:opts.join(' · '),
+        linesTotal:allProfiles.length,
+        linesKept:doAdaptive?Math.max(2,Math.round(allProfiles.length*0.7)):allProfiles.length,
+      };
+      resetAdjustments();
+      S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
+      $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
+      showStep(4);
+      updateResultsDisplay();
+      requestAnimationFrame(drawChart);
+    }catch(ex){showErr('Analysis failed: '+ex.message);}
+    S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=!S.measLine;
+  },100);
+}
+
+function saveImage(){
+  if(!S.results||!S.imgEl||!S.pixels)return;
+  const pw=S.pixels.width,ph=S.pixels.height,s=Math.max(1,pw/1200);
+  const canvas=document.createElement('canvas');canvas.width=pw;canvas.height=ph;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(S.imgEl,0,0,pw,ph);
+  const toPx=pt=>({x:pt.x/S.dispScale,y:pt.y/S.dispScale});
+  const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
+  const drawLabel=(text,cx,cy,bg)=>{const fs=Math.max(14,20*s);ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=8*s,rad=6*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
+  if(S.scalePts&&S.scalePts.length===2){
+    const a=toPx(S.scalePts[0]),b=toPx(S.scalePts[1]);
+    ctx.save();ctx.strokeStyle='#d97706';ctx.lineWidth=2*s;ctx.setLineDash([8*s,5*s]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,12*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${13*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+
+    if(S.scaleMode==='twopoint'&&S.realDist){
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const ddx=b.x-a.x,ddy=b.y-a.y,dlen=Math.sqrt(ddx*ddx+ddy*ddy);
+      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*28*s,mid.y+py*28*s,'rgba(160,90,0,.90)');}
+    }
+    ctx.restore();
+  }
+  if(S.measLine){
+    const p1=toPx(S.measLine.p1),p2=toPx(S.measLine.p2);
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(len>1){
+      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2;
+      ctx.save();ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5*s;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,5*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      const{bWidth,aWidth}=getDisplayValues();
+      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+      const lOff=bh+60*s;
+      const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
+      const upPerp={x:-downPerp.x,y:-downPerp.y};
+      drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
+      drawLabel(`B: ${bWidth<0.001?'<0.001':bWidth.toFixed(3)} mm`,mid.x+downPerp.x*lOff,mid.y+downPerp.y*lOff,'rgba(5,100,85,.90)');
+      ctx.restore();
+    }
+  }
+  const mfs=Math.max(12,16*s),mpad=10*s,mlineH=mfs*1.6;
+  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px  ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
+  ctx.font=`${mfs}px monospace`;
+  const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
+  const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
+  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,ph-stripH,stripW,stripH);
+  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
+  mLines.forEach((line,i)=>ctx.fillText(line,mpad,ph-stripH+mpad+i*mlineH));
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob);
+    if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
+      window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
+    } else {
+      const a=document.createElement('a');a.href=url;a.download='crack_measurement.png';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    }
+  },'image/png');
+}
+
+function saveZoomedImage(){
+  if(!S.results||!S.imgEl||!S.pixels)return;
+
+  const bx0=Math.max(0,-S.panX/S.zoom),bx1=Math.min(S.dispW,(S.dispW-S.panX)/S.zoom);
+  const by0=Math.max(0,-S.panY/S.zoom),by1=Math.min(S.dispH,(S.dispH-S.panY)/S.zoom);
+
+  const px0=bx0/S.dispScale,py0=by0/S.dispScale;
+  const rW=(bx1-bx0)/S.dispScale,rH=(by1-by0)/S.dispScale;
+  if(rW<10||rH<10)return;
+
+  const expScale=Math.min(1920/rW,Math.max(1,1200/rW));
+  const outW=Math.round(rW*expScale),outH=Math.round(rH*expScale);
+  const s=Math.max(1,outW/800);
+  const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+  const ctx=canvas.getContext('2d');
+
+  const natW=S.imgEl.naturalWidth||S.pixels.width,natH=S.imgEl.naturalHeight||S.pixels.height;
+  const pdToNatX=natW/S.pixels.width,pdToNatY=natH/S.pixels.height;
+  ctx.drawImage(S.imgEl,px0*pdToNatX,py0*pdToNatY,rW*pdToNatX,rH*pdToNatY,0,0,outW,outH);
+
+  const toEx=pt=>({x:(pt.x/S.dispScale-px0)*expScale,y:(pt.y/S.dispScale-py0)*expScale});
+
+  const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
+  const drawLabel=(text,cx,cy,bg)=>{const fs=Math.max(14,18*s);ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=7*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
+
+  if(S.scalePts&&S.scalePts.length===2){
+    const a=toEx(S.scalePts[0]),b=toEx(S.scalePts[1]);
+    ctx.save();ctx.strokeStyle='#d97706';ctx.lineWidth=2*s;ctx.setLineDash([8*s,5*s]);
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,12*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${13*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+    if(S.scaleMode==='twopoint'&&S.realDist){
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const ddx=b.x-a.x,ddy=b.y-a.y,dlen=Math.sqrt(ddx*ddx+ddy*ddy);
+      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*28*s,mid.y+py*28*s,'rgba(160,90,0,.90)');}
+    }
+    ctx.restore();
+  }
+
+  if(S.measLine){
+    const p1=toEx(S.measLine.p1),p2=toEx(S.measLine.p2);
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(len>1){
+      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2*expScale;
+      ctx.save();
+      ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5*s;
+      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,5*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      const{bWidth,aWidth}=getDisplayValues();
+      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+      const lOff=bh+50*s;
+      const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
+      const upPerp={x:-downPerp.x,y:-downPerp.y};
+      drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
+      drawLabel(`B: ${bWidth<0.001?'<0.001':bWidth.toFixed(3)} mm`,mid.x+downPerp.x*lOff,mid.y+downPerp.y*lOff,'rgba(5,100,85,.90)');
+      ctx.restore();
+    }
+  }
+
+  const mfs=Math.max(11,14*s),mpad=8*s,mlineH=mfs*1.6;
+  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px`:`${S.pixels.width}×${S.pixels.height} px`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
+  ctx.font=`${mfs}px monospace`;
+  const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
+  const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
+  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,outH-stripH,stripW,stripH);
+  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
+  mLines.forEach((line,i)=>ctx.fillText(line,mpad,outH-stripH+mpad+i*mlineH));
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
+      window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
+    } else {
+      a.href=url;a.download='crack_measurement_zoom.png';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    }
+  },'image/png');
+}
+
+function resetAdjustments(){
+  S.cropLeft=null;S.cropRight=null;S.cropLeftStr='';S.cropRightStr='';
+  S.tilt=0;S.bow=0;S.shift=0;S.showBaseCorr=false;S.live=null;
+  $('tilt-slider').value=0;$('bow-slider').value=0;$('shift-slider').value=0;
+  $('tilt-val').textContent='0.0';$('bow-val').textContent='0.0';$('shift-val').textContent='0.0';
+  $('base-active-badge').style.display='none';$('btn-base-reset').style.display='none';
+  $('base-controls').style.display='none';
+  $('base-toggle-txt').textContent='▸ Baseline correction';
+}
+
+function resetAll(){
+  S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
+  S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.realDist='';S.directPx='';S.pxMm=null;
+  S.drawStart=null;S.drawCur=null;S.measLine=null;S.nLines=40;S.results=null;S.busy=false;
+  resetAdjustments();clearErr();
+  S.bCoeff=0.357;S.bExp=0.16;S.activeProfile='';
+  if($('bcoeff-inp')){$('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';}
+  if($('formula-active-badge')){$('formula-active-badge').style.display='none';$('btn-formula-reset').style.display='none';}
+  if($('formula-controls')){$('formula-controls').style.display='none';$('formula-toggle-txt').textContent='▸ Approach B formula';}
+  if($('profile-save-form'))$('profile-save-form').className='';
+  if($('profile-note'))$('profile-note').textContent='';
+  renderProfileList();
+  $('canvas-wrap').className='';
+  $('nlines-slider').value=40;$('nlines-val').textContent='40';
+  $('q-badge').innerHTML='';$('band-width').textContent='';
+  $('scale-display').textContent='';$('scale-display-3').textContent='';
+  $('chk-align').checked=false;$('chk-adaptive').checked=false;
+  document.querySelectorAll('input[name="avgMethod"]').forEach(r=>{r.checked=r.value==='mean';});
+  S.scaleDist='';S.activeScaleProfile='';S.calibActive=false;S.calibShots=[];
+  if($('dist-inp'))$('dist-inp').value='';
+  closeCalibWizard();
+  switchScaleMode('twopoint');
+  resetCalibPanel();
+  showStep(1);
+}
+
+function goBack(){
+  S.measLine=null;S.iMode='scale';
+  $('img-canvas').style.cursor='crosshair';
+  showStep(2);
+  // Restore the UI for whichever scale mode is active (not just two-point)
+  if(S.scaleMode==='distance'){
+    const distPanel=$('scale-distance-panel'),hintCard=$('scale-hint');
+    if(distPanel)distPanel.style.display='';
+    if(hintCard)hintCard.style.display='none';
+    renderScaleProfileSelect();
+    if($('dist-inp'))$('dist-inp').value=S.scaleDist||'';
+    onDistanceInput();
+  } else {
+    updateScaleHint();
+  }
+  paintCanvas();
+}
+
+function redrawLine(){
+  S.measLine=null;S.iMode='draw';S.results=null;S.live=null;
+  resetCalibPanel();
+  $('img-canvas').style.cursor='crosshair';
+  showStep(3);updateDrawHint();paintCanvas();
+}
+
+const imgCanvas=$('img-canvas');
+const zoomRef={current:1},panXRef={current:0},panYRef={current:0};
+const dispWRef={current:0},dispHRef={current:0};
+
+function getImgCanvasPos(e){
+  const r=imgCanvas.getBoundingClientRect();
+  const cx=(e.clientX-r.left)*(S.dispW/r.width);
+  const cy=(e.clientY-r.top)*(S.dispH/r.height);
+  return{x:(cx-S.panX)/S.zoom,y:(cy-S.panY)/S.zoom};
+}
+function getRawImgPos(e){
+  const r=imgCanvas.getBoundingClientRect();
+  return{x:(e.clientX-r.left)*(S.dispW/r.width),y:(e.clientY-r.top)*(S.dispH/r.height)};
+}
+
+imgCanvas.addEventListener('mousedown',e=>{
+  if(e.button===2){const raw=getRawImgPos(e);S.isPanning=true;S.panAnchor={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY};e.preventDefault();return;}
+  if(S.step===4)return;
+  const pos=getImgCanvasPos(e);
+  if(S.iMode==='scale'&&S.scaleMode==='twopoint'){
+    if(S.scalePts.length<2){
+      S.scalePts.push(pos);
+      if(S.scalePts.length===2){
+        const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
+      }
+      updateScaleHint();paintCanvas();
+    }
+  } else if(S.iMode==='scale'&&S.calibActive){
+    if(S.scalePts.length<2){
+      S.scalePts.push(pos);
+      updateWizSpanHint();paintCanvas();
+    }
+  } else if(S.iMode==='draw'){
+    S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;
+  }
+});
+
+imgCanvas.addEventListener('mousemove',e=>{
+  if(S.isPanning&&S.panAnchor){const raw=getRawImgPos(e);S.panX=S.panAnchor.px+(raw.x-S.panAnchor.rx);S.panY=S.panAnchor.py+(raw.y-S.panAnchor.ry);panXRef.current=S.panX;panYRef.current=S.panY;paintCanvas();return;}
+  if(S.iMode==='draw'&&S.drawStart){S.drawCur=getImgCanvasPos(e);paintCanvas();}
+});
+
+imgCanvas.addEventListener('mouseup',e=>{
+  if(S.isPanning){S.isPanning=false;S.panAnchor=null;return;}
+  if(S.iMode==='draw'&&S.drawStart){
+    const pos=getImgCanvasPos(e);
+    const dx=pos.x-S.drawStart.x,dy=pos.y-S.drawStart.y;
+    if(Math.sqrt(dx*dx+dy*dy)>5){S.measLine={p1:{...S.drawStart},p2:{...pos}};updateDrawHint();}
+    S.drawStart=null;S.drawCur=null;paintCanvas();
+  }
+});
+
+imgCanvas.addEventListener('mouseleave',()=>{if(!S.isPanning){S.drawStart=null;S.drawCur=null;}});
+imgCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+imgCanvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const fac=e.deltaY>0?0.85:1.18;
+  const r=imgCanvas.getBoundingClientRect();
+  const cx=(e.clientX-r.left)*(S.dispW/r.width);
+  const cy=(e.clientY-r.top)*(S.dispH/r.height);
+  const newZoom=Math.min(20,Math.max(0.5,S.zoom*fac));
+  const ratio=newZoom/S.zoom;
+  S.panX=cx-(cx-S.panX)*ratio;S.panY=cy-(cy-S.panY)*ratio;S.zoom=newZoom;
+  panXRef.current=S.panX;panYRef.current=S.panY;zoomRef.current=S.zoom;
+  updateZoom();paintCanvas();
+},{passive:false});
+
+$('btn-reset-view').onclick=()=>{S.zoom=1;S.panX=0;S.panY=0;updateZoom();paintCanvas();};
+
+let pinchStart=null,singleTouchPan=null,touchDraw=false;
+
+function getRawTouchPos(t){
+  const r=imgCanvas.getBoundingClientRect();
+  return{x:(t.clientX-r.left)*(S.dispW/r.width),y:(t.clientY-r.top)*(S.dispH/r.height)};
+}
+function getImgTouchPos(t){
+  const{x:cx,y:cy}=getRawTouchPos(t);
+  return{x:(cx-S.panX)/S.zoom,y:(cy-S.panY)/S.zoom};
+}
+
+imgCanvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length>=2){
+
+    const t1=e.touches[0],t2=e.touches[1];
+    const r=imgCanvas.getBoundingClientRect();
+    const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
+    const midRawY=((t1.clientY+t2.clientY)/2-r.top)*(S.dispH/r.height);
+    pinchStart={dist:Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY),
+      zoom:S.zoom,panX:S.panX,panY:S.panY,midRawX,midRawY};
+    touchDraw=false;singleTouchPan=null;S.drawStart=null;S.drawCur=null;
+    return;
+  }
+  const touch=e.touches[0];
+  const raw=getRawTouchPos(touch);
+
+  singleTouchPan={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY,moved:false};
+
+  if(S.step===3&&S.iMode==='draw'&&S.touchMode==='draw'){
+    const pos=getImgTouchPos(touch);
+    S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;touchDraw=true;
+    singleTouchPan=null;
+  } else {
+    touchDraw=false;
+  }
+},{passive:false});
+
+imgCanvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length>=2&&pinchStart){
+    const t1=e.touches[0],t2=e.touches[1];
+    const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
+    const r=imgCanvas.getBoundingClientRect();
+    const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
+    const midRawY=((t1.clientY+t2.clientY)/2-r.top)*(S.dispH/r.height);
+    const newZoom=Math.min(20,Math.max(0.5,pinchStart.zoom*(dist/pinchStart.dist)));
+
+    const imgMidX=(pinchStart.midRawX-pinchStart.panX)/pinchStart.zoom;
+    const imgMidY=(pinchStart.midRawY-pinchStart.panY)/pinchStart.zoom;
+    S.zoom=newZoom;S.panX=midRawX-newZoom*imgMidX;S.panY=midRawY-newZoom*imgMidY;
+    updateZoom();paintCanvas();
+    return;
+  }
+  const touch=e.touches[0];
+  if(touchDraw&&S.drawStart){
+    S.drawCur=getImgTouchPos(touch);paintCanvas();
+  } else if(singleTouchPan){
+    const raw=getRawTouchPos(touch);
+    const dx=raw.x-singleTouchPan.rx,dy=raw.y-singleTouchPan.ry;
+    if(Math.sqrt(dx*dx+dy*dy)>12)singleTouchPan.moved=true;
+    if(singleTouchPan.moved){
+      S.panX=singleTouchPan.px+dx;S.panY=singleTouchPan.py+dy;
+      updateZoom();paintCanvas();
+    }
+  }
+},{passive:false});
+
+imgCanvas.addEventListener('touchend',e=>{
+  e.preventDefault();
+  if(touchDraw&&S.drawStart&&S.drawCur){
+
+    const dx=S.drawCur.x-S.drawStart.x,dy=S.drawCur.y-S.drawStart.y;
+    if(Math.sqrt(dx*dx+dy*dy)>5){S.measLine={p1:{...S.drawStart},p2:{...S.drawCur}};updateDrawHint();}
+    S.drawStart=null;S.drawCur=null;touchDraw=false;paintCanvas();
+  } else if(singleTouchPan&&!singleTouchPan.moved){
+
+    if(S.step===2&&S.iMode==='scale'&&S.scaleMode==='twopoint'&&S.scalePts.length<2){
+      const pos=getImgTouchPos(e.changedTouches[0]);
+      S.scalePts.push(pos);
+      if(S.scalePts.length===2){
+        const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
+      }
+      updateScaleHint();paintCanvas();
+    } else if(S.step===2&&S.iMode==='scale'&&S.calibActive&&S.scalePts.length<2){
+      const pos=getImgTouchPos(e.changedTouches[0]);
+      S.scalePts.push(pos);
+      updateWizSpanHint();paintCanvas();
+    }
+  }
+  pinchStart=null;singleTouchPan=null;touchDraw=false;
+},{passive:false});
+
+const chartCanvas=$('chart-canvas');
+
+function getChartPos(e){
+  const r=chartCanvas.getBoundingClientRect();
+  return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+
+function hitHandle(x,hitW){
+  hitW=hitW||10;
+  const g=S.chartGeom;if(!g)return null;
+  const cLpx=g.xPx(S.cropLeft!==null?S.cropLeft:S.results?.boundLeft??0);
+  const cRpx=g.xPx(S.cropRight!==null?S.cropRight:S.results?.boundRight??0);
+  if(Math.abs(x-cLpx)<hitW)return'left';
+  if(Math.abs(x-cRpx)<hitW)return'right';
+  return null;
+}
+
+chartCanvas.addEventListener('mousedown',e=>{
+  if(e.button!==0||!S.results)return;
+  const{x}=getChartPos(e);
+  S.chartDrag=hitHandle(x);
+  if(S.chartDrag)e.preventDefault();
+});
+
+chartCanvas.addEventListener('mousemove',e=>{
+  if(!S.chartGeom||!S.results)return;
+  const{x}=getChartPos(e);
+  if(S.chartDrag){
+    const g=S.chartGeom;
+    const mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
+    if(S.chartDrag==='left'){
+      const cR=S.cropRight!==null?S.cropRight:S.results.boundRight;
+      const v=Math.min(mm,cR-0.001);
+      S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
+      $('crop-l-inp').value=S.cropLeftStr;
+    } else {
+      const cL=S.cropLeft!==null?S.cropLeft:S.results.boundLeft;
+      const maxV=S.results.prof?(S.results.prof.length/S.results.pxMm_pd):g.xMax;
+      const v=Math.max(mm,cL+0.001);
+      S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
+      $('crop-r-inp').value=S.cropRightStr;
+    }
+    updateCropUI();recompute();
+  } else {
+    chartCanvas.style.cursor=hitHandle(x)?'ew-resize':'default';
+  }
+});
+
+document.addEventListener('mouseup',()=>{S.chartDrag=null;});
+chartCanvas.addEventListener('mouseleave',()=>{if(!S.chartDrag)chartCanvas.style.cursor='default';});
+
+chartCanvas.addEventListener('touchstart',e=>{
+  if(!S.results||e.touches.length!==1)return;
+  e.preventDefault();
+  const r=chartCanvas.getBoundingClientRect();
+  const x=e.touches[0].clientX-r.left;
+  S.chartDrag=hitHandle(x,24); // 24px hit area for fingers
+},{passive:false});
+
+chartCanvas.addEventListener('touchmove',e=>{
+  if(!S.chartDrag||!S.chartGeom||!S.results)return;
+  e.preventDefault();
+  const r=chartCanvas.getBoundingClientRect();
+  const x=e.touches[0].clientX-r.left;
+  const g=S.chartGeom,mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
+  if(S.chartDrag==='left'){
+    const cR=S.cropRight!==null?S.cropRight:S.results.boundRight;
+    const v=Math.min(mm,cR-0.001);S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
+    $('crop-l-inp').value=S.cropLeftStr;
+  } else {
+    const cL=S.cropLeft!==null?S.cropLeft:S.results.boundLeft;
+    const maxV=S.results.prof?(S.results.prof.length/S.results.pxMm_pd):g.xMax;
+    const v=Math.max(mm,cL+0.001);S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
+    $('crop-r-inp').value=S.cropRightStr;
+  }
+  updateCropUI();recompute();
+},{passive:false});
+
+chartCanvas.addEventListener('touchend',()=>{S.chartDrag=null;});
+
+$('file-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
+$('err-close').addEventListener('click',clearErr);
+
+const dz=$('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dragover');});
+dz.addEventListener('dragenter',e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dragover');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+
+$('crop-l-inp').addEventListener('blur',()=>commitCropLeft($('crop-l-inp').value));
+$('crop-l-inp').addEventListener('keydown',e=>{if(e.key==='Enter'){commitCropLeft(e.target.value);e.target.blur();}});
+$('crop-r-inp').addEventListener('blur',()=>commitCropRight($('crop-r-inp').value));
+$('crop-r-inp').addEventListener('keydown',e=>{if(e.key==='Enter'){commitCropRight(e.target.value);e.target.blur();}});
+
+$('chk-adaptive').addEventListener('change',e=>{$('adaptive-warn').style.display=e.target.checked&&!$('chk-align').checked?'block':'none';});
+$('chk-align').addEventListener('change',()=>{$('adaptive-warn').style.display=$('chk-adaptive').checked&&!$('chk-align').checked?'block':'none';});
+
+window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);});
+
+buildStepBar();
+updateStepBar();
+showStep(1);
+loadProfiles();
+loadScaleProfiles();
+
+if(isTouch){
+  $('touch-mode-bar').style.display='flex';
+  $('nav-hint').textContent='Pinch to zoom · drag to pan';
+  updateTouchModeBtn();
+}
+</script>
+</body>
+</html>
