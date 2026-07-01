@@ -347,9 +347,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div id="dist-result"></div>
       <div id="dist-zoom-caution">A profile is only valid at the same zoom/focal length it was calibrated at. Use the lens/zoom the profile name refers to.</div>
       <div class="profile-btns" style="margin-top:12px">
-        <button class="btn-ghost btn-small" onclick="showScreen('calibrate')">+ Calibrate new camera…</button>
+        <button class="btn-ghost btn-small" onclick="calibrateFromStep2()">+ Calibrate new camera…</button>
         <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" style="display:none">Delete profile</button>
-        <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export</button>
+        <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
         <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
         <input type="file" id="scale-import-file" accept=".json,application/json" style="display:none" onchange="importScaleProfiles(event)">
       </div>
@@ -408,16 +408,16 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   
   <div id="panel-4" class="panel">
     <div id="result-cards">
-      <div class="result-card b">
-        <div class="r-tag">Approach B</div>
-        <div class="r-method">Empirical Formula</div>
-        <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
-      </div>
       <div class="result-card" id="card-a">
         <div class="r-tag" id="a-tag">Approach A</div>
-        <div class="r-method" id="a-method">Physical Reference</div>
+        <div class="r-method" id="a-method">Physical Reference · high accuracy</div>
         <div class="r-val" id="r-a">—.— <span class="r-unit">mm</span></div>
         <div class="r-hint" id="a-hint">↓ Enter calibration data below</div>
+      </div>
+      <div class="result-card b">
+        <div class="r-tag">Approach B</div>
+        <div class="r-method">Empirical Formula · estimate only</div>
+        <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
       </div>
     </div>
 
@@ -473,6 +473,41 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
+      <div id="calib-panel">
+      <div class="calib-title">Approach A — Physical Reference Calibration</div>
+      <div class="calib-sub pro-only">Photograph a reference line of known width under the same conditions, run this tool on it, note the profile area, then enter below.</div>
+      <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
+      
+      <div class="pro-only">
+        <div id="calib-mode-toggle-pro">
+          <button id="cmode-calibrate-pro" onclick="setCalibMode('calibrate')">Calibrate</button>
+          <button id="cmode-measure-pro" class="active" onclick="setCalibMode('measure')">Measure</button>
+        </div>
+        <div class="input-row">
+          <span>Reference width:</span>
+          <input type="number" id="calib-width" value="" placeholder="e.g. 0.30" style="width:84px" oninput="onProWidthInput()">
+          <span>mm</span>
+          <span style="margin-left:10px">Reference area:</span>
+          <input type="number" id="calib-area" placeholder="e.g. 118.5" style="width:105px" oninput="onProAreaInput()">
+          <span>lum·mm</span>
+        </div>
+      </div>
+      
+      <div class="simple-only">
+        <div id="calib-mode-toggle">
+          <button id="cmode-calibrate" onclick="setCalibMode('calibrate')">Calibrate</button>
+          <button id="cmode-measure" class="active" onclick="setCalibMode('measure')">Measure</button>
+        </div>
+        <div class="input-row">
+          <span>Actual width:</span>
+          <input type="number" id="simp-width" placeholder="e.g. 0.30" style="width:100px" oninput="onSimpWidthInput()">
+          <span>mm</span>
+          <span style="margin-left:10px">Adjustment coefficient:</span>
+          <input type="number" id="simp-coeff" placeholder="—" style="width:110px" oninput="onSimpCoeffInput()">
+        </div>
+      </div>
+    </div>
+
     <div id="formula-panel" class="pro-only">
       <div class="panel-hdr" style="margin-bottom:0">
         <button id="btn-formula-toggle" onclick="toggleFormula()"><span id="formula-toggle-txt">▸ Approach B formula</span><span id="formula-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#0cbbcc;display:none">· modified</span></button>
@@ -516,44 +551,10 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           </div>
         </div>
         <div class="profile-btns" style="margin-top:10px">
-          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export profiles</button>
-          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import profiles</button>
+          <button class="btn-ghost btn-small" id="btn-prof-export-one" onclick="exportOneProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
           <input type="file" id="profile-import-file" accept=".json,application/json" style="display:none" onchange="importProfiles(event)">
-        </div>
-      </div>
-    </div>
-
-      <div id="calib-panel">
-      <div class="calib-title">Approach A — Physical Reference Calibration</div>
-      <div class="calib-sub pro-only">Photograph a reference line of known width under the same conditions, run this tool on it, note the profile area, then enter below.</div>
-      <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
-      
-      <div class="pro-only">
-        <div id="calib-mode-toggle-pro">
-          <button id="cmode-calibrate-pro" onclick="setCalibMode('calibrate')">Calibrate</button>
-          <button id="cmode-measure-pro" class="active" onclick="setCalibMode('measure')">Measure</button>
-        </div>
-        <div class="input-row">
-          <span>Reference width:</span>
-          <input type="number" id="calib-width" value="" placeholder="e.g. 0.30" style="width:84px" oninput="onProWidthInput()">
-          <span>mm</span>
-          <span style="margin-left:10px">Reference area:</span>
-          <input type="number" id="calib-area" placeholder="e.g. 118.5" style="width:105px" oninput="onProAreaInput()">
-          <span>lum·mm</span>
-        </div>
-      </div>
-      
-      <div class="simple-only">
-        <div id="calib-mode-toggle">
-          <button id="cmode-calibrate" onclick="setCalibMode('calibrate')">Calibrate</button>
-          <button id="cmode-measure" class="active" onclick="setCalibMode('measure')">Measure</button>
-        </div>
-        <div class="input-row">
-          <span>Actual width:</span>
-          <input type="number" id="simp-width" placeholder="e.g. 0.30" style="width:100px" oninput="onSimpWidthInput()">
-          <span>mm</span>
-          <span style="margin-left:10px">Adjustment coefficient:</span>
-          <input type="number" id="simp-coeff" placeholder="—" style="width:110px" oninput="onSimpCoeffInput()">
         </div>
       </div>
     </div>
@@ -581,7 +582,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         </select>
         <div class="profile-btns">
           <button class="btn-ghost btn-small" id="btn-scale-prof-delete-cal" onclick="deleteScaleProfileCal()" style="display:none">Delete</button>
-          <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export</button>
+          <button class="btn-ghost btn-small" id="btn-scale-prof-export-one" onclick="exportOneScaleProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
           <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
         </div>
       </div>
@@ -606,7 +608,10 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div id="calib-canvas-wrap">
       <canvas id="calib-canvas"></canvas>
       <div id="calib-zoom-bar">
-        <span id="calib-img-meta" style="color:rgba(232,248,249,0.45);font-size:11px"></span>
+        <button class="btn-ghost btn-small" onclick="resetCalibView()">Reset view</button>
+        <span id="calib-zoom-label" style="font-family:monospace;color:#e8f8f9">1.0×</span>
+        <span id="calib-nav-hint" style="color:rgba(232,248,249,0.4)">Scroll to zoom · right-drag to pan</span>
+        <span id="calib-img-meta" style="color:rgba(232,248,249,0.45);font-size:11px;margin-left:auto"></span>
       </div>
     </div>
 
@@ -640,17 +645,71 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <input type="text" id="wiz-name-inp" placeholder="Camera name — e.g. iPhone 15 main 1×" maxlength="60" style="width:100%;margin-bottom:6px">
         <input type="text" id="wiz-note-inp" placeholder="Optional note — lens, settings, date" maxlength="120" style="width:100%;margin-bottom:8px">
       </div>
-      <div class="wiz-btns">
-        <button class="btn btn-success btn-small" id="btn-wiz-save" onclick="saveCalibProfile()">Save camera profile</button>
+      <div class="wiz-btns" style="margin-top:4px">
+        <button class="btn btn-success" id="btn-wiz-save" onclick="saveCalibProfile()">Save camera profile</button>
+        <button class="btn btn-nav" onclick="calibrateAnother()">Reset calibration</button>
       </div>
+      <div id="calib-save-msg" style="display:none;font-size:12px;margin-top:8px"></div>
       <div id="calib-saved-msg" style="display:none;font-size:12px;color:#34d399;margin-top:8px"></div>
     </div>
 
     <div class="calib-screen-nav">
       <button class="btn btn-primary" onclick="startMeasuringFromCalib()">Start crack measurement →</button>
-      <button class="btn btn-nav" onclick="calibrateAnother()">Calibrate another lens / device</button>
     </div>
   </div>
+
+  <div id="formula-screen" style="display:none">
+    <div class="calib-screen-title">Approach B — empirical formula</div>
+    <div class="calib-screen-sub">Approach B estimates crack width directly from image resolution, using a calibrated power-law. The default constants suit general use; a specific camera may perform better with tuned values. This is an estimate — for high-accuracy results use Approach A (physical reference).</div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Formula constants</div>
+      <div class="formula-eq">calib = c × 256 × (px/mm)<sup>α</sup></div>
+      <div class="formula-input-row">
+        <label>Coefficient (c):</label>
+        <input type="number" id="bcoeff-inp-scr" step="0.001" value="0.357" oninput="onFormulaChangeScr()">
+        <span class="formula-default">default 0.357</span>
+      </div>
+      <div class="formula-input-row">
+        <label>Exponent (α):</label>
+        <input type="number" id="bexp-inp-scr" step="0.01" value="0.16" oninput="onFormulaChangeScr()">
+        <span class="formula-default">default 0.16</span>
+      </div>
+      <div class="wiz-btns" style="margin-top:10px">
+        <button class="btn-ghost btn-small" id="btn-formula-reset-scr" style="display:none" onclick="resetFormula()">Reset to default</button>
+        <span id="formula-active-badge-scr" style="font-size:12px;color:#0cbbcc;display:none;align-self:center">· modified from default</span>
+      </div>
+    </div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Saved formula profiles</div>
+      <div class="profile-row">
+        <select id="profile-select-scr" onchange="onProfileSelectScr()">
+          <option value="">— Default (0.357, 0.16) —</option>
+        </select>
+        <div class="profile-btns">
+          <button class="btn-ghost btn-small" id="btn-profile-delete-scr" onclick="deleteProfileScr()" style="display:none">Delete</button>
+          <button class="btn-ghost btn-small" id="btn-prof-export-one-scr" onclick="exportOneProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
+        </div>
+      </div>
+      <div class="profile-note" id="profile-note-scr"></div>
+      <div id="profile-save-form-scr" style="margin-top:8px">
+        <input type="text" id="profile-name-inp-scr" placeholder="Profile name — e.g. Sony a6700 (105 mm)" maxlength="60" style="width:100%;margin-bottom:6px">
+        <input type="text" id="profile-desc-inp-scr" placeholder="Optional note — calibration details" maxlength="120" style="width:100%;margin-bottom:8px">
+        <div class="wiz-btns">
+          <button class="btn btn-success" onclick="saveProfileScr()">Save formula profile</button>
+        </div>
+        <div id="formula-save-msg-scr" style="display:none;font-size:12px;margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="calib-screen-nav">
+      <button class="btn btn-primary" onclick="showScreen('workflow')">Back to measurement →</button>
+    </div>
+  </div>
+
   <footer id="app-footer">
     <div class="social-row">
       <a href="mailto:okroge@tuta.com" title="Email" aria-label="Email">
@@ -1170,16 +1229,26 @@ function buildStepBar(){
 function buildAuxBar(){
   const bar=$('aux-bar');if(!bar)return;
   bar.innerHTML='';
+  // Camera calibration circle
   const item=document.createElement('div');item.className='aux-item';
   item.onclick=()=>showScreen(S.screen==='calibrate'?'workflow':'calibrate');
   const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
   const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';
   item.append(circle,lbl);bar.append(item);
+  // Approach B formula circle
+  const item2=document.createElement('div');item2.className='aux-item';
+  item2.onclick=()=>showScreen(S.screen==='formula'?'workflow':'formula');
+  const circle2=document.createElement('div');circle2.className='aux-circle';circle2.id='aux-formula';circle2.textContent='B';
+  const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';
+  item2.append(circle2,lbl2);bar.append(item2);
 }
 function updateAuxBar(){
-  const c=$('aux-calib');if(!c)return;
-  const hasData=S.scaleProfiles.length>0;
-  c.className='aux-circle'+(S.screen==='calibrate'?' active':(hasData?' has-data':''));
+  const c=$('aux-calib');
+  if(c){const hasData=S.scaleProfiles.length>0;
+    c.className='aux-circle'+(S.screen==='calibrate'?' active':(hasData?' has-data':''));}
+  const f=$('aux-formula');
+  if(f){const modified=formulaModified()||S.profiles.length>0;
+    f.className='aux-circle'+(S.screen==='formula'?' active':(modified?' has-data':''));}
 }
 
 function updateStepBar(){
@@ -1306,6 +1375,7 @@ function renderScaleProfileSelect(){
 function onScaleProfileSelectCal(){
   const id=$('scale-profile-select-cal').value;
   const delC=$('btn-scale-prof-delete-cal');if(delC)delC.style.display=id?'':'none';
+  const expC=$('btn-scale-prof-export-one');if(expC)expC.style.display=id?'':'none';
   const noteC=$('scale-prof-note-cal');
   if(noteC){
     const p=S.scaleProfiles.find(x=>x.id===id);
@@ -1354,15 +1424,19 @@ function deleteScaleProfile(){
 ═══════════════════════════════════════════════════════════ */
 function showScreen(name){
   S.screen=name;
-  const wf=$('workflow-container'),cs=$('calibrate-screen');
+  const wf=$('workflow-container'),cs=$('calibrate-screen'),fs=$('formula-screen');
+  if(wf)wf.style.display='none';
+  if(cs)cs.style.display='none';
+  if(fs)fs.style.display='none';
   if(name==='calibrate'){
-    if(wf)wf.style.display='none';
     if(cs)cs.style.display='block';
     enterCalibScreen();
+  } else if(name==='formula'){
+    if(fs)fs.style.display='block';
+    enterFormulaScreen();
   } else {
-    if(cs)cs.style.display='none';
     if(wf)wf.style.display='block';
-    // Repaint the measurement canvas for whichever step we're on
+    calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
     requestAnimationFrame(paintCanvas);
   }
   updateAuxBar();
@@ -1399,6 +1473,10 @@ function updateCalibUploadPrompt(){
 }
 
 function openCalibWizard(){ showScreen('calibrate'); }   // legacy entry point → new screen
+function calibrateFromStep2(){
+  if(!confirm('This opens the camera calibration screen and leaves the measurement workflow. Your current image and scale are kept. Continue?'))return;
+  showScreen('calibrate');
+}
 
 function loadCalibImageClick(){$('wiz-image-file').click();}
 function loadCalibImage(ev){
@@ -1411,7 +1489,7 @@ function loadCalibImage(ev){
     S.calib.resizeFactor=d.resizeFactor;S.calib.imgMeta=d.imgMeta;
     S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
     S.calib.imageLoaded=true;S.calib.reused=false;
-    updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();
+    updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();updateCalibZoom();
     requestAnimationFrame(paintCanvas);
   });
   ev.target.value='';
@@ -1470,8 +1548,8 @@ function renderWizShots(){
     list.innerHTML=shots.map((s,i)=>{
       let resid='';
       if(fit){const pred=fit.k*Math.pow(s.d,fit.p);const rp=Math.abs(pred-s.r)/s.r*100;
-        const col=rp<5?'#34d399':rp<12?'#fbbf24':'#f87171';
-        resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(1)}%</span>`;}
+        const col=rp<1?'#34d399':rp<2?'#fbbf24':'#f87171';
+        resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(2)}%</span>`;}
       return `<div class="wiz-shot-item"><span>${s.d.toFixed(3)} m · ${s.w.toFixed(1)} mm · ${s.span.toFixed(0)} px → <strong>${s.r.toFixed(3)} px/mm</strong></span>${resid}<button class="wiz-shot-del" onclick="deleteCalibShot(${i})" title="Remove">✕</button></div>`;
     }).join('');
   }
@@ -1489,9 +1567,9 @@ function updateWizFitSummary(){
     quality='<span class="fit-warn">Add a 3rd shot to get a fit-quality estimate.</span>';
   } else {
     const e=fit.rmsePct;
-    const cls=e<5?'fit-good':e<12?'fit-warn':'fit-bad';
-    const word=e<5?'excellent':e<12?'acceptable':'poor — check for an outlier or zoom change';
-    quality=`Fit quality: <span class="${cls}">±${e.toFixed(1)}% (${word})</span>`;
+    const cls=e<1?'fit-good':e<2?'fit-warn':'fit-bad';
+    const word=e<0.5?'excellent':e<1?'good':e<2?'acceptable':'something isn\u2019t right — check for an outlier or zoom change';
+    quality=`Fit quality: <span class="${cls}">±${e.toFixed(2)}% (${word})</span>`;
   }
   box.innerHTML=`Power-law fit from ${n} shot${n>1?'s':''}: <strong>r = ${fit.k.toFixed(3)} · d<sup>${fit.p.toFixed(3)}</sup></strong><br>${quality}`;
 }
@@ -1499,12 +1577,17 @@ function hasUnsavedCalib(){
   // Unsaved if there are shots that don't already match the active saved profile
   return S.calib.shots.length>0;
 }
+function calibSaveMsg(text,ok){
+  const m=$('calib-save-msg');if(!m)return;
+  if(!text){m.style.display='none';m.textContent='';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+}
 function saveCalibProfile(){
-  if(S.calib.shots.length<3){showErr('Add at least 3 shots before saving.');return;}
+  if(S.calib.shots.length<3){calibSaveMsg('Add at least 3 shots before saving.',false);return;}
   const fit=fitScalePowerLaw(S.calib.shots);
-  if(!fit){showErr('Fit failed — shots must be at different distances.');return;}
+  if(!fit){calibSaveMsg('Fit failed — shots must be at different distances.',false);return;}
   const name=$('wiz-name-inp').value.trim();
-  if(!name){showErr('Give the camera profile a name.');$('wiz-name-inp').focus();return;}
+  if(!name){calibSaveMsg('Give the camera profile a name.',false);$('wiz-name-inp').focus();return;}
   const note=$('wiz-note-inp').value.trim();
   let p=S.scaleProfiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
   const data={name,note,k:fit.k,p:fit.p,rmsePct:fit.rmsePct,points:S.calib.shots.map(s=>({...s})),date:new Date().toISOString().slice(0,10)};
@@ -1512,22 +1595,21 @@ function saveCalibProfile(){
   else{p={id:'sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),...data};S.scaleProfiles.push(p);}
   S.activeScaleProfile=p.id;
   persistScaleProfiles();
-  clearErr();
+  calibSaveMsg('',true);
   // Clear the capture form (profile now saved) but stay on the screen
   S.calib.shots=[];S.calib.scalePts=[];
   ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
   renderWizShots();renderScaleProfileSelect();updateWizSpanHint();
-  showErr('');clearErr();
-  const msg=$('calib-saved-msg');if(msg){msg.textContent=`Saved “${name}”. Calibrate another, or start measuring.`;msg.style.display='block';setTimeout(()=>{if(msg)msg.style.display='none';},4000);}
+  const msg=$('calib-saved-msg');if(msg){msg.textContent=`Saved “${name}”. Reset to calibrate another, or start measuring.`;msg.style.display='block';setTimeout(()=>{if(msg)msg.style.display='none';},4000);}
 }
 function calibrateAnother(){
   if(hasUnsavedCalib()){
     if(!confirm('You have unsaved calibration shots. Discard them and start a new calibration?'))return;
   }
-  S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;
+  S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
   ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
-  // Keep the loaded image? Start fresh: prompt for a new photo.
   S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
+  calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
   renderWizShots();updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();paintCanvas();
 }
 function startMeasuringFromCalib(){
@@ -1537,6 +1619,7 @@ function startMeasuringFromCalib(){
   // Fully reset the calibration capture state so re-entry starts fresh
   S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
   S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
+  calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
   showScreen('workflow');
   // If a crack image is loaded go to Scale, otherwise Upload
   if(S.imgEl&&S.dispW>0){
@@ -1551,13 +1634,28 @@ function startMeasuringFromCalib(){
 }
 
 /* ── Scale-profile export / import ── */
-function exportScaleProfiles(){
-  if(!S.scaleProfiles.length){showErr('No camera profiles to export yet.');return;}
-  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:S.scaleProfiles},null,2);
+function sanitizeFilename(name){
+  return String(name).trim().replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,30)||'profile';
+}
+function downloadJSON(data,filename){
   const blob=new Blob([data],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
-  else{const a=document.createElement('a');a.href=url;a.download='crack_gauge_camera_profiles.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+  else{const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+}
+function exportScaleProfiles(){
+  // Export all camera (distance-scale) profiles as a dated bundle
+  if(!S.scaleProfiles.length){showErr('No camera profiles to export yet.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:S.scaleProfiles},null,2);
+  downloadJSON(data,`DCG_camera_profiles_${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportOneScaleProfile(){
+  // Export only the profile selected in the calibration-screen dropdown
+  const id=$('scale-profile-select-cal')?$('scale-profile-select-cal').value:'';
+  const p=S.scaleProfiles.find(x=>x.id===id);
+  if(!p){showErr('Select a camera profile to export.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:[p]},null,2);
+  downloadJSON(data,`DCG_camera_${sanitizeFilename(p.name)}.json`);
 }
 function importScaleProfilesClick(){$('scale-import-file').click();}
 function importScaleProfiles(ev){
@@ -1719,15 +1817,22 @@ function onFormulaChange(){
     }
   }
   updateFormulaActive();
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(S.bCoeff);
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value=String(S.bExp);
   if(S.results)recompute();
 }
 function resetFormula(){
   S.bCoeff=0.357;S.bExp=0.16;
   $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value='0.357';
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value='0.16';
   S.activeProfile='';
   if($('profile-select'))$('profile-select').value='';
+  if($('profile-select-scr'))$('profile-select-scr').value='';
   if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
+  if($('btn-profile-delete-scr'))$('btn-profile-delete-scr').style.display='none';
   if($('profile-note'))$('profile-note').textContent='';
+  if($('profile-note-scr'))$('profile-note-scr').textContent='';
   updateFormulaActive();
   if(S.results)recompute();
 }
@@ -1735,6 +1840,85 @@ function updateFormulaActive(){
   const on=formulaModified();
   $('formula-active-badge').style.display=on?'':'none';
   $('btn-formula-reset').style.display=on?'':'none';
+  // Mirror onto the standalone formula screen
+  const b2=$('formula-active-badge-scr');if(b2)b2.style.display=on?'':'none';
+  const r2=$('btn-formula-reset-scr');if(r2)r2.style.display=on?'':'none';
+}
+
+/* ── Standalone Approach B formula screen (mirrors the Step-4 box) ── */
+function syncFormulaInputs(){
+  // Push current constants into BOTH views' inputs
+  if($('bcoeff-inp'))$('bcoeff-inp').value=String(S.bCoeff);
+  if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(S.bCoeff);
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value=String(S.bExp);
+}
+function enterFormulaScreen(){
+  syncFormulaInputs();
+  renderProfileList();          // refreshes both dropdowns
+  updateFormulaActive();
+  const note=$('profile-note-scr');
+  if(note){const p=S.profiles.find(x=>x.id===S.activeProfile);note.textContent=p&&p.desc?p.desc:'';}
+}
+function onFormulaChangeScr(){
+  // Read the screen inputs into state, then run the shared change logic
+  const c=parseFloat($('bcoeff-inp-scr').value),e=parseFloat($('bexp-inp-scr').value);
+  if(isFinite(c)&&c>0)S.bCoeff=c;
+  if(isFinite(e))S.bExp=e;
+  // Mirror into the step-4 inputs so they agree
+  if($('bcoeff-inp'))$('bcoeff-inp').value=String(S.bCoeff);
+  if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
+  // Deselect a profile if we've diverged from it
+  if(S.activeProfile){
+    const p=S.profiles.find(x=>x.id===S.activeProfile);
+    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
+      S.activeProfile='';
+      if($('profile-select'))$('profile-select').value='';
+      if($('profile-select-scr'))$('profile-select-scr').value='';
+      if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
+      if($('btn-profile-delete-scr'))$('btn-profile-delete-scr').style.display='none';
+      if($('profile-note'))$('profile-note').textContent='';
+      if($('profile-note-scr'))$('profile-note-scr').textContent='';
+    }
+  }
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+function onProfileSelectScr(){
+  // Mirror the screen dropdown selection into the shared select and reuse onProfileSelect
+  const id=$('profile-select-scr').value;
+  if($('profile-select'))$('profile-select').value=id;
+  onProfileSelect();          // updates state + step-4 inputs
+  syncFormulaInputs();        // reflect into screen inputs
+  // Update screen-local UI
+  const p=S.profiles.find(x=>x.id===id);
+  const note=$('profile-note-scr');if(note)note.textContent=p&&p.desc?p.desc:'';
+  const del=$('btn-profile-delete-scr');if(del)del.style.display=id?'':'none';
+  const exp=$('btn-prof-export-one-scr');if(exp)exp.style.display=id?'':'none';
+}
+function deleteProfileScr(){
+  const id=$('profile-select-scr').value;if(!id)return;
+  const p=S.profiles.find(x=>x.id===id);
+  if(p&&!confirm(`Delete formula profile “${p.name}”?`))return;
+  if($('profile-select'))$('profile-select').value=id;
+  S.activeProfile=id;
+  deleteProfile();            // shared delete
+  syncFormulaInputs();
+}
+function saveProfileScr(){
+  const name=$('profile-name-inp-scr').value.trim();
+  const msg=$('formula-save-msg-scr');
+  if(!name){if(msg){msg.textContent='Give the profile a name.';msg.style.color='#fbbf24';msg.style.display='block';}$('profile-name-inp-scr').focus();return;}
+  const desc=$('profile-desc-inp-scr').value.trim();
+  let p=S.profiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(p){p.c=+S.bCoeff;p.a=+S.bExp;p.n=S.nLines;p.desc=desc;}
+  else{p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,c:+S.bCoeff,a:+S.bExp,n:S.nLines,desc};S.profiles.push(p);}
+  S.activeProfile=p.id;
+  persistProfiles();
+  renderProfileList();
+  $('profile-name-inp-scr').value='';$('profile-desc-inp-scr').value='';
+  const note=$('profile-note-scr');if(note)note.textContent=desc||'';
+  if(msg){msg.textContent=`Saved “${name}”.`;msg.style.color='#34d399';msg.style.display='block';setTimeout(()=>{if(msg)msg.style.display='none';},4000);}
 }
 
 const PROFILE_KEY='dcg_camera_profiles_v1';
@@ -1801,13 +1985,17 @@ function persistProfiles(){
   storageSet(PROFILE_KEY,JSON.stringify(S.profiles));
 }
 function renderProfileList(){
-  const sel=$('profile-select');
-  if(!sel)return;
   const cur=S.activeProfile;
-  sel.innerHTML='<option value="">— Default (0.357, 0.16) —</option>'+
+  const opts='<option value="">— Default (0.357, 0.16) —</option>'+
     S.profiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  sel.value=cur;
-  $('btn-profile-delete').style.display=cur?'':'none';
+  const sel=$('profile-select');
+  if(sel){sel.innerHTML=opts;sel.value=cur;
+    $('btn-profile-delete').style.display=cur?'':'none';
+    const e1=$('btn-prof-export-one');if(e1)e1.style.display=cur?'':'none';}
+  const selS=$('profile-select-scr');
+  if(selS){selS.innerHTML=opts;selS.value=cur;
+    const d2=$('btn-profile-delete-scr');if(d2)d2.style.display=cur?'':'none';
+    const e2=$('btn-prof-export-one-scr');if(e2)e2.style.display=cur?'':'none';}
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -1834,6 +2022,7 @@ function onProfileSelect(){
     }
   }
   $('btn-profile-delete').style.display=id?'':'none';
+  const expOne=$('btn-prof-export-one');if(expOne)expOne.style.display=id?'':'none';
   updateFormulaActive();
   if(S.results)recompute();
 }
@@ -1885,16 +2074,18 @@ function deleteProfile(){
 }
 
 function exportProfiles(){
+  // Export all Approach B formula profiles as a dated bundle
   if(!S.profiles.length){showErr('No profiles to export yet.');return;}
-  const data=JSON.stringify({tool:'Digital Crack Gauge',version:1,profiles:S.profiles},null,2);
-  const blob=new Blob([data],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
-    window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
-  } else {
-    const a=document.createElement('a');a.href=url;a.download='crack_gauge_profiles.json';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  }
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'approachB-profiles',version:1,profiles:S.profiles},null,2);
+  downloadJSON(data,`DCG_approachB_profiles_${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportOneProfile(){
+  // Export only the Approach B profile currently selected
+  const id=S.activeProfile;
+  const p=S.profiles.find(x=>x.id===id);
+  if(!p){showErr('Select a formula profile to export.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'approachB-profiles',version:1,profiles:[p]},null,2);
+  downloadJSON(data,`DCG_approachB_${sanitizeFilename(p.name)}.json`);
 }
 function importProfilesClick(){$('profile-import-file').click();}
 function importProfiles(ev){
@@ -2276,30 +2467,95 @@ function getRawImgPos(e){
 
 // Calibration screen canvas — click to place object-edge points into S.calib.scalePts
 const calibCanvas=$('calib-canvas');
+let calibPanning=false,calibPanAnchor=null,calibPinch=null,calibSingle=null;
+function calibRawPos(clientX,clientY){
+  const r=calibCanvas.getBoundingClientRect();
+  return{x:(clientX-r.left)*(S.calib.dispW/r.width),y:(clientY-r.top)*(S.calib.dispH/r.height)};
+}
 if(calibCanvas){
+  // Right-drag pan; left-click places edge points
+  calibCanvas.addEventListener('contextmenu',e=>e.preventDefault());
   calibCanvas.addEventListener('mousedown',e=>{
     if(!S.calib.imageLoaded)return;
-    const r=calibCanvas.getBoundingClientRect();
-    const cx=(e.clientX-r.left)*(S.calib.dispW/r.width);
-    const cy=(e.clientY-r.top)*(S.calib.dispH/r.height);
-    const pos={x:(cx-S.calib.panX)/S.calib.zoom,y:(cy-S.calib.panY)/S.calib.zoom};
-    if(S.calib.scalePts.length<2){
-      S.calib.scalePts.push(pos);
+    if(e.button===2){
+      const raw=calibRawPos(e.clientX,e.clientY);
+      calibPanning=true;calibPanAnchor={rx:raw.x,ry:raw.y,px:S.calib.panX,py:S.calib.panY};
+      e.preventDefault();return;
+    }
+    const raw=calibRawPos(e.clientX,e.clientY);
+    const pos={x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom};
+    if(S.calib.scalePts.length<2){S.calib.scalePts.push(pos);updateWizSpanHint();paintCanvas();}
+  });
+  calibCanvas.addEventListener('mousemove',e=>{
+    if(!calibPanning)return;
+    const raw=calibRawPos(e.clientX,e.clientY);
+    S.calib.panX=calibPanAnchor.px+(raw.x-calibPanAnchor.rx);
+    S.calib.panY=calibPanAnchor.py+(raw.y-calibPanAnchor.ry);
+    paintCanvas();
+  });
+  window.addEventListener('mouseup',()=>{calibPanning=false;});
+  calibCanvas.addEventListener('wheel',e=>{
+    if(!S.calib.imageLoaded)return;
+    e.preventDefault();
+    const fac=e.deltaY>0?0.85:1.18;
+    const raw=calibRawPos(e.clientX,e.clientY);
+    const newZoom=Math.min(20,Math.max(0.5,S.calib.zoom*fac));
+    const ratio=newZoom/S.calib.zoom;
+    S.calib.panX=raw.x-(raw.x-S.calib.panX)*ratio;
+    S.calib.panY=raw.y-(raw.y-S.calib.panY)*ratio;
+    S.calib.zoom=newZoom;
+    updateCalibZoom();paintCanvas();
+  },{passive:false});
+  // Touch: two-finger pinch-zoom+pan, single-finger pan, tap places point
+  calibCanvas.addEventListener('touchstart',e=>{
+    if(!S.calib.imageLoaded)return;
+    e.preventDefault();
+    if(e.touches.length>=2){
+      const a=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      const b=calibRawPos(e.touches[1].clientX,e.touches[1].clientY);
+      calibPinch={dist:Math.hypot(a.x-b.x,a.y-b.y),midRawX:(a.x+b.x)/2,midRawY:(a.y+b.y)/2,zoom:S.calib.zoom,panX:S.calib.panX,panY:S.calib.panY};
+      calibSingle=null;
+    } else if(e.touches.length===1){
+      const raw=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      calibSingle={rx:raw.x,ry:raw.y,px:S.calib.panX,py:S.calib.panY,moved:false};
+    }
+  },{passive:false});
+  calibCanvas.addEventListener('touchmove',e=>{
+    if(!S.calib.imageLoaded)return;
+    e.preventDefault();
+    if(e.touches.length>=2&&calibPinch){
+      const a=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      const b=calibRawPos(e.touches[1].clientX,e.touches[1].clientY);
+      const dist=Math.hypot(a.x-b.x,a.y-b.y);
+      const midX=(a.x+b.x)/2,midY=(a.y+b.y)/2;
+      const newZoom=Math.min(20,Math.max(0.5,calibPinch.zoom*(dist/calibPinch.dist)));
+      const imgMidX=(calibPinch.midRawX-calibPinch.panX)/calibPinch.zoom;
+      const imgMidY=(calibPinch.midRawY-calibPinch.panY)/calibPinch.zoom;
+      S.calib.zoom=newZoom;
+      S.calib.panX=midX-newZoom*imgMidX;
+      S.calib.panY=midY-newZoom*imgMidY;
+      updateCalibZoom();paintCanvas();
+    } else if(e.touches.length===1&&calibSingle){
+      const raw=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      if(Math.hypot(raw.x-calibSingle.rx,raw.y-calibSingle.ry)>12)calibSingle.moved=true;
+      S.calib.panX=calibSingle.px+(raw.x-calibSingle.rx);
+      S.calib.panY=calibSingle.py+(raw.y-calibSingle.ry);
+      paintCanvas();
+    }
+  },{passive:false});
+  calibCanvas.addEventListener('touchend',e=>{
+    if(!S.calib.imageLoaded)return;
+    if(calibSingle&&!calibSingle.moved&&e.changedTouches.length===1&&S.calib.scalePts.length<2){
+      const raw=calibRawPos(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+      S.calib.scalePts.push({x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom});
       updateWizSpanHint();paintCanvas();
     }
-  });
-  calibCanvas.addEventListener('touchend',e=>{
-    if(!S.calib.imageLoaded||e.changedTouches.length!==1)return;
-    if(S.calib.scalePts.length>=2)return;
-    const r=calibCanvas.getBoundingClientRect();
-    const t=e.changedTouches[0];
-    const cx=(t.clientX-r.left)*(S.calib.dispW/r.width);
-    const cy=(t.clientY-r.top)*(S.calib.dispH/r.height);
-    S.calib.scalePts.push({x:(cx-S.calib.panX)/S.calib.zoom,y:(cy-S.calib.panY)/S.calib.zoom});
-    updateWizSpanHint();paintCanvas();
-    e.preventDefault();
+    calibPinch=null;calibSingle=null;
   },{passive:false});
 }
+function updateCalibZoom(){const l=$('calib-zoom-label');if(l)l.textContent=S.calib.zoom.toFixed(1)+'×';}
+function resetCalibView(){S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;updateCalibZoom();paintCanvas();}
+
 
 imgCanvas.addEventListener('mousedown',e=>{
   if(e.button===2){const raw=getRawImgPos(e);S.isPanning=true;S.panAnchor={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY};e.preventDefault();return;}
@@ -2550,6 +2806,7 @@ updateAuxBar();
 if(isTouch){
   $('touch-mode-bar').style.display='flex';
   $('nav-hint').textContent='Pinch to zoom · drag to pan';
+  const ch=$('calib-nav-hint');if(ch)ch.textContent='Pinch to zoom · drag to pan';
   updateTouchModeBtn();
 }
 </script>
