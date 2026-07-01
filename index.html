@@ -283,7 +283,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.1-beta</div>
+  <div id="version-tag">v1.2.3-beta</div>
 
   
   <div id="step-bar"></div>
@@ -427,11 +427,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div id="chart-title">Luminance profile across crack</div>
       <div id="chart-subtitle">Blue = profile · red dashed = baseline · amber = crack centre · blue shading = integration region · drag blue handles to adjust</div>
       <canvas id="chart-canvas"></canvas>
-    </div>
-
-    <div id="crop-panel" class="pro-only">
-      <div class="panel-hdr">
-        <div class="panel-title">Integration window<span class="panel-badge" id="crop-badge" style="display:none">· custom</span></div>
+      <div class="panel-hdr" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(12,187,204,0.12)">
+        <div class="panel-title">Profile integration window<span class="panel-badge" id="crop-badge" style="display:none">· custom</span></div>
         <button class="btn-ghost" id="btn-reset-crop" style="display:none" onclick="resetCrop()">Reset to auto</button>
       </div>
       <div class="input-row">
@@ -475,7 +472,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
       <div id="calib-panel">
       <div class="calib-title">Approach A — Physical Reference Calibration</div>
-      <div class="calib-sub pro-only">Photograph a reference line of known width under the same conditions, run this tool on it, note the profile area, then enter below.</div>
+      <div class="calib-sub pro-only">Two steps. <strong>Calibrate:</strong> analyse a photo of a reference crack of known width (same camera, distance and conditions), then enter that width — the tool computes a calibration coefficient. <strong>Measure:</strong> analyse your crack photo with that coefficient entered and the width is read directly. The coefficient survives “Start over”, so calibrate first, then load the crack photo. An inaccurate reference width feeds directly into every result, so measure it as precisely as you can.</div>
       <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
       
       <div class="pro-only">
@@ -487,9 +484,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <span>Reference width:</span>
           <input type="number" id="calib-width" value="" placeholder="e.g. 0.30" style="width:84px" oninput="onProWidthInput()">
           <span>mm</span>
-          <span style="margin-left:10px">Reference area:</span>
-          <input type="number" id="calib-area" placeholder="e.g. 118.5" style="width:105px" oninput="onProAreaInput()">
-          <span>lum·mm</span>
+          <span style="margin-left:10px">Calibration coefficient:</span>
+          <input type="number" id="calib-area" placeholder="e.g. 395" style="width:105px" oninput="onProAreaInput()">
+          <span>lum·mm / mm</span>
         </div>
       </div>
       
@@ -514,8 +511,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <button class="btn-ghost" id="btn-formula-reset" style="display:none" onclick="resetFormula()">Reset</button>
       </div>
       <div id="formula-controls" style="display:none;margin-top:12px">
-        <div class="base-sub">Approach B estimates width from a calibrated power-law. The default constants suit general use, but a specific camera may perform better with tuned values. Changes affect the Approach B result only.</div>
-        <div class="formula-eq">calib = c × 256 × (px/mm)<sup>α</sup></div>
+        <div class="base-sub">Approach B estimates width from a calibrated function. The default constants suit general use, but a specific camera and site condition will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference). Changes affect the Approach B result only.</div>
         <div class="formula-input-row">
           <label>Coefficient (c):</label>
           <input type="number" id="bcoeff-inp" step="0.001" value="0.357" oninput="onFormulaChange()">
@@ -528,7 +524,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         </div>
 
         <div class="profile-divider"></div>
-        <div class="profile-label">Camera profiles</div>
+        <div class="profile-label">Saved formula profiles</div>
         <div class="profile-row">
           <select id="profile-select" onchange="onProfileSelect()">
             <option value="">— Default (0.357, 0.16) —</option>
@@ -559,7 +555,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
-    <div id="acc-note"><strong>Approach B accuracy note:</strong> The empirical formula was calibrated for high-contrast printed lines. For concrete cracks, treat this as an estimate — typical accuracy ±0.05–0.1 mm. Use Approach A (physical reference) for critical measurements.</div>
+    <div id="acc-note"><strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.</div>
 
     <div class="nav-row">
       <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
@@ -594,6 +590,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="wiz-tip">Calibrate across the distance range you expect to actually use the camera at.</div>
       <div class="wiz-tip">Photograph from far away first, then halve the distance each shot — e.g. 8 m, then 4 m, then 2 m. This spreads the points evenly for a robust fit.</div>
       <div class="wiz-tip">Use the same zoom/focal length for every shot and for real measurements later.</div>
+      <div class="wiz-tip">Measure each distance with a laser meter for best accuracy — the smaller the distance error, the more accurate every measurement you make with this profile.</div>
     </div>
 
     <div id="calib-upload-prompt">
@@ -642,8 +639,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="wiz-fit-summary" id="wiz-fit-summary" style="display:none"></div>
 
       <div class="wiz-btns">
-        <input type="text" id="wiz-name-inp" placeholder="Camera name — e.g. iPhone 15 main 1×" maxlength="60" style="width:100%;margin-bottom:6px">
-        <input type="text" id="wiz-note-inp" placeholder="Optional note — lens, settings, date" maxlength="120" style="width:100%;margin-bottom:8px">
+        <input type="text" id="wiz-name-inp" placeholder="Camera & lens — e.g. iPhone 15 main 1×" maxlength="60" style="width:100%;margin-bottom:6px">
+        <input type="text" id="wiz-note-inp" placeholder="Optional note — settings, site, date" maxlength="120" style="width:100%;margin-bottom:8px">
       </div>
       <div class="wiz-btns" style="margin-top:4px">
         <button class="btn btn-success" id="btn-wiz-save" onclick="saveCalibProfile()">Save camera profile</button>
@@ -654,17 +651,16 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
 
     <div class="calib-screen-nav">
-      <button class="btn btn-primary" onclick="startMeasuringFromCalib()">Start crack measurement →</button>
+      <button class="btn btn-primary" onclick="startMeasuringFromCalib()">Back to measurements →</button>
     </div>
   </div>
 
   <div id="formula-screen" style="display:none">
     <div class="calib-screen-title">Approach B — empirical formula</div>
-    <div class="calib-screen-sub">Approach B estimates crack width directly from image resolution, using a calibrated power-law. The default constants suit general use; a specific camera may perform better with tuned values. This is an estimate — for high-accuracy results use Approach A (physical reference).</div>
+    <div class="calib-screen-sub">Approach B estimates crack width directly from image resolution, using a calibrated function. The default constants suit general use; a specific camera and site will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference).</div>
 
     <div class="avg-section" style="margin-bottom:14px">
       <div class="avg-title">Formula constants</div>
-      <div class="formula-eq">calib = c × 256 × (px/mm)<sup>α</sup></div>
       <div class="formula-input-row">
         <label>Coefficient (c):</label>
         <input type="number" id="bcoeff-inp-scr" step="0.001" value="0.357" oninput="onFormulaChangeScr()">
@@ -696,8 +692,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
       <div class="profile-note" id="profile-note-scr"></div>
       <div id="profile-save-form-scr" style="margin-top:8px">
-        <input type="text" id="profile-name-inp-scr" placeholder="Profile name — e.g. Sony a6700 (105 mm)" maxlength="60" style="width:100%;margin-bottom:6px">
-        <input type="text" id="profile-desc-inp-scr" placeholder="Optional note — calibration details" maxlength="120" style="width:100%;margin-bottom:8px">
+        <input type="text" id="profile-name-inp-scr" placeholder="Profile name — e.g. DJI Air 3S 24 mm" maxlength="60" style="width:100%;margin-bottom:6px">
+        <input type="text" id="profile-desc-inp-scr" placeholder="Optional note — surface colour, material, date" maxlength="120" style="width:100%;margin-bottom:8px">
         <div class="wiz-btns">
           <button class="btn btn-success" onclick="saveProfileScr()">Save formula profile</button>
         </div>
@@ -1176,8 +1172,6 @@ function recompute(){
   }
 
   const{width}=approachB(area,S.pxMm);
-  const cA=parseFloat($('calib-area').value),cW=parseFloat($('calib-width').value);
-  const awLive=(cA&&cW&&cA>0&&cW>0)?(area/(cA/cW)).toFixed(4):null;
 
   let peakIdx=cL,peakVal=-Infinity;
   for(let i=cL;i<=Math.min(cR,n-1);i++){const r=sign*(corrBase[i]-prof[i]);if(r>peakVal){peakVal=r;peakIdx=i;}}
@@ -1189,7 +1183,7 @@ function recompute(){
     return acc;
   },[]);
 
-  S.live={area:+area.toFixed(4),width:+width.toFixed(4),awLive,crackMm:+(peakIdx/pxMm_pd).toFixed(3),cropLeftMm:S.cropLeft!==null?S.cropLeft:S.results.boundLeft,cropRightMm:S.cropRight!==null?S.cropRight:S.results.boundRight,baselineChanged,corrChartData};
+  S.live={area:+area.toFixed(4),width:+width.toFixed(4),crackMm:+(peakIdx/pxMm_pd).toFixed(3),cropLeftMm:S.cropLeft!==null?S.cropLeft:S.results.boundLeft,cropRightMm:S.cropRight!==null?S.cropRight:S.results.boundRight,baselineChanged,corrChartData};
 
   updateResultsDisplay();
   drawChart();
@@ -2249,22 +2243,25 @@ function runAnalysis(){
 
 function saveImage(){
   if(!S.results||!S.imgEl||!S.pixels)return;
-  const pw=S.pixels.width,ph=S.pixels.height,s=Math.max(1,pw/1200);
+  const pw=S.pixels.width,ph=S.pixels.height;
+  // Annotation scale is a fixed fraction of image size, so elements occupy the
+  // same visual proportion on every photo regardless of resolution (kept small).
+  const s=Math.hypot(pw,ph)/2600;
   const canvas=document.createElement('canvas');canvas.width=pw;canvas.height=ph;
   const ctx=canvas.getContext('2d');
   ctx.drawImage(S.imgEl,0,0,pw,ph);
   const toPx=pt=>({x:pt.x/S.dispScale,y:pt.y/S.dispScale});
   const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
-  const drawLabel=(text,cx,cy,bg)=>{const fs=Math.max(14,20*s);ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=8*s,rad=6*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
+  const drawLabel=(text,cx,cy,bg)=>{const fs=15*s;ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=6*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
   if(S.scalePts&&S.scalePts.length===2){
     const a=toPx(S.scalePts[0]),b=toPx(S.scalePts[1]);
     ctx.save();ctx.strokeStyle='#d97706';ctx.lineWidth=2*s;ctx.setLineDash([8*s,5*s]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
-    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,12*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${13*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,9*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
 
     if(S.scaleMode==='twopoint'&&S.realDist){
       const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
       const ddx=b.x-a.x,ddy=b.y-a.y,dlen=Math.sqrt(ddx*ddx+ddy*ddy);
-      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*28*s,mid.y+py*28*s,'rgba(160,90,0,.90)');}
+      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*24*s,mid.y+py*24*s,'rgba(160,90,0,.90)');}
     }
     ctx.restore();
   }
@@ -2276,11 +2273,11 @@ function saveImage(){
       ctx.save();ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
       ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
-      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5*s;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
-      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,5*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
       const{bWidth,aWidth}=getDisplayValues();
       const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
-      const lOff=bh+60*s;
+      const lOff=bh+50*s;
       const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
       const upPerp={x:-downPerp.x,y:-downPerp.y};
       drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
@@ -2288,7 +2285,7 @@ function saveImage(){
       ctx.restore();
     }
   }
-  const mfs=Math.max(12,16*s),mpad=10*s,mlineH=mfs*1.6;
+  const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
   const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px  ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
   ctx.font=`${mfs}px monospace`;
   const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
@@ -2320,7 +2317,8 @@ function saveZoomedImage(){
 
   const expScale=Math.min(1920/rW,Math.max(1,1200/rW));
   const outW=Math.round(rW*expScale),outH=Math.round(rH*expScale);
-  const s=Math.max(1,outW/800);
+  // Same-proportion, resolution-independent annotation scale (matches saveImage)
+  const s=Math.hypot(outW,outH)/2600;
   const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
   const ctx=canvas.getContext('2d');
 
@@ -2331,17 +2329,17 @@ function saveZoomedImage(){
   const toEx=pt=>({x:(pt.x/S.dispScale-px0)*expScale,y:(pt.y/S.dispScale-py0)*expScale});
 
   const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
-  const drawLabel=(text,cx,cy,bg)=>{const fs=Math.max(14,18*s);ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=7*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
+  const drawLabel=(text,cx,cy,bg)=>{const fs=15*s;ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=6*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
 
   if(S.scalePts&&S.scalePts.length===2){
     const a=toEx(S.scalePts[0]),b=toEx(S.scalePts[1]);
     ctx.save();ctx.strokeStyle='#d97706';ctx.lineWidth=2*s;ctx.setLineDash([8*s,5*s]);
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
-    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,12*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${13*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,9*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
     if(S.scaleMode==='twopoint'&&S.realDist){
       const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
       const ddx=b.x-a.x,ddy=b.y-a.y,dlen=Math.sqrt(ddx*ddx+ddy*ddy);
-      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*28*s,mid.y+py*28*s,'rgba(160,90,0,.90)');}
+      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*24*s,mid.y+py*24*s,'rgba(160,90,0,.90)');}
     }
     ctx.restore();
   }
@@ -2356,9 +2354,9 @@ function saveZoomedImage(){
       ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);
       ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
-      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5*s;
+      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;
       ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
-      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,5*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
       const{bWidth,aWidth}=getDisplayValues();
       const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
       const lOff=bh+50*s;
@@ -2370,8 +2368,8 @@ function saveZoomedImage(){
     }
   }
 
-  const mfs=Math.max(11,14*s),mpad=8*s,mlineH=mfs*1.6;
-  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px`:`${S.pixels.width}×${S.pixels.height} px`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
+  const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
+  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
   ctx.font=`${mfs}px monospace`;
   const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
   const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
