@@ -283,7 +283,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.3-beta</div>
+  <div id="version-tag">v1.2.4-beta</div>
 
   
   <div id="step-bar"></div>
@@ -734,41 +734,8 @@ function bilinearLum(data,x,y,W,H){
   return lum(x0,y0)*(1-fx)*(1-fy)+lum(x1,y0)*fx*(1-fy)+lum(x0,y1)*(1-fx)*fy+lum(x1,y1)*fx*fy;
 }
 
-function fitBaseline(profile,frac=0.25){
-  const n=profile.length;
-  const medOf=arr=>{const s=[...arr].sort((a,b)=>a-b);return s[Math.floor(s.length/2)];};
 
-  const left=[],right=[];
-  for(let i=0;i<Math.floor(n*frac);i++)left.push({i,v:profile[i]});
-  for(let i=Math.ceil(n*(1-frac));i<n;i++)right.push({i,v:profile[i]});
 
-  const lMed=medOf(left.map(p=>p.v)),rMed=medOf(right.map(p=>p.v));
-  let pts=[...left.filter(p=>p.v>=lMed).map(p=>[p.i,p.v]),...right.filter(p=>p.v>=rMed).map(p=>[p.i,p.v])];
-
-  if(pts.length<4)pts=[...left.map(p=>[p.i,p.v]),...right.map(p=>[p.i,p.v])];
-  const m=pts.length;let sx=0,sy=0,sxy=0,sx2=0;
-  for(const[x,y]of pts){sx+=x;sy+=y;sxy+=x*y;sx2+=x*x;}
-  const d=m*sx2-sx*sx;
-  if(Math.abs(d)<1e-10){const a=sy/m;return profile.map(()=>a);}
-  const sl=(m*sxy-sx*sy)/d,ic=(sy-sl*sx)/m;
-  return profile.map((_,i)=>sl*i+ic);
-}
-
-function smoothArray(arr,win=5){
-  const h=Math.floor(win/2);
-  return arr.map((_,i)=>{let s=0,c=0;for(let k=Math.max(0,i-h);k<=Math.min(arr.length-1,i+h);k++){s+=arr[k];c++;}return s/c;});
-}
-
-function findBounds(residuals,win=5){
-  const sm=smoothArray(residuals,win);
-  let pi=0,pv=-Infinity;
-  for(let i=0;i<sm.length;i++)if(sm[i]>pv){pv=sm[i];pi=i;}
-  if(pv<=0)return{left:0,right:residuals.length-1};
-  const thr=Math.max(0.5,pv*0.02);
-  let L=pi;while(L>0&&sm[L-1]>thr)L--;
-  let R=pi;while(R<sm.length-1&&sm[R+1]>thr)R++;
-  return{left:L,right:R};
-}
 
 function extractAllProfiles(pixels,p1,p2,nLines){
   const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.sqrt(dx*dx+dy*dy);
@@ -783,36 +750,18 @@ function extractAllProfiles(pixels,p1,p2,nLines){
   return profiles;
 }
 
-async function combineViaWorker(profiles, opts){
-  let remembered=null;
-  try{remembered=sessionStorage.getItem('dcg_tier');}catch(e){}
+async function analyzeViaWorker(profiles, opts, pxPerMm){
   const pin=sessionStorage.getItem('dcg_pin')||'';
   const resp=await fetch(WORKER_URL,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'combine',pin,profiles,options:opts}),
+    body:JSON.stringify({action:'analyze',pin,profiles,options:opts,pxPerMm}),
   });
   const data=await resp.json();
-  if(!data.ok||!Array.isArray(data.combined)) throw new Error('combine service unavailable');
-  return data.combined;
+  if(!data.ok||!Array.isArray(data.prof)||!Array.isArray(data.base)) throw new Error('analysis service unavailable');
+  return data;
 }
 
-function integrateArea(profile,base,pxPerMm){
-  const dx=1/pxPerMm,n=profile.length;
-
-  let peakRes=0;
-  const midS=Math.floor(n*0.1),midE=Math.ceil(n*0.9);
-  for(let i=midS;i<midE;i++){const r=base[i]-profile[i];if(Math.abs(r)>Math.abs(peakRes))peakRes=r;}
-  const sign=peakRes>=0?1:-1;
-  const raw=profile.map((_,i)=>sign*(base[i]-profile[i]));
-  const{left,right}=findBounds(raw);
-  let area=0;
-  for(let i=left;i<Math.min(right,n-1);i++){
-    const r1=Math.max(0,raw[i]),r2=Math.max(0,raw[i+1]);
-    area+=0.5*(r1+r2)*dx;
-  }
-  return{area,isDep:sign===1,left,right};
-}
 
 function approachB(area,pxMmOrig){
   const calib=S.bCoeff*256*Math.pow(pxMmOrig,S.bExp);
@@ -2205,11 +2154,10 @@ function runAnalysis(){
       S.doAlign=doAlign;S.avgMethod=avgMethod;S.doAdaptive=doAdaptive;
       const allProfiles=extractAllProfiles(S.pixels,p1,p2,S.nLines);
       if(!allProfiles||!allProfiles.length){showErr('Line too short — draw it longer.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
-      const prof=await combineViaWorker(allProfiles,{doAlign,method:avgMethod,doAdaptive});
-      if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
-      const base=fitBaseline(prof);
       const pxMm_pd=S.pxMm*S.resizeFactor;
-      const{area,isDep,left,right}=integrateArea(prof,base,pxMm_pd);
+      const r=await analyzeViaWorker(allProfiles,{doAlign,method:avgMethod,doAdaptive},pxMm_pd);
+      const prof=r.prof,base=r.base,area=r.area,isDep=r.isDep,left=r.left,right=r.right;
+      if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
       const{width,calib}=approachB(area,S.pxMm);
       const stride=Math.max(1,Math.floor(prof.length/300));
       const chartData=prof.reduce((acc,v,i)=>{if(i%stride===0)acc.push({mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+base[i].toFixed(1)});return acc;},[]);
