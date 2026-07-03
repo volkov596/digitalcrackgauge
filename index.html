@@ -283,7 +283,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.4-beta</div>
+  <div id="version-tag">v1.2.5-beta</div>
 
   
   <div id="step-bar"></div>
@@ -557,6 +557,33 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
     <div id="acc-note"><strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.</div>
 
+    <div id="fcalib-panel" class="pro-only">
+      <div class="panel-hdr" style="margin-bottom:0">
+        <button id="btn-fcalib-toggle" onclick="toggleFcalib()"><span id="fcalib-toggle-txt">▸ Calibrate the Approach B formula (advanced)</span></button>
+      </div>
+      <div id="fcalib-controls" style="display:none;margin-top:12px">
+        <div class="calib-sub">Measure cracks whose width you already know, and save each as a calibration point. Once you have enough points across a wide resolution range, fit them on the Approach B screen to get constants tuned to your camera and site.</div>
+        <div class="profile-row" style="margin-bottom:10px">
+          <select id="fcalib-dataset-select" onchange="onFcalibDatasetSelect()">
+            <option value="">— Select or create a dataset —</option>
+          </select>
+          <div class="profile-btns">
+            <button class="btn-ghost btn-small" onclick="newFcalibDataset()">+ New dataset</button>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Known crack width:</label>
+          <input type="number" id="fcalib-width-inp" step="0.001" min="0" placeholder="e.g. 0.500" style="width:105px">
+          <span>mm</span>
+        </div>
+        <div class="wiz-btns" style="margin-top:8px">
+          <button class="btn btn-primary btn-small" id="btn-fcalib-save" onclick="saveCalibPoint()">Save calibration point</button>
+          <span id="fcalib-count" style="font-size:12px;color:rgba(232,248,249,0.6);align-self:center"></span>
+        </div>
+        <div id="fcalib-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+      </div>
+    </div>
+
     <div class="nav-row">
       <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
       <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
@@ -701,6 +728,30 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Calibrate from measurements</div>
+      <div class="calib-screen-sub" style="margin-bottom:10px">Fit constants from calibration points you collected at Step 4 (measurements of cracks whose width you already knew). Add points across a wide resolution range, then fit.</div>
+      <div class="profile-row">
+        <select id="calib-dataset-select-scr" onchange="onCalibDatasetSelectScr()">
+          <option value="">— Select a dataset —</option>
+        </select>
+        <div class="profile-btns">
+          <button class="btn-ghost btn-small" id="btn-calib-ds-delete" onclick="deleteCalibDatasetScr()" style="display:none">Delete dataset</button>
+          <button class="btn-ghost btn-small" id="btn-calib-ds-export" onclick="exportOneCalibDataset()" style="display:none">↓ Export</button>
+          <button class="btn-ghost btn-small" onclick="exportCalibDatasets()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importCalibDatasetsClick()">↑ Import</button>
+          <input type="file" id="calib-ds-import-file" accept=".json,application/json" style="display:none" onchange="importCalibDatasets(event)">
+        </div>
+      </div>
+      <div id="calib-gate-status" style="font-size:12px;margin:10px 0"></div>
+      <div id="calib-records-list" class="wiz-shots-list"></div>
+      <div id="calib-fit-summary" class="wiz-fit-summary" style="display:none"></div>
+      <div class="wiz-btns" style="margin-top:10px">
+        <button class="btn btn-success" id="btn-calib-fit" onclick="fitAndFinaliseDataset()" disabled>Fit &amp; save constants</button>
+      </div>
+      <div id="calib-fit-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+    </div>
+
     <div class="calib-screen-nav">
       <button class="btn btn-primary" onclick="showScreen('workflow')">Back to measurement →</button>
     </div>
@@ -781,6 +832,7 @@ const S={
   bCoeff:0.357,bExp:0.16,    // Approach B empirical formula constants (overridable)
   profiles:[],activeProfile:'',   // saved camera profiles + currently selected id
   scaleProfiles:[],activeScaleProfile:'',   // distance-scale profiles (Pro) + selected id
+  calibDatasets:[],activeCalibDataset:'',    // Approach B formula-calibration datasets (Pro)
   scaleDist:'',                    // distance (m) entered in distance+profile scale mode
   calibShots:[],                   // (legacy field, retained harmlessly)
   calibActive:false,               // whether the calibration wizard is capturing
@@ -1190,7 +1242,7 @@ function updateAuxBar(){
   if(c){const hasData=S.scaleProfiles.length>0;
     c.className='aux-circle'+(S.screen==='calibrate'?' active':(hasData?' has-data':''));}
   const f=$('aux-formula');
-  if(f){const modified=formulaModified()||S.profiles.length>0;
+  if(f){const modified=formulaModified()||S.profiles.length>0||S.calibDatasets.length>0;
     f.className='aux-circle'+(S.screen==='formula'?' active':(modified?' has-data':''));}
 }
 
@@ -1218,6 +1270,7 @@ function showStep(n){
     else if(n===2||n===3){S.touchMode='draw';}
     updateTouchModeBtn();
   }
+  if(n===4){renderFcalibSelect();updateFcalibCount();}
   updateStepBar();
 }
 
@@ -1800,6 +1853,7 @@ function enterFormulaScreen(){
   syncFormulaInputs();
   renderProfileList();          // refreshes both dropdowns
   updateFormulaActive();
+  renderCalibDatasetSelectScr();renderCalibRecords();
   const note=$('profile-note-scr');
   if(note){const p=S.profiles.find(x=>x.id===S.activeProfile);note.textContent=p&&p.desc?p.desc:'';}
 }
@@ -1912,6 +1966,244 @@ function loadScaleProfiles(){
 function persistScaleProfiles(){
   storageSet(SCALE_PROFILE_KEY,JSON.stringify(S.scaleProfiles));
   updateAuxBar();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APPROACH B FORMULA-CALIBRATION DATASETS (Pro only)
+   Each record: {pxMm, knownWidth, area, date}.
+   Fit calib_per_mm = area/knownWidth against px/mm as a power law:
+     calib_per_mm = K · (px/mm)^P   →   c = K/256,  α = P
+   Finalise requires ≥8 records AND max/min px/mm ratio ≥16.
+═══════════════════════════════════════════════════════════ */
+const CALIB_DATASET_KEY='dcg_formula_datasets_v1';
+const CALIB_MIN_RECORDS=8;
+const CALIB_MIN_RATIO=16;
+
+function loadCalibDatasets(){
+  const raw=storageGet(CALIB_DATASET_KEY);
+  if(raw){
+    try{
+      const arr=JSON.parse(raw);
+      if(Array.isArray(arr))S.calibDatasets=arr.filter(d=>d&&d.id&&d.name&&Array.isArray(d.records));
+    }catch(e){S.calibDatasets=[];}
+  }
+}
+function persistCalibDatasets(){
+  storageSet(CALIB_DATASET_KEY,JSON.stringify(S.calibDatasets));
+}
+function activeDataset(){
+  return S.calibDatasets.find(d=>d.id===S.activeCalibDataset)||null;
+}
+function createCalibDataset(name){
+  const d={id:'cd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:name||('Dataset '+(S.calibDatasets.length+1)),note:'',records:[],c:null,a:null,rmsePct:null,fittedDate:null,date:new Date().toISOString().slice(0,10)};
+  S.calibDatasets.push(d);S.activeCalibDataset=d.id;persistCalibDatasets();
+  return d;
+}
+function calibResolutionRatio(records){
+  const rs=records.map(r=>r.pxMm).filter(v=>v>0);
+  if(rs.length<2)return 0;
+  return Math.max(...rs)/Math.min(...rs);
+}
+function fitCalibDataset(ds){
+  // Reuse the power-law fitter: map pxMm→d, calib_per_mm→r
+  const pts=ds.records.filter(r=>r.pxMm>0&&r.knownWidth>0&&r.area>0)
+    .map(r=>({d:r.pxMm,r:r.area/r.knownWidth}));
+  const fit=fitScalePowerLaw(pts);
+  if(!fit)return null;
+  return{c:fit.k/256,a:fit.p,rmsePct:fit.rmsePct};
+}
+function calibGateState(ds){
+  const n=ds?ds.records.length:0;
+  const ratio=ds?calibResolutionRatio(ds.records):0;
+  return{n,ratio,okN:n>=CALIB_MIN_RECORDS,okRatio:ratio>=CALIB_MIN_RATIO,canFit:n>=CALIB_MIN_RECORDS&&ratio>=CALIB_MIN_RATIO,ideal:n>=16};
+}
+
+/* ── Step-4 capture panel ── */
+function toggleFcalib(){
+  const c=$('fcalib-controls'),t=$('fcalib-toggle-txt');
+  const open=c.style.display==='none';
+  c.style.display=open?'block':'none';
+  t.textContent=(open?'▾':'▸')+' Calibrate the Approach B formula (advanced)';
+  if(open){renderFcalibSelect();updateFcalibCount();}
+}
+function renderFcalibSelect(){
+  const sel=$('fcalib-dataset-select');if(!sel)return;
+  sel.innerHTML='<option value="">— Select or create a dataset —</option>'+
+    S.calibDatasets.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.records.length})</option>`).join('');
+  sel.value=S.activeCalibDataset||'';
+}
+function onFcalibDatasetSelect(){
+  S.activeCalibDataset=$('fcalib-dataset-select').value;
+  updateFcalibCount();
+}
+function newFcalibDataset(){
+  const name=prompt('Name this calibration dataset (e.g. "DJI Air 3S · concrete"):');
+  if(name===null)return;
+  const nm=name.trim();if(!nm){return;}
+  createCalibDataset(nm);
+  renderFcalibSelect();renderCalibDatasetSelectScr();updateFcalibCount();
+  fcalibMsg(`Created “${nm}”. Save points into it below.`,true);
+}
+function fcalibMsg(text,ok){
+  const m=$('fcalib-msg');if(!m)return;
+  if(!text){m.style.display='none';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+}
+function updateFcalibCount(){
+  const el=$('fcalib-count');if(!el)return;
+  const ds=activeDataset();
+  if(!ds){el.textContent='';return;}
+  const g=calibGateState(ds);
+  el.textContent=`${g.n} point${g.n===1?'':'s'} · range ${g.ratio>0?g.ratio.toFixed(1)+'×':'—'}`;
+}
+function saveCalibPoint(){
+  if(!S.results){fcalibMsg('Run an analysis first.',false);return;}
+  const ds=activeDataset();
+  if(!ds){fcalibMsg('Select or create a dataset first.',false);return;}
+  const w=parseFloat($('fcalib-width-inp').value);
+  if(!(w>0)){fcalibMsg('Enter the known crack width (mm).',false);$('fcalib-width-inp').focus();return;}
+  const rec={pxMm:+S.pxMm,knownWidth:+w,area:+S.results.area,date:new Date().toISOString().slice(0,10)};
+  ds.records.push(rec);
+  persistCalibDatasets();
+  renderFcalibSelect();updateFcalibCount();
+  if(S.screen==='formula')renderCalibRecords();
+  const g=calibGateState(ds);
+  let extra='';
+  if(g.canFit)extra=' Ready to fit on the Approach B screen.';
+  else if(!g.okN)extra=` Need ${CALIB_MIN_RECORDS-g.n} more (min ${CALIB_MIN_RECORDS}).`;
+  else if(!g.okRatio)extra=` Widen the resolution range to ${CALIB_MIN_RATIO}× (now ${g.ratio.toFixed(1)}×).`;
+  fcalibMsg(`Saved: ${w.toFixed(3)} mm at ${S.pxMm.toFixed(3)} px/mm.${extra}`,true);
+  $('fcalib-width-inp').value='';
+}
+
+/* ── Approach B screen: dataset fitting ── */
+function renderCalibDatasetSelectScr(){
+  const sel=$('calib-dataset-select-scr');if(!sel)return;
+  sel.innerHTML='<option value="">— Select a dataset —</option>'+
+    S.calibDatasets.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.records.length})</option>`).join('');
+  sel.value=S.activeCalibDataset||'';
+  const has=!!activeDataset();
+  const del=$('btn-calib-ds-delete');if(del)del.style.display=has?'':'none';
+  const exp=$('btn-calib-ds-export');if(exp)exp.style.display=has?'':'none';
+}
+function onCalibDatasetSelectScr(){
+  S.activeCalibDataset=$('calib-dataset-select-scr').value;
+  renderCalibDatasetSelectScr();renderCalibRecords();
+}
+function deleteCalibDatasetScr(){
+  const ds=activeDataset();if(!ds)return;
+  if(!confirm(`Delete dataset “${ds.name}” and its ${ds.records.length} points?`))return;
+  S.calibDatasets=S.calibDatasets.filter(d=>d.id!==ds.id);
+  S.activeCalibDataset='';
+  persistCalibDatasets();
+  renderCalibDatasetSelectScr();renderCalibRecords();renderFcalibSelect();
+}
+function deleteCalibRecord(i){
+  const ds=activeDataset();if(!ds)return;
+  ds.records.splice(i,1);
+  persistCalibDatasets();
+  renderCalibRecords();renderFcalibSelect();updateFcalibCount();
+}
+function renderCalibRecords(){
+  const list=$('calib-records-list');if(!list)return;
+  const ds=activeDataset();
+  if(!ds){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">Select a dataset to see its points.</div>';
+    updateCalibGateStatus();updateCalibFitSummary();return;}
+  if(!ds.records.length){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">No points yet. Collect them at Step 4.</div>';}
+  else{
+    const fit=fitCalibDataset(ds);
+    list.innerHTML=ds.records.map((r,i)=>{
+      const cpm=r.area/r.knownWidth;
+      let resid='';
+      if(fit){const pred=(fit.c*256)*Math.pow(r.pxMm,fit.a);const rp=Math.abs(pred-cpm)/cpm*100;
+        const col=rp<5?'#34d399':rp<12?'#fbbf24':'#f87171';
+        resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(1)}%</span>`;}
+      return `<div class="wiz-shot-item"><span>${r.pxMm.toFixed(2)} px/mm · ${r.knownWidth.toFixed(3)} mm · area ${r.area.toFixed(1)} → <strong>${cpm.toFixed(1)}</strong> lum·mm/mm</span>${resid}<button class="wiz-shot-del" onclick="deleteCalibRecord(${i})" title="Remove">✕</button></div>`;
+    }).join('');
+  }
+  updateCalibGateStatus();updateCalibFitSummary();
+}
+function updateCalibGateStatus(){
+  const box=$('calib-gate-status');if(!box)return;
+  const ds=activeDataset();
+  if(!ds){box.innerHTML='';return;}
+  const g=calibGateState(ds);
+  const nCls=g.okN?'fit-good':'fit-warn',rCls=g.okRatio?'fit-good':'fit-warn';
+  const nTxt=`<span class="${nCls}">${g.n} / ${CALIB_MIN_RECORDS} points${g.ideal?' ✓ ideal':''}</span>`;
+  const rTxt=`<span class="${rCls}">${g.ratio>0?g.ratio.toFixed(1):'0'}× / ${CALIB_MIN_RATIO}× resolution range</span>`;
+  box.innerHTML=`${nTxt} &nbsp;·&nbsp; ${rTxt}`;
+  const btn=$('btn-calib-fit');if(btn)btn.disabled=!g.canFit;
+}
+function updateCalibFitSummary(){
+  const box=$('calib-fit-summary');if(!box)return;
+  const ds=activeDataset();
+  if(!ds||ds.records.length<2){box.style.display='none';return;}
+  const fit=fitCalibDataset(ds);
+  if(!fit){box.style.display='none';return;}
+  box.style.display='block';
+  let q='';
+  if(fit.rmsePct!=null){
+    const e=fit.rmsePct,cls=e<5?'fit-good':e<12?'fit-warn':'fit-bad';
+    const word=e<5?'excellent':e<12?'acceptable':'high scatter — check for outliers';
+    q=`<br>Fit quality: <span class="${cls}">±${e.toFixed(1)}% (${word})</span>`;
+  }
+  box.innerHTML=`Preview fit: <strong>c = ${fit.c.toFixed(3)}, α = ${fit.a.toFixed(3)}</strong>${q}`;
+}
+function fitAndFinaliseDataset(){
+  const ds=activeDataset();if(!ds)return;
+  const g=calibGateState(ds);
+  if(!g.canFit){calibFitMsg(`Need ${CALIB_MIN_RECORDS}+ points and ${CALIB_MIN_RATIO}× range first.`,false);return;}
+  const fit=fitCalibDataset(ds);
+  if(!fit||!isFinite(fit.c)||!isFinite(fit.a)){calibFitMsg('Fit failed — check the points for bad values.',false);return;}
+  ds.c=fit.c;ds.a=fit.a;ds.rmsePct=fit.rmsePct;ds.fittedDate=new Date().toISOString().slice(0,10);
+  persistCalibDatasets();
+  // Apply the fitted constants to the live Approach B formula
+  S.bCoeff=+fit.c.toFixed(4);S.bExp=+fit.a.toFixed(4);
+  S.activeProfile='';
+  if($('profile-select'))$('profile-select').value='';
+  if($('profile-select-scr'))$('profile-select-scr').value='';
+  syncFormulaInputs();updateFormulaActive();
+  if(S.results)recompute();
+  calibFitMsg(`Fitted c = ${fit.c.toFixed(3)}, α = ${fit.a.toFixed(3)} and applied to the formula. Save it as a named profile above to keep it.`,true);
+  updateCalibFitSummary();
+}
+function calibFitMsg(text,ok){
+  const m=$('calib-fit-msg');if(!m)return;
+  if(!text){m.style.display='none';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+}
+function exportCalibDatasets(){
+  if(!S.calibDatasets.length){calibFitMsg('No datasets to export yet.',false);return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'formula-datasets',version:1,datasets:S.calibDatasets},null,2);
+  downloadJSON(data,`DCG_formula_datasets_${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportOneCalibDataset(){
+  const ds=activeDataset();if(!ds){calibFitMsg('Select a dataset to export.',false);return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'formula-datasets',version:1,datasets:[ds]},null,2);
+  downloadJSON(data,`DCG_formula_${sanitizeFilename(ds.name)}.json`);
+}
+function importCalibDatasetsClick(){$('calib-ds-import-file').click();}
+function importCalibDatasets(ev){
+  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const arr=obj.datasets||obj;
+      if(!Array.isArray(arr))throw 0;
+      let added=0;
+      arr.forEach(d=>{
+        if(d&&d.name&&Array.isArray(d.records)){
+          d.id='cd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+added;
+          S.calibDatasets.push(d);added++;
+        }
+      });
+      persistCalibDatasets();renderCalibDatasetSelectScr();renderCalibRecords();renderFcalibSelect();
+      calibFitMsg(`Imported ${added} dataset${added===1?'':'s'}.`,true);
+    }catch(err){calibFitMsg('Could not read that file.',false);}
+  };
+  reader.readAsText(file);
+  ev.target.value='';
 }
 
 function loadProfiles(){
@@ -2747,6 +3039,7 @@ updateStepBar();
 showStep(1);
 loadProfiles();
 loadScaleProfiles();
+loadCalibDatasets();
 updateAuxBar();
 
 if(isTouch){
