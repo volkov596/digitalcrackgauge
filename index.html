@@ -26,6 +26,9 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 .step-lbl.active{color:#e8f8f9;font-weight:500}
 
 #err-bar{margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(239,68,68,0.12);color:#fca5a5;font-size:13px;border:1px solid rgba(239,68,68,0.25);display:none}
+#backup-bar{display:none;align-items:flex-start;gap:10px;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(217,119,6,0.12);color:#fbbf24;font-size:12px;line-height:1.5;border:1px solid rgba(217,119,6,0.3)}
+#backup-bar-text{flex:1}
+#backup-bar-close{background:none;border:none;color:#fbbf24;cursor:pointer;font-size:14px;padding:0;line-height:1;flex-shrink:0}
 #err-bar.show{display:flex;justify-content:space-between;align-items:center}
 #err-close{background:none;border:none;cursor:pointer;color:#fca5a5;font-size:16px;margin-left:10px}
 
@@ -296,7 +299,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.7-beta</div>
+  <div id="version-tag">v1.2.8-beta</div>
+
+  <div id="backup-bar" style="display:none">
+    <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
+    <button id="backup-bar-close" onclick="dismissBackupReminder()" title="Dismiss">✕</button>
+  </div>
 
   
   <div id="step-bar"></div>
@@ -315,7 +323,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div id="drop-zone">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <p class="big">Drop a crack photo here</p>
-      <p class="small">or use a button below</p>
+      <p class="small">or use a button below · or paste an image (Ctrl/Cmd+V)</p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files…</button>
         <button class="btn btn-primary" id="btn-take-photo" style="display:none" onclick="document.getElementById('camera-input').click()">📷 Take photo</button>
@@ -912,6 +920,7 @@ function applyInterfaceMode(tier){
 
   $('pin-overlay').style.display = 'none';
   $('app').style.display = 'block';
+  maybeShowBackupReminder();
 }
 
 async function checkPin(){
@@ -1721,6 +1730,33 @@ function downloadJSON(data,filename){
   const url=URL.createObjectURL(blob);
   if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
   else{const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+  markExported();
+}
+
+/* ── Backup reminder (passive, ~weekly) ── */
+const LAST_EXPORT_KEY='dcg_last_export_v1';
+const BACKUP_REMIND_DAYS=7;
+function markExported(){
+  try{storageSet(LAST_EXPORT_KEY,String(Date.now()));}catch(e){}
+  const b=$('backup-bar');if(b)b.style.display='none';
+}
+function hasBackupWorthyData(){
+  return (S.scaleProfiles&&S.scaleProfiles.length>0)
+      || (S.profiles&&S.profiles.length>0)
+      || (S.calibDatasets&&S.calibDatasets.length>0)
+      || (S.measLog&&S.measLog.length>0);
+}
+function maybeShowBackupReminder(){
+  if(!hasBackupWorthyData())return;
+  let last=0;
+  try{const v=storageGet(LAST_EXPORT_KEY);last=v?parseInt(v,10):0;}catch(e){last=0;}
+  const days=(Date.now()-last)/86400000;
+  if(!last||days>=BACKUP_REMIND_DAYS){
+    const b=$('backup-bar');if(b)b.style.display='flex';
+  }
+}
+function dismissBackupReminder(){
+  const b=$('backup-bar');if(b)b.style.display='none';
 }
 function exportScaleProfiles(){
   // Export all camera (distance-scale) profiles as a dated bundle
@@ -2133,6 +2169,7 @@ function exportMeasLogCSV(){
   const name=`DCG_measurement_log_${new Date().toISOString().slice(0,10)}.csv`;
   if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
   else{const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+  markExported();
 }
 
 
@@ -2550,7 +2587,7 @@ function decodeImage(file, cb){
 
 function loadFile(file){
   clearErr();
-  S.photoName=file&&file.name?file.name:'';
+  S.photoName=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
   decodeImage(file,d=>{
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
@@ -3179,6 +3216,26 @@ chartCanvas.addEventListener('touchend',()=>{S.chartDrag=null;});
 
 $('file-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
 $('camera-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
+
+// Paste an image to upload — only on the Step-1 upload screen, and not while typing in a field.
+window.addEventListener('paste',e=>{
+  if(S.screen!=='workflow'||S.step!==1)return;
+  const t=e.target;
+  if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;
+  const items=e.clipboardData&&e.clipboardData.items;
+  if(!items)return;
+  for(let i=0;i<items.length;i++){
+    if(items[i].type&&items[i].type.indexOf('image')===0){
+      const blob=items[i].getAsFile();
+      if(blob){
+        e.preventDefault();
+        if(!blob.name){try{Object.defineProperty(blob,'name',{value:`pasted_image_${Date.now()}.png`});}catch(err){}}
+        loadFile(blob);
+      }
+      return;
+    }
+  }
+});
 $('err-close').addEventListener('click',clearErr);
 
 const dz=$('drop-zone');
