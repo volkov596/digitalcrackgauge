@@ -145,6 +145,8 @@ input[type=range]{accent-color:#0cbbcc}
 .base-sub{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px;line-height:1.5}
 
 #formula-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+#fcalib-panel{padding:12px 16px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:16px}
+#btn-fcalib-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
 #btn-formula-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
 .formula-eq{font-family:monospace;font-size:13px;color:#0cbbcc;background:rgba(0,0,0,0.25);padding:8px 12px;border-radius:6px;margin-bottom:12px;text-align:center;letter-spacing:.02em}
 .formula-input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -199,7 +201,7 @@ input[type=range]{accent-color:#0cbbcc}
 
 /* ── Auxiliary tools bar (calibration circle) ── */
 #aux-bar{display:flex;justify-content:center;gap:24px;margin:-6px 0 18px}
-body.simple #aux-bar{display:none}
+body.simple #aux-bar .pro-only{display:none}
 .aux-item{display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none}
 .aux-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px dashed rgba(12,187,204,0.4);background:rgba(255,255,255,0.03);color:rgba(12,187,204,0.75);font-size:14px;transition:all .2s}
 .aux-item:hover .aux-circle{border-color:#0cbbcc;background:rgba(12,187,204,0.12)}
@@ -221,6 +223,17 @@ body.simple #aux-bar{display:none}
 #calib-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none;cursor:crosshair}
 #calib-zoom-bar{display:flex;align-items:center;gap:10px;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,0.04);font-size:11px}
 .calib-screen-nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(12,187,204,0.15)}
+.log-controls-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.log-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#e8f8f9;cursor:pointer}
+.log-toggle input{width:16px;height:16px;accent-color:#0cbbcc;cursor:pointer}
+.log-btns{display:flex;gap:8px;flex-wrap:wrap}
+.log-row{padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.12);margin-bottom:8px}
+.log-row-main{display:flex;align-items:center;gap:10px}
+.log-idx{min-width:22px;height:22px;border-radius:50%;background:rgba(12,187,204,0.18);color:#0cbbcc;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.log-vals{flex:1;font-size:13px;color:#e8f8f9}
+.log-dim{color:rgba(232,248,249,0.55);font-size:12px}
+.log-row-sub{font-size:11px;color:rgba(232,248,249,0.5);margin:5px 0 0 32px}
+.log-note-inp{width:calc(100% - 32px);margin:6px 0 0 32px;padding:4px 8px;font-size:12px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2);border-radius:5px;color:#e8f8f9;box-sizing:border-box}
 
 #calib-panel{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
 .calib-title{font-size:12px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
@@ -283,11 +296,11 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.5-beta</div>
+  <div id="version-tag">v1.2.7-beta</div>
 
   
   <div id="step-bar"></div>
-  <div id="aux-bar" class="pro-only"></div>
+  <div id="aux-bar"></div>
 
   
   <div id="err-bar"><span id="err-msg"></span><button id="err-close">✕</button></div>
@@ -302,9 +315,13 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div id="drop-zone">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <p class="big">Drop a crack photo here</p>
-      <p class="small">or click the button below</p>
-      <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files…</button>
+      <p class="small">or use a button below</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files…</button>
+        <button class="btn btn-primary" id="btn-take-photo" style="display:none" onclick="document.getElementById('camera-input').click()">📷 Take photo</button>
+      </div>
       <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
+      <input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none">
     </div>
   </div>
 
@@ -576,8 +593,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <input type="number" id="fcalib-width-inp" step="0.001" min="0" placeholder="e.g. 0.500" style="width:105px">
           <span>mm</span>
         </div>
-        <div class="wiz-btns" style="margin-top:8px">
-          <button class="btn btn-primary btn-small" id="btn-fcalib-save" onclick="saveCalibPoint()">Save calibration point</button>
+        <div class="wiz-btns" style="margin-top:10px;align-items:center">
+          <button class="btn btn-primary" id="btn-fcalib-save" onclick="saveCalibPoint()" style="padding:7px 14px;font-size:12px;border-radius:6px">Save calibration point</button>
           <span id="fcalib-count" style="font-size:12px;color:rgba(232,248,249,0.6);align-self:center"></span>
         </div>
         <div id="fcalib-msg" style="display:none;font-size:12px;margin-top:8px"></div>
@@ -757,6 +774,29 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
   </div>
 
+  <div id="log-screen" style="display:none">
+    <div class="calib-screen-title">Measurement log</div>
+    <div class="calib-screen-sub">Every completed analysis is recorded here for the session, so you can measure a whole site and export the results to a spreadsheet. Stored on this device only.</div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="log-controls-row">
+        <label class="log-toggle"><input type="checkbox" id="autolog-toggle" onchange="setAutoLog(this.checked)"> Automatically log every measurement</label>
+        <span id="log-count" style="font-size:12px;color:rgba(232,248,249,0.6)"></span>
+      </div>
+      <div class="log-btns">
+        <button class="btn btn-primary" onclick="exportMeasLogCSV()">↓ Export CSV</button>
+        <button class="btn btn-nav" onclick="clearMeasLog()">Clear log</button>
+      </div>
+      <div id="log-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+    </div>
+
+    <div id="log-list"></div>
+
+    <div class="calib-screen-nav">
+      <button class="btn btn-primary" onclick="showScreen('workflow')">Back to measurement →</button>
+    </div>
+  </div>
+
   <footer id="app-footer">
     <div class="social-row">
       <a href="mailto:okroge@tuta.com" title="Email" aria-label="Email">
@@ -833,6 +873,8 @@ const S={
   profiles:[],activeProfile:'',   // saved camera profiles + currently selected id
   scaleProfiles:[],activeScaleProfile:'',   // distance-scale profiles (Pro) + selected id
   calibDatasets:[],activeCalibDataset:'',    // Approach B formula-calibration datasets (Pro)
+  measLog:[],autoLog:true,                    // session measurement log (both tiers)
+  photoName:'',                               // filename of the loaded crack photo
   scaleDist:'',                    // distance (m) entered in distance+profile scale mode
   calibShots:[],                   // (legacy field, retained harmlessly)
   calibActive:false,               // whether the calibration wizard is capturing
@@ -1224,18 +1266,24 @@ function buildStepBar(){
 function buildAuxBar(){
   const bar=$('aux-bar');if(!bar)return;
   bar.innerHTML='';
-  // Camera calibration circle
-  const item=document.createElement('div');item.className='aux-item';
+  // Camera calibration circle (Pro)
+  const item=document.createElement('div');item.className='aux-item pro-only';
   item.onclick=()=>showScreen(S.screen==='calibrate'?'workflow':'calibrate');
   const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
   const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';
   item.append(circle,lbl);bar.append(item);
-  // Approach B formula circle
-  const item2=document.createElement('div');item2.className='aux-item';
+  // Approach B formula circle (Pro)
+  const item2=document.createElement('div');item2.className='aux-item pro-only';
   item2.onclick=()=>showScreen(S.screen==='formula'?'workflow':'formula');
   const circle2=document.createElement('div');circle2.className='aux-circle';circle2.id='aux-formula';circle2.textContent='B';
   const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';
   item2.append(circle2,lbl2);bar.append(item2);
+  // Measurement log circle (both tiers)
+  const item3=document.createElement('div');item3.className='aux-item';
+  item3.onclick=()=>showScreen(S.screen==='log'?'workflow':'log');
+  const circle3=document.createElement('div');circle3.className='aux-circle';circle3.id='aux-log';circle3.textContent='L';
+  const lbl3=document.createElement('span');lbl3.className='aux-lbl';lbl3.textContent='Log';
+  item3.append(circle3,lbl3);bar.append(item3);
 }
 function updateAuxBar(){
   const c=$('aux-calib');
@@ -1244,6 +1292,7 @@ function updateAuxBar(){
   const f=$('aux-formula');
   if(f){const modified=formulaModified()||S.profiles.length>0||S.calibDatasets.length>0;
     f.className='aux-circle'+(S.screen==='formula'?' active':(modified?' has-data':''));}
+  updateLogAux();
 }
 
 function updateStepBar(){
@@ -1420,22 +1469,56 @@ function deleteScaleProfile(){
 ═══════════════════════════════════════════════════════════ */
 function showScreen(name){
   S.screen=name;
-  const wf=$('workflow-container'),cs=$('calibrate-screen'),fs=$('formula-screen');
+  const wf=$('workflow-container'),cs=$('calibrate-screen'),fs=$('formula-screen'),ls=$('log-screen');
   if(wf)wf.style.display='none';
   if(cs)cs.style.display='none';
   if(fs)fs.style.display='none';
+  if(ls)ls.style.display='none';
   if(name==='calibrate'){
     if(cs)cs.style.display='block';
     enterCalibScreen();
   } else if(name==='formula'){
     if(fs)fs.style.display='block';
     enterFormulaScreen();
+  } else if(name==='log'){
+    if(ls)ls.style.display='block';
+    enterLogScreen();
   } else {
     if(wf)wf.style.display='block';
     calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
     requestAnimationFrame(paintCanvas);
   }
   updateAuxBar();
+}
+function enterLogScreen(){
+  const t=$('autolog-toggle');if(t)t.checked=S.autoLog;
+  renderMeasLog();
+}
+function renderMeasLog(){
+  const list=$('log-list');if(!list)return;
+  const cnt=$('log-count');if(cnt)cnt.textContent=S.measLog.length?`${S.measLog.length} measurement${S.measLog.length===1?'':'s'}`:'';
+  if(!S.measLog.length){list.innerHTML='<div style="font-size:12px;color:rgba(232,248,249,0.4);padding:8px 0">No measurements logged yet. Completed analyses appear here'+(S.autoLog?' automatically.':' when you add them.')+'</div>';return;}
+  const rows=S.measLog.map((e,i)=>{
+    const t=new Date(e.timestamp);
+    const ts=isNaN(t)?'':`${t.toLocaleDateString()} ${t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    const A=e.widthA!=null?e.widthA.toFixed(3):'—';
+    const B=e.widthB!=null?e.widthB.toFixed(3):'—';
+    const photo=e.photoName?escapeHtml(e.photoName):'(unnamed)';
+    return `<div class="log-row">
+      <div class="log-row-main">
+        <span class="log-idx">${i+1}</span>
+        <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm &nbsp; <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span></span>
+        <button class="wiz-shot-del" onclick="deleteLogEntry('${e.id}')" title="Delete">✕</button>
+      </div>
+      <div class="log-row-sub">${ts} · ${photo}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}</div>
+      <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
+    </div>`;
+  }).join('');
+  list.innerHTML=rows;
+}
+function updateLogAux(){
+  const c=$('aux-log');if(!c)return;
+  c.className='aux-circle'+(S.screen==='log'?' active':(S.measLog.length?' has-data':''));
 }
 
 function enterCalibScreen(){
@@ -1976,6 +2059,83 @@ function persistScaleProfiles(){
    Finalise requires ≥8 records AND max/min px/mm ratio ≥16.
 ═══════════════════════════════════════════════════════════ */
 const CALIB_DATASET_KEY='dcg_formula_datasets_v1';
+const MEAS_LOG_KEY='dcg_measurement_log_v1';
+const AUTO_LOG_KEY='dcg_autolog_v1';
+
+function loadMeasLog(){
+  const raw=storageGet(MEAS_LOG_KEY);
+  if(raw){try{const a=JSON.parse(raw);if(Array.isArray(a))S.measLog=a;}catch(e){S.measLog=[];}}
+  const al=storageGet(AUTO_LOG_KEY);
+  if(al!==null&&al!==undefined&&al!=='')S.autoLog=(al==='1'||al===true||al==='true');
+}
+function persistMeasLog(){storageSet(MEAS_LOG_KEY,JSON.stringify(S.measLog));}
+function setAutoLog(on){S.autoLog=!!on;storageSet(AUTO_LOG_KEY,on?'1':'0');}
+
+function addLogEntry(silent){
+  if(!S.results){if(!silent)logMsg('Run an analysis first.',false);return;}
+  const dv=getDisplayValues();
+  const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+  const entry={
+    id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    timestamp:new Date().toISOString(),
+    photoName:S.photoName||'',
+    resolution:+(+S.pxMm).toFixed(3),
+    scaleMode:S.scaleMode||'',
+    distance:(S.scaleMode==='distance'&&S.scaleDist)?+S.scaleDist:null,
+    cameraProfile:prof?prof.name:'',
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+(+dv.aWidth).toFixed(4):null,
+    widthB:+(+dv.bWidth).toFixed(4),
+    cropLeft:+(+dv.cL).toFixed(3),cropRight:+(+dv.cR).toFixed(3),
+    resolutionMP:S.imgMeta?S.imgMeta.mp:'',
+    note:''
+  };
+  S.measLog.push(entry);
+  persistMeasLog();
+  if(S.screen==='log')renderMeasLog();
+  updateLogAux();
+  if(!silent)logMsg(`Added — ${S.measLog.length} in log.`,true);
+}
+function deleteLogEntry(id){
+  S.measLog=S.measLog.filter(e=>e.id!==id);
+  persistMeasLog();renderMeasLog();updateLogAux();
+}
+function clearMeasLog(){
+  if(!S.measLog.length)return;
+  if(!confirm(`Clear all ${S.measLog.length} logged measurements? This cannot be undone.`))return;
+  S.measLog=[];persistMeasLog();renderMeasLog();updateLogAux();
+}
+function updateLogNote(id,val){
+  const e=S.measLog.find(x=>x.id===id);if(e){e.note=val;persistMeasLog();}
+}
+function logMsg(text,ok){
+  const m=$('log-msg');if(!m)return;
+  if(!text){m.style.display='none';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+  setTimeout(()=>{if(m)m.style.display='none';},3500);
+}
+function csvEscape(v){
+  if(v===null||v===undefined)return '';
+  const s=String(v);
+  return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function exportMeasLogCSV(){
+  if(!S.measLog.length){logMsg('No measurements to export yet.',false);return;}
+  const cols=[['timestamp','Timestamp'],['photoName','Photo'],['resolution','px/mm'],
+    ['scaleMode','Scale mode'],['distance','Distance (m)'],['cameraProfile','Camera profile'],
+    ['widthA','Width A (mm)'],['widthB','Width B (mm)'],
+    ['cropLeft','Window from (mm)'],['cropRight','Window to (mm)'],
+    ['resolutionMP','Image MP'],['note','Note']];
+  const header=cols.map(c=>csvEscape(c[1])).join(',');
+  const rows=S.measLog.map(e=>cols.map(c=>csvEscape(e[c[0]])).join(','));
+  const csv=[header,...rows].join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const name=`DCG_measurement_log_${new Date().toISOString().slice(0,10)}.csv`;
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
+  else{const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+}
+
+
 const CALIB_MIN_RECORDS=8;
 const CALIB_MIN_RATIO=16;
 
@@ -2143,8 +2303,9 @@ function updateCalibFitSummary(){
   box.style.display='block';
   let q='';
   if(fit.rmsePct!=null){
-    const e=fit.rmsePct,cls=e<5?'fit-good':e<12?'fit-warn':'fit-bad';
-    const word=e<5?'excellent':e<12?'acceptable':'high scatter — check for outliers';
+    const e=fit.rmsePct;
+    const cls=e<12?'fit-good':e<16?'fit-warn':'fit-bad';
+    const word=e<8?'excellent':e<12?'good':e<16?'acceptable':'high scatter — check for outliers';
     q=`<br>Fit quality: <span class="${cls}">±${e.toFixed(1)}% (${word})</span>`;
   }
   box.innerHTML=`Preview fit: <strong>c = ${fit.c.toFixed(3)}, α = ${fit.a.toFixed(3)}</strong>${q}`;
@@ -2389,6 +2550,7 @@ function decodeImage(file, cb){
 
 function loadFile(file){
   clearErr();
+  S.photoName=file&&file.name?file.name:'';
   decodeImage(file,d=>{
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
@@ -2476,6 +2638,7 @@ function runAnalysis(){
       showStep(4);
       updateResultsDisplay();
       requestAnimationFrame(drawChart);
+      if(S.autoLog)addLogEntry(true);
     }catch(ex){showErr('Analysis failed: '+ex.message);}
     S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=!S.measLine;
   },100);
@@ -3015,6 +3178,7 @@ chartCanvas.addEventListener('touchmove',e=>{
 chartCanvas.addEventListener('touchend',()=>{S.chartDrag=null;});
 
 $('file-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
+$('camera-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
 $('err-close').addEventListener('click',clearErr);
 
 const dz=$('drop-zone');
@@ -3040,12 +3204,14 @@ showStep(1);
 loadProfiles();
 loadScaleProfiles();
 loadCalibDatasets();
+loadMeasLog();
 updateAuxBar();
 
 if(isTouch){
   $('touch-mode-bar').style.display='flex';
   $('nav-hint').textContent='Pinch to zoom · drag to pan';
   const ch=$('calib-nav-hint');if(ch)ch.textContent='Pinch to zoom · drag to pan';
+  const tp=$('btn-take-photo');if(tp)tp.style.display='';
   updateTouchModeBtn();
 }
 </script>
