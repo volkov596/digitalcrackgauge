@@ -1,0 +1,3339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Digital Crack Gauge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Raleway',-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(160deg,#0d4f5c 0%,#0a3540 40%,#081a1e 100%);background-attachment:fixed;color:#e8f8f9;min-height:100vh;padding:1.5rem 1rem}
+#app{max-width:680px;margin:0 auto}
+h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-transform:uppercase;margin-bottom:.35rem;text-align:center}
+#version-tag{text-align:center;font-size:10px;letter-spacing:.18em;color:rgba(12,187,204,0.45);text-transform:uppercase;margin-bottom:1.5rem;font-weight:400}
+
+#step-bar{display:flex;align-items:flex-start;margin-bottom:1.25rem}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center}
+.step-row{display:flex;align-items:center;width:100%}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,0.12);transition:background .3s}
+.step-line.done{background:#0cbbcc}
+.step-line.invis{background:transparent}
+.step-circle{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(232,248,249,0.4);transition:all .3s}
+.step-circle.active{background:#0cbbcc;border-color:#0cbbcc;color:#081a1e}
+.step-circle.done{background:#0a9aab;border-color:#0a9aab;color:#fff}
+.step-lbl{font-size:11px;margin-top:4px;color:rgba(232,248,249,0.35);font-weight:400;transition:color .2s}
+.step-lbl.active{color:#e8f8f9;font-weight:500}
+
+#err-bar{margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(239,68,68,0.12);color:#fca5a5;font-size:13px;border:1px solid rgba(239,68,68,0.25);display:none}
+#backup-bar{display:none;align-items:flex-start;gap:10px;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(217,119,6,0.12);color:#fbbf24;font-size:12px;line-height:1.5;border:1px solid rgba(217,119,6,0.3)}
+#backup-bar-text{flex:1}
+#backup-bar-close{background:none;border:none;color:#fbbf24;cursor:pointer;font-size:14px;padding:0;line-height:1;flex-shrink:0}
+#version-bar{display:none;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(37,99,235,0.14);color:#93c5fd;font-size:12px;line-height:1.5;border:1px solid rgba(37,99,235,0.35)}
+#demo-link-row{margin-top:16px;text-align:center}
+#demo-link{font-size:12px;color:rgba(12,187,204,0.85);text-decoration:none;border-bottom:1px dotted rgba(12,187,204,0.5);cursor:pointer}
+#demo-link:hover{color:#0cbbcc;border-bottom-color:#0cbbcc}
+#err-bar.show{display:flex;justify-content:space-between;align-items:center}
+#err-close{background:none;border:none;cursor:pointer;color:#fca5a5;font-size:16px;margin-left:10px}
+
+.panel{display:none}.panel.show{display:block}
+.card{padding:12px 16px;border-radius:9px;margin-bottom:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.2);font-size:13px;color:rgba(232,248,249,0.75);line-height:1.5}
+.card.success-bg{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)}
+.card.blue-bg{background:rgba(12,187,204,0.08);border-color:rgba(12,187,204,0.3)}
+
+#info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:14px;font-size:12px;color:rgba(232,248,249,0.6);line-height:1.7}
+.info-head{font-weight:600;color:#0cbbcc;margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+#drop-zone{border:2px dashed rgba(12,187,204,0.35);border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.03);transition:border-color .15s,background .15s;margin-bottom:12px}
+#drop-zone.dragover{border-color:#0cbbcc;background:rgba(12,187,204,0.08)}
+#drop-zone p.big{color:#e8f8f9;font-weight:500;font-size:15px;margin-bottom:6px}
+#drop-zone p.small{color:rgba(232,248,249,0.45);font-size:13px;margin-bottom:20px}
+
+#canvas-wrap{display:none;margin-bottom:0;position:relative}
+#res-warn-overlay{position:absolute;left:0;right:0;bottom:0;padding:8px 14px;font-size:12px;line-height:1.45;text-align:center;border-bottom-left-radius:8px;border-bottom-right-radius:8px;pointer-events:none;z-index:5}
+#res-warn-overlay.warn{background:rgba(217,119,6,0.82);color:#fff}
+#res-warn-overlay.danger{background:rgba(220,38,38,0.85);color:#fff}
+#canvas-wrap.show{display:block}
+#img-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none}
+#zoom-bar{display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.15);font-size:11px;color:rgba(232,248,249,0.4);flex-wrap:wrap;margin-bottom:12px}
+#zoom-label{font-family:monospace;color:#e8f8f9}
+#img-meta{margin-left:auto;color:rgba(12,187,204,0.2)}#img-meta.show{color:rgba(232,248,249,0.45)}
+#img-meta span{margin-left:6px}
+
+.btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s,background .15s}
+.btn-primary{background:#0cbbcc;color:#081a1e}
+.btn-success{background:#10b981;color:#fff}
+.btn-nav{background:rgba(255,255,255,0.1);color:#e8f8f9;border:1px solid rgba(255,255,255,0.18)}
+.btn-outline{background:transparent;color:rgba(232,248,249,0.7);border:1px solid rgba(255,255,255,0.25)}
+.btn-small{padding:4px 12px;font-size:12px;border-radius:6px}
+.btn:disabled{background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.25);cursor:not-allowed}
+.btn-ghost{background:none;border:1px solid rgba(12,187,204,0.3);color:rgba(232,248,249,0.65);cursor:pointer;padding:6px 12px;border-radius:6px;font-size:12px}
+
+.tab-row{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:400;background:transparent;color:rgba(232,248,249,0.55);border:1px solid rgba(255,255,255,0.18);transition:all .15s}
+.tab.active{background:#0cbbcc;color:#081a1e;border-color:#0cbbcc;font-weight:500}
+.tab.amber{background:#d97706;color:#fff;border-color:#d97706}
+
+input[type=text],input[type=number]{padding:5px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px}
+input[type=text].mono,input[type=number].mono{font-family:monospace}
+input[type=range]{accent-color:#0cbbcc}
+.input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:rgba(232,248,249,0.6)}
+
+.q-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.q-segs{display:inline-flex;gap:2px;align-items:center}
+.q-seg{display:inline-block;width:4px;height:10px;border-radius:2px;background:rgba(255,255,255,0.15)}
+
+.avg-section{padding:14px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:14px}
+.avg-title{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.chk-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer;user-select:none}
+.chk-row input{margin-top:2px}
+.chk-main{font-size:13px;color:#e8f8f9;font-weight:500}
+.chk-sub{font-size:11px;color:rgba(232,248,249,0.4);margin-top:1px}
+.chk-warn{font-size:11px;color:#fbbf24;margin-top:3px}
+.radio-group{display:flex;flex-direction:column;gap:7px}
+.radio-row{display:flex;align-items:flex-start;gap:6px;cursor:pointer;user-select:none}
+.radio-label{font-size:13px;color:#e8f8f9;font-weight:500}
+.radio-desc{font-size:11px;color:rgba(232,248,249,0.4);margin-left:6px}
+.method-label{font-size:12px;font-weight:500;color:rgba(232,248,249,0.55);margin-bottom:8px}
+
+#result-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.result-card{padding:16px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.2)}
+.result-card.b{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)}
+.result-card.a-active{background:rgba(12,187,204,0.1);border-color:rgba(12,187,204,0.35)}
+.r-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;color:rgba(232,248,249,0.45)}
+.r-method{font-size:11px;margin-bottom:12px;color:rgba(232,248,249,0.45)}
+.r-val{font-size:38px;font-weight:500;line-height:1;font-family:monospace;color:rgba(232,248,249,0.35)}
+.r-unit{font-size:18px;font-weight:400;margin-left:5px}
+.r-hint{font-size:11px;margin-top:8px;color:rgba(232,248,249,0.4)}
+.b .r-tag,.b .r-method,.b .r-val,.b .r-hint{color:#34d399}
+.a-active .r-tag,.a-active .r-method,.a-active .r-val{color:#0cbbcc}
+
+#stats-row{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.15);margin-bottom:14px;font-size:11px;color:rgba(232,248,249,0.5);font-family:monospace;line-height:1.8}
+
+#chart-wrap{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+#chart-title{font-size:13px;font-weight:500;color:#e8f8f9;margin-bottom:2px}
+#chart-subtitle{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px}
+#chart-canvas{display:block;width:100%;height:220px;cursor:default;touch-action:none}
+
+#touch-mode-bar{display:none;margin-bottom:8px;gap:8px;align-items:center;flex-wrap:wrap}
+#btn-touch-mode{min-width:130px}
+
+.nav-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+@media(max-width:520px){
+  body{padding:.9rem .65rem}
+  h1{font-size:.95rem;margin-bottom:.9rem}
+  #info-grid{grid-template-columns:1fr;gap:6px}
+  #result-cards{grid-template-columns:1fr}
+  .r-val{font-size:32px}
+  .nav-row .btn{flex:1 1 40%;min-width:0;text-align:center;padding:10px 8px;font-size:12px}
+  .tab{padding:8px 10px;font-size:11px;min-height:44px}
+  .tab-row{gap:6px}
+  .chk-row{padding:5px 0;min-height:44px}
+  .chk-row input[type=checkbox]{width:20px;height:20px;flex-shrink:0;margin-top:2px}
+  .radio-row{padding:5px 0;min-height:44px}
+  .radio-row input[type=radio]{width:20px;height:20px;flex-shrink:0;margin-top:2px}
+  input[type=range]{height:36px}
+  .slider-lbl{width:36px;font-size:12px}
+  #stats-row{font-size:10px;line-height:1.7}
+  #chart-canvas{height:200px}
+  #calib-panel .input-row{flex-wrap:wrap;gap:6px}
+  #acc-note{font-size:11px}
+  #drop-zone .btn{width:100%;box-sizing:border-box}
+}
+
+#crop-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+.panel-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.panel-title{font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+.panel-badge{font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#0cbbcc;font-size:12px}
+#crop-auto-hint{font-size:11px;color:rgba(232,248,249,0.35)}
+
+#base-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}#btn-base-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.slider-lbl{width:32px;font-size:13px;color:rgba(232,248,249,0.55);flex-shrink:0}
+.slider-row input[type=range]{flex:1}
+.slider-val{font-family:monospace;font-size:12px;width:42px;text-align:right;flex-shrink:0;color:#e8f8f9}
+.base-sub{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px;line-height:1.5}
+
+#formula-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+#fcalib-panel{padding:12px 16px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:16px}
+#btn-fcalib-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+#btn-formula-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:#e8f8f9;text-transform:uppercase;letter-spacing:.06em}
+.formula-eq{font-family:monospace;font-size:13px;color:#0cbbcc;background:rgba(0,0,0,0.25);padding:8px 12px;border-radius:6px;margin-bottom:12px;text-align:center;letter-spacing:.02em}
+.formula-input-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.formula-input-row label{font-size:13px;color:rgba(232,248,249,0.7);min-width:130px}
+.formula-input-row input[type=number]{width:90px}
+.formula-default{font-size:11px;color:rgba(232,248,249,0.35);font-family:monospace}
+
+.profile-divider{border-top:1px solid rgba(12,187,204,0.15);margin:14px 0 12px}
+.profile-label{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.profile-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+#profile-select{flex:1;min-width:140px;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
+#profile-select option{background:#0a3540;color:#e8f8f9}
+.profile-btns{display:flex;gap:6px;flex-wrap:wrap}
+.profile-note{font-size:11px;color:rgba(232,248,249,0.4);font-style:italic;margin-top:2px;min-height:14px}
+#profile-save-form{display:none;margin-top:8px;padding:10px;border-radius:7px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2)}
+#profile-save-form.show{display:block}
+#profile-save-form input[type=text]{width:100%;margin-bottom:6px}
+#profile-name-inp{font-size:13px}
+.profile-meta-row{display:flex;gap:8px;align-items:center;font-size:11px;color:rgba(232,248,249,0.45);margin-top:4px}
+
+/* ── Distance + camera profile scale mode (Pro) ── */
+#scale-distance-panel{margin-bottom:12px}
+.dist-input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.dist-input-row label{font-size:13px;color:rgba(232,248,249,0.7);min-width:120px}
+.dist-input-row input[type=number]{width:110px}
+.dist-input-row select{flex:1;min-width:150px;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
+.dist-input-row select option{background:#0a3540;color:#e8f8f9}
+#dist-result{font-family:monospace;font-size:14px;color:#0cbbcc;margin-top:4px;min-height:18px}
+#dist-zoom-caution{font-size:11px;color:rgba(251,191,36,0.8);font-style:italic;margin-top:6px;line-height:1.45}
+
+/* ── Calibration wizard ── */
+#calib-wizard{display:none;margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.3)}
+#calib-wizard.show{display:block}
+.wiz-title{font-size:13px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.wiz-tip{font-size:11px;color:rgba(232,248,249,0.55);line-height:1.5;margin-bottom:6px;padding-left:18px;position:relative}
+.wiz-tip::before{content:'💡';position:absolute;left:0;top:0}
+.wiz-tips-box{background:rgba(12,187,204,0.07);border:1px solid rgba(12,187,204,0.15);border-radius:7px;padding:10px 12px;margin-bottom:14px}
+.wiz-shot-form{border:1px solid rgba(12,187,204,0.2);border-radius:8px;padding:12px;margin-bottom:12px;background:rgba(255,255,255,0.03)}
+.wiz-shot-form .dist-input-row label{min-width:140px}
+.wiz-step-num{display:inline-block;background:#0cbbcc;color:#081a1e;font-weight:600;font-size:11px;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;margin-right:6px}
+#wiz-span-hint{font-size:12px;color:rgba(232,248,249,0.6);margin:8px 0;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,0.25);min-height:16px}
+#wiz-span-hint strong{color:#0cbbcc}
+.wiz-shots-list{margin-bottom:12px}
+.wiz-shot-item{display:flex;align-items:center;gap:8px;font-size:12px;font-family:monospace;color:rgba(232,248,249,0.75);padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.04);margin-bottom:5px}
+.wiz-shot-item .shot-resid{margin-left:auto;font-size:11px}
+.wiz-shot-del{background:none;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:0 4px}
+.wiz-fit-summary{font-size:12px;color:rgba(232,248,249,0.7);padding:10px 12px;border-radius:7px;background:rgba(12,187,204,0.08);border:1px solid rgba(12,187,204,0.2);margin-bottom:12px;line-height:1.6}
+.wiz-fit-summary .fit-good{color:#34d399}
+.wiz-fit-summary .fit-warn{color:#fbbf24}
+.wiz-fit-summary .fit-bad{color:#f87171}
+.wiz-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── Auxiliary tools bar (calibration circle) ── */
+#aux-bar{display:flex;justify-content:center;gap:24px;margin:-6px 0 18px}
+body.simple #aux-bar .pro-only{display:none}
+.aux-item{display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none}
+.aux-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px dashed rgba(12,187,204,0.4);background:rgba(255,255,255,0.03);color:rgba(12,187,204,0.75);font-size:14px;transition:all .2s}
+.aux-item:hover .aux-circle{border-color:#0cbbcc;background:rgba(12,187,204,0.12)}
+.aux-circle.has-data{border-style:solid;background:rgba(12,187,204,0.15)}
+.aux-circle.active{border-style:solid;border-color:#0cbbcc;background:#0cbbcc;color:#081a1e}
+.aux-lbl{font-size:10px;margin-top:3px;color:rgba(232,248,249,0.5)}
+.aux-item:hover .aux-lbl{color:#e8f8f9}
+
+/* ── Calibration screen ── */
+#calibrate-screen{animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.calib-screen-title{font-size:16px;font-weight:600;color:#0cbbcc;margin-bottom:4px}
+.calib-screen-sub{font-size:13px;color:rgba(232,248,249,0.6);line-height:1.5;margin-bottom:16px}
+#calib-drop-zone{border:2px dashed rgba(12,187,204,0.35);border-radius:12px;padding:28px 24px;text-align:center;background:rgba(255,255,255,0.03);margin-bottom:14px}
+#calib-drop-zone p.big{color:#e8f8f9;font-weight:500;font-size:14px;margin-bottom:5px}
+#calib-drop-zone p.small{color:rgba(232,248,249,0.45);font-size:12px;margin-bottom:16px}
+#calib-canvas-wrap{margin-bottom:14px}
+#calib-canvas-wrap:not(.show){display:none}
+#calib-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none;cursor:crosshair}
+#calib-zoom-bar{display:flex;align-items:center;gap:10px;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,0.04);font-size:11px}
+.calib-screen-nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(12,187,204,0.15)}
+.log-controls-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.log-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#e8f8f9;cursor:pointer}
+.log-toggle input{width:16px;height:16px;accent-color:#0cbbcc;cursor:pointer}
+.log-btns{display:flex;gap:8px;flex-wrap:wrap}
+.log-row{padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.12);margin-bottom:8px}
+.log-row-main{display:flex;align-items:center;gap:10px}
+.log-idx{min-width:22px;height:22px;border-radius:50%;background:rgba(12,187,204,0.18);color:#0cbbcc;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.log-vals{flex:1;font-size:13px;color:#e8f8f9}
+.log-dim{color:rgba(232,248,249,0.55);font-size:12px}
+.log-row-sub{font-size:11px;color:rgba(232,248,249,0.5);margin:5px 0 0 32px}
+.log-note-inp{width:calc(100% - 32px);margin:6px 0 0 32px;padding:4px 8px;font-size:12px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2);border-radius:5px;color:#e8f8f9;box-sizing:border-box}
+
+#calib-panel{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
+.calib-title{font-size:12px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.calib-sub{font-size:12px;color:rgba(232,248,249,0.45);margin-bottom:10px;line-height:1.5}
+
+#acc-note{padding:10px 14px;border-radius:8px;background:rgba(251,191,36,0.07);color:rgba(251,191,36,0.85);font-size:12px;line-height:1.55;margin-bottom:14px;border:1px solid rgba(251,191,36,0.2)}
+
+.simple-only{display:none}
+body.simple .pro-only{display:none}
+body.simple span.simple-only{display:inline}
+body.simple div.simple-only{display:block}
+#calib-mode-toggle,#calib-mode-toggle-pro{display:inline-flex;border:1px solid rgba(12,187,204,0.35);border-radius:8px;overflow:hidden;margin-bottom:12px}
+#calib-mode-toggle button,#calib-mode-toggle-pro button{background:rgba(255,255,255,0.04);color:rgba(232,248,249,0.6);border:none;padding:7px 16px;cursor:pointer;font-family:inherit;font-size:12px;transition:all .15s}
+#calib-mode-toggle button.active,#calib-mode-toggle-pro button.active{background:#0cbbcc;color:#081a1e;font-weight:600}
+input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight:600;cursor:not-allowed}
+#mode-badge{font-size:0.5em;vertical-align:middle;padding:3px 10px;border-radius:6px;letter-spacing:.1em;font-weight:600;margin-left:8px;border:1px solid rgba(12,187,204,0.5);color:#0cbbcc;background:rgba(12,187,204,0.1)}
+
+#pin-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#0a1416;padding:24px}
+#pin-box{width:100%;max-width:340px;text-align:center}
+#pin-box h2{font-size:1.1rem;font-weight:300;letter-spacing:.1em;color:#0cbbcc;text-transform:uppercase;margin:0 0 6px}
+#pin-box p{font-size:12px;color:rgba(232,248,249,0.5);margin:0 0 22px;line-height:1.6}
+#pin-input{width:100%;box-sizing:border-box;text-align:center;font-family:monospace;font-size:28px;letter-spacing:.4em;padding:14px;border-radius:10px;border:1px solid rgba(12,187,204,0.35);background:rgba(255,255,255,0.04);color:#e8f8f9;outline:none;margin-bottom:14px}
+#pin-input:focus{border-color:#0cbbcc}
+#pin-btn{width:100%;padding:13px;border-radius:10px;border:none;background:#0cbbcc;color:#081a1e;font-family:inherit;font-weight:600;font-size:14px;letter-spacing:.08em;cursor:pointer;transition:background .15s}
+#pin-btn:hover{background:#0aa6b5}
+#pin-btn:disabled{opacity:.5;cursor:wait}
+#pin-msg{min-height:18px;margin-top:14px;font-size:12px;color:#f87171}
+#app{display:none}
+/* ── Footer (social links + licence line) ── */
+#app-footer{margin-top:48px;padding:32px 0 20px;text-align:center;border-top:1px solid rgba(255,255,255,0.07)}
+.social-row{display:flex;gap:18px;justify-content:center;margin-bottom:22px}
+.social-row a{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;border:1px solid rgba(232,248,249,0.45);color:rgba(232,248,249,0.85);transition:all .15s;text-decoration:none}
+.social-row a:hover{border-color:#0cbbcc;color:#0cbbcc;transform:translateY(-2px)}
+.social-row svg{width:20px;height:20px;display:block}
+.footer-note{font-size:12px;color:rgba(232,248,249,0.4);line-height:1.6;max-width:560px;margin:0 auto;padding:0 16px}
+/* social row also on the pin screen */
+#pin-social{margin-top:30px}   
+</style>
+</head>
+<body>
+<div id="pin-overlay">
+  <div id="pin-box">
+    <h2>Digital Crack Gauge</h2>
+    <p>Enter your access code to continue.</p>
+    <input id="pin-input" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off">
+    <button id="pin-btn" onclick="checkPin()">Enter</button>
+    <div id="pin-msg"></div>
+    <div class="social-row" id="pin-social">
+      <a href="mailto:okroge@tuta.com" title="Email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/in/egorv/" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.3c0-1.26-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21h-4z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@byegorvolkov" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.3-.42-4.88a2.55 2.55 0 0 0-1.8-1.8C19.2 5 12 5 12 5s-7.2 0-8.78.42a2.55 2.55 0 0 0-1.8 1.8C1 8.7 1 12 1 12s0 3.3.42 4.88a2.55 2.55 0 0 0 1.8 1.8C4.8 19 12 19 12 19s7.2 0 8.78-.42a2.55 2.55 0 0 0 1.8-1.8C23 15.3 23 12 23 12zM9.75 15.02v-6.04L15.5 12z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+<div id="app">
+  <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
+  <div id="version-tag">v1.2.9-beta</div>
+
+  <div id="backup-bar" style="display:none">
+    <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
+    <button id="backup-bar-close" onclick="dismissBackupReminder()" title="Dismiss">✕</button>
+  </div>
+
+  <div id="version-bar" style="display:none">
+    <span>A new version is available. Please hard-refresh the page (Ctrl+Shift+R / Cmd+Shift+R) to update. Continuing on this version may lead to errors.</span>
+  </div>
+
+  
+  <div id="step-bar"></div>
+  <div id="aux-bar"></div>
+
+  
+  <div id="err-bar"><span id="err-msg"></span><button id="err-close">✕</button></div>
+
+  <div id="workflow-container">
+  <div id="panel-1" class="panel show">
+    <div id="info-grid">
+      <div><div class="info-head">Formats</div>JPEG · PNG · WebP</div>
+      <div><div class="info-head">Resolution</div>Up to 50 MP<br>Larger images auto-resized</div>
+      <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting</div>
+    </div>
+    <div id="drop-zone">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p class="big">Drop a crack photo here</p>
+      <p class="small">or use a button below · or paste an image (Ctrl/Cmd+V)</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files…</button>
+        <button class="btn btn-primary" id="btn-take-photo" style="display:none" onclick="document.getElementById('camera-input').click()">📷 Take photo</button>
+      </div>
+      <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
+      <input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none">
+      <div id="demo-link-row"><a id="demo-link" href="#" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
+    </div>
+  </div>
+
+  
+  <div id="canvas-wrap">
+    <div id="touch-mode-bar">
+      <button id="btn-touch-mode" class="btn btn-nav" onclick="toggleTouchMode()">✋ Navigate</button>
+      <span id="touch-mode-hint" style="font-size:12px;color:#94a3b8">Single finger: pan · Two fingers: pinch zoom</span>
+    </div>
+    <canvas id="img-canvas"></canvas>
+    <div id="res-warn-overlay" style="display:none"></div>
+    <div id="zoom-bar">
+      <span id="zoom-label">1.0×</span>
+      <button class="btn-ghost" id="btn-reset-view">Reset view</button>
+      <span id="nav-hint" style="color:#cbd5e1">Scroll to zoom · Right-drag to pan</span>
+      <span id="img-meta"></span>
+    </div>
+  </div>
+
+  
+  <div id="panel-2" class="panel">
+    <div class="tab-row">
+      <button class="tab active" id="tab-twopoint" onclick="switchScaleMode('twopoint')">Click two reference points</button>
+      <button class="tab" id="tab-direct" title="Use this if previously measured" onclick="switchScaleMode('direct')">Enter pixels/mm directly</button>
+      <button class="tab pro-only" id="tab-distance" title="Use a saved camera calibration + distance" onclick="switchScaleMode('distance')">Distance + camera</button>
+    </div>
+    <div class="card" id="scale-hint">Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size</div>
+
+    <div id="scale-distance-panel" class="pro-only" style="display:none">
+      <div class="card" style="margin-bottom:12px">Enter the camera-to-crack distance and pick a saved camera profile. Resolution is predicted from the camera's calibration — no reference object needed in the crack photo.</div>
+      <div class="dist-input-row">
+        <label>Distance to crack (m):</label>
+        <input type="number" id="dist-inp" step="0.001" min="0" placeholder="e.g. 4.000" oninput="onDistanceInput()">
+      </div>
+      <div class="dist-input-row">
+        <label>Camera profile:</label>
+        <select id="scale-profile-select" onchange="onScaleProfileSelect()">
+          <option value="">— Select a calibrated camera —</option>
+        </select>
+      </div>
+      <div id="dist-result"></div>
+      <div id="dist-zoom-caution">A profile is only valid at the same zoom/focal length it was calibrated at. Use the lens/zoom the profile name refers to.</div>
+      <div class="profile-btns" style="margin-top:12px">
+        <button class="btn-ghost btn-small" onclick="calibrateFromStep2()">+ Calibrate new camera…</button>
+        <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" style="display:none">Delete profile</button>
+        <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
+        <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
+        <input type="file" id="scale-import-file" accept=".json,application/json" style="display:none" onchange="importScaleProfiles(event)">
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-primary" id="btn-confirm-scale" onclick="confirmScale()">Confirm scale →</button>
+      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+      <span id="scale-display" style="font-family:monospace;font-size:13px;color:#94a3b8"></span>
+    </div>
+  </div>
+
+  
+  <div id="panel-3" class="panel">
+    <div class="card" id="draw-hint"><strong>Click and drag across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.</div>
+
+    <div class="input-row" style="margin-bottom:14px">
+      <label style="font-size:13px;color:#64748b" title="More lines = better sampling and noise reduction, but only over a uniform section of the crack">Scan lines:</label>
+      <input type="range" id="nlines-slider" min="5" max="200" value="40" style="width:140px" oninput="onNlinesChange()">
+      <strong id="nlines-val" style="font-family:monospace;font-size:13px;min-width:28px">40</strong>
+      <span id="band-width" style="font-size:12px;color:#94a3b8"></span>
+      <span id="q-badge"></span>
+    </div>
+
+    <div class="avg-section pro-only">
+      <div class="avg-title">Profile Averaging</div>
+      <label class="chk-row">
+        <input type="checkbox" id="chk-align">
+        <div><div class="chk-main">Align profiles before averaging</div>
+        <div class="chk-sub">Compensates for cracks that aren't perfectly straight</div></div>
+      </label>
+      <div class="method-label">Combining method</div>
+      <div class="radio-group" style="margin-bottom:12px">
+        <label class="radio-row"><input type="radio" name="avgMethod" value="mean" checked>
+          <span class="radio-label">Mean</span><span class="radio-desc">Lowest noise — all lines weighted equally</span></label>
+        <label class="radio-row"><input type="radio" name="avgMethod" value="median">
+          <span class="radio-label">Median</span><span class="radio-desc">Robust to outliers, debris, and staining</span></label>
+        <label class="radio-row"><input type="radio" name="avgMethod" value="gaussian">
+          <span class="radio-label">Gaussian weighted</span><span class="radio-desc">Emphasises central scan lines</span></label>
+      </div>
+      <label class="chk-row" style="margin-bottom:0">
+        <input type="checkbox" id="chk-adaptive">
+        <div><div class="chk-main">Adaptive line selection <span style="font-weight:400;font-size:11px;color:#94a3b8">keep top 70%, drop lowest quality</span></div>
+        <div class="chk-sub">Scores each scan line by depression clarity; discards contaminated lines</div>
+        <div class="chk-warn" id="adaptive-warn" style="display:none">⚠ Works best with alignment enabled</div></div>
+      </label>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
+      <button class="btn btn-nav" onclick="goBack()">← Back</button>
+      <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
+    </div>
+  </div>
+
+  
+  <div id="panel-4" class="panel">
+    <div id="result-cards">
+      <div class="result-card" id="card-a">
+        <div class="r-tag" id="a-tag">Approach A</div>
+        <div class="r-method" id="a-method">Physical Reference · high accuracy</div>
+        <div class="r-val" id="r-a">—.— <span class="r-unit">mm</span></div>
+        <div class="r-hint" id="a-hint">↓ Enter calibration data below</div>
+      </div>
+      <div class="result-card b">
+        <div class="r-tag">Approach B</div>
+        <div class="r-method">Empirical Formula · estimate only</div>
+        <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
+      </div>
+    </div>
+
+    <div id="stats-row" class="pro-only"></div>
+
+    <div id="chart-wrap" class="pro-only">
+      <div id="chart-title">Luminance profile across crack</div>
+      <div id="chart-subtitle">Blue = profile · red dashed = baseline · amber = crack centre · blue shading = integration region · drag blue handles to adjust</div>
+      <canvas id="chart-canvas"></canvas>
+      <div class="panel-hdr" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(12,187,204,0.12)">
+        <div class="panel-title">Profile integration window<span class="panel-badge" id="crop-badge" style="display:none">· custom</span></div>
+        <button class="btn-ghost" id="btn-reset-crop" style="display:none" onclick="resetCrop()">Reset to auto</button>
+      </div>
+      <div class="input-row">
+        <label>From:</label>
+        <input type="text" id="crop-l-inp" class="mono" style="width:90px">
+        <span>mm</span>
+        <label style="margin-left:8px">To:</label>
+        <input type="text" id="crop-r-inp" class="mono" style="width:90px">
+        <span>mm</span>
+        <span id="crop-auto-hint" style="font-size:11px;color:#94a3b8">auto-detected</span>
+      </div>
+    </div>
+
+    <div id="base-panel" class="pro-only">
+      <div class="panel-hdr" style="margin-bottom:0">
+        <button id="btn-base-toggle" onclick="toggleBaseCorr()"><span id="base-toggle-txt">▸ Baseline correction</span><span id="base-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#2563eb;display:none">· active</span></button>
+        <button class="btn-ghost" id="btn-base-reset" style="display:none" onclick="resetBaseCorr()">Reset</button>
+      </div>
+      <div id="base-controls" style="display:none;margin-top:12px">
+        <div class="base-sub">Tilt rotates the baseline around the crack centre. Bow adds curvature anchored at the crack centre, preventing it from curving into the depression.</div>
+        <div class="slider-row">
+          <span class="slider-lbl">Shift:</span>
+          <input type="range" id="shift-slider" min="-50" max="50" step="0.5" value="0" oninput="onShiftChange()">
+          <span class="slider-val" id="shift-val">0.0</span>
+          <button class="btn-ghost btn-small" onclick="setShift(0)">×</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Tilt:</span>
+          <input type="range" id="tilt-slider" min="-50" max="50" step="0.5" value="0" oninput="onTiltChange()">
+          <span class="slider-val" id="tilt-val">0.0</span>
+          <button class="btn-ghost btn-small" onclick="setTilt(0)">×</button>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Bow:</span>
+          <input type="range" id="bow-slider" min="-30" max="30" step="0.5" value="0" oninput="onBowChange()">
+          <span class="slider-val" id="bow-val">0.0</span>
+          <button class="btn-ghost btn-small" onclick="setBow(0)">×</button>
+        </div>
+      </div>
+    </div>
+
+      <div id="calib-panel">
+      <div class="calib-title">Approach A — Physical Reference Calibration</div>
+      <div class="calib-sub pro-only">Two steps. <strong>Calibrate:</strong> analyse a photo of a reference crack of known width (same camera, distance and conditions), then enter that width — the tool computes a calibration coefficient. <strong>Measure:</strong> analyse your crack photo with that coefficient entered and the width is read directly. The coefficient survives “Start over”, so calibrate first, then load the crack photo. An inaccurate reference width feeds directly into every result, so measure it as precisely as you can.</div>
+      <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
+      
+      <div class="pro-only">
+        <div id="calib-mode-toggle-pro">
+          <button id="cmode-calibrate-pro" onclick="setCalibMode('calibrate')">Calibrate</button>
+          <button id="cmode-measure-pro" class="active" onclick="setCalibMode('measure')">Measure</button>
+        </div>
+        <div class="input-row">
+          <span>Reference width:</span>
+          <input type="number" id="calib-width" value="" placeholder="e.g. 0.30" style="width:84px" oninput="onProWidthInput()">
+          <span>mm</span>
+          <span style="margin-left:10px">Calibration coefficient:</span>
+          <input type="number" id="calib-area" placeholder="e.g. 395" style="width:105px" oninput="onProAreaInput()">
+          <span>lum·mm / mm</span>
+        </div>
+      </div>
+      
+      <div class="simple-only">
+        <div id="calib-mode-toggle">
+          <button id="cmode-calibrate" onclick="setCalibMode('calibrate')">Calibrate</button>
+          <button id="cmode-measure" class="active" onclick="setCalibMode('measure')">Measure</button>
+        </div>
+        <div class="input-row">
+          <span>Actual width:</span>
+          <input type="number" id="simp-width" placeholder="e.g. 0.30" style="width:100px" oninput="onSimpWidthInput()">
+          <span>mm</span>
+          <span style="margin-left:10px">Adjustment coefficient:</span>
+          <input type="number" id="simp-coeff" placeholder="—" style="width:110px" oninput="onSimpCoeffInput()">
+        </div>
+      </div>
+    </div>
+
+    <div id="formula-panel" class="pro-only">
+      <div class="panel-hdr" style="margin-bottom:0">
+        <button id="btn-formula-toggle" onclick="toggleFormula()"><span id="formula-toggle-txt">▸ Approach B formula</span><span id="formula-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#0cbbcc;display:none">· modified</span></button>
+        <button class="btn-ghost" id="btn-formula-reset" style="display:none" onclick="resetFormula()">Reset</button>
+      </div>
+      <div id="formula-controls" style="display:none;margin-top:12px">
+        <div class="base-sub">Approach B estimates width from a calibrated function. The default constants suit general use, but a specific camera and site condition will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference). Changes affect the Approach B result only.</div>
+        <div class="formula-input-row">
+          <label>Coefficient (c):</label>
+          <input type="number" id="bcoeff-inp" step="0.001" value="0.357" oninput="onFormulaChange()">
+          <span class="formula-default">default 0.357</span>
+        </div>
+        <div class="formula-input-row">
+          <label>Exponent (α):</label>
+          <input type="number" id="bexp-inp" step="0.01" value="0.16" oninput="onFormulaChange()">
+          <span class="formula-default">default 0.16</span>
+        </div>
+
+        <div class="profile-divider"></div>
+        <div class="profile-label">Saved formula profiles</div>
+        <div class="profile-row">
+          <select id="profile-select" onchange="onProfileSelect()">
+            <option value="">— Default (0.357, 0.16) —</option>
+          </select>
+          <div class="profile-btns">
+            <button class="btn-ghost btn-small" id="btn-profile-save" onclick="showProfileSaveForm()">Save current…</button>
+            <button class="btn-ghost btn-small" id="btn-profile-delete" onclick="deleteProfile()" style="display:none">Delete</button>
+          </div>
+        </div>
+        <div class="profile-note" id="profile-note"></div>
+        <div id="profile-save-form">
+          <input type="text" id="profile-name-inp" placeholder="Profile name — e.g. Sony a6700 (105 mm)" maxlength="60">
+          <input type="text" id="profile-desc-inp" placeholder="Optional note — e.g. calibrated 1–32 m, white background" maxlength="120">
+          <div class="profile-meta-row">
+            <span>Will store: c=<span id="pf-c">0.357</span>, α=<span id="pf-a">0.16</span>, scan lines=<span id="pf-n">40</span></span>
+          </div>
+          <div class="profile-btns" style="margin-top:8px">
+            <button class="btn btn-primary btn-small" onclick="saveProfile()">Save profile</button>
+            <button class="btn-ghost btn-small" onclick="hideProfileSaveForm()">Cancel</button>
+          </div>
+        </div>
+        <div class="profile-btns" style="margin-top:10px">
+          <button class="btn-ghost btn-small" id="btn-prof-export-one" onclick="exportOneProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
+          <input type="file" id="profile-import-file" accept=".json,application/json" style="display:none" onchange="importProfiles(event)">
+        </div>
+      </div>
+    </div>
+
+    <div id="acc-note"><strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.</div>
+
+    <div id="fcalib-panel" class="pro-only">
+      <div class="panel-hdr" style="margin-bottom:0">
+        <button id="btn-fcalib-toggle" onclick="toggleFcalib()"><span id="fcalib-toggle-txt">▸ Calibrate the Approach B formula (advanced)</span></button>
+      </div>
+      <div id="fcalib-controls" style="display:none;margin-top:12px">
+        <div class="calib-sub">Measure cracks whose width you already know, and save each as a calibration point. Once you have enough points across a wide resolution range, fit them on the Approach B screen to get constants tuned to your camera and site.</div>
+        <div class="profile-row" style="margin-bottom:10px">
+          <select id="fcalib-dataset-select" onchange="onFcalibDatasetSelect()">
+            <option value="">— Select or create a dataset —</option>
+          </select>
+          <div class="profile-btns">
+            <button class="btn-ghost btn-small" onclick="newFcalibDataset()">+ New dataset</button>
+          </div>
+        </div>
+        <div class="input-row">
+          <label>Known crack width:</label>
+          <input type="number" id="fcalib-width-inp" step="0.001" min="0" placeholder="e.g. 0.500" style="width:105px">
+          <span>mm</span>
+        </div>
+        <div class="wiz-btns" style="margin-top:10px;align-items:center">
+          <button class="btn btn-primary" id="btn-fcalib-save" onclick="saveCalibPoint()" style="padding:7px 14px;font-size:12px;border-radius:6px">Save calibration point</button>
+          <span id="fcalib-count" style="font-size:12px;color:rgba(232,248,249,0.6);align-self:center"></span>
+        </div>
+        <div id="fcalib-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
+      <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
+      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+    </div>
+  </div>
+  </div><!-- /workflow-container -->
+
+  <div id="calibrate-screen" style="display:none">
+    <div class="calib-screen-title">Camera calibration — distance to resolution</div>
+    <div class="calib-screen-sub">Teach the tool your camera's resolution at different distances. Once saved, you can scale any crack photo from just the distance — no reference object needed in the shot.</div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Saved camera profiles</div>
+      <div class="profile-row">
+        <select id="scale-profile-select-cal" onchange="onScaleProfileSelectCal()">
+          <option value="">— No profile selected —</option>
+        </select>
+        <div class="profile-btns">
+          <button class="btn-ghost btn-small" id="btn-scale-prof-delete-cal" onclick="deleteScaleProfileCal()" style="display:none">Delete</button>
+          <button class="btn-ghost btn-small" id="btn-scale-prof-export-one" onclick="exportOneScaleProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
+        </div>
+      </div>
+      <div class="profile-note" id="scale-prof-note-cal"></div>
+    </div>
+
+    <div class="wiz-tips-box">
+      <div class="wiz-tip">Calibrate across the distance range you expect to actually use the camera at.</div>
+      <div class="wiz-tip">Photograph from far away first, then halve the distance each shot — e.g. 8 m, then 4 m, then 2 m. This spreads the points evenly for a robust fit.</div>
+      <div class="wiz-tip">Use the same zoom/focal length for every shot and for real measurements later.</div>
+      <div class="wiz-tip">Measure each distance with a laser meter for best accuracy — the smaller the distance error, the more accurate every measurement you make with this profile.</div>
+    </div>
+
+    <div id="calib-upload-prompt">
+      <div id="calib-drop-zone">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 10px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p class="big">Load your first calibration photo</p>
+        <p class="small">a photo of a known-width object at a known distance</p>
+        <button class="btn btn-primary" onclick="loadCalibImageClick()">Browse files…</button>
+      </div>
+    </div>
+
+    <div id="calib-canvas-wrap">
+      <canvas id="calib-canvas"></canvas>
+      <div id="calib-zoom-bar">
+        <button class="btn-ghost btn-small" onclick="resetCalibView()">Reset view</button>
+        <span id="calib-zoom-label" style="font-family:monospace;color:#e8f8f9">1.0×</span>
+        <span id="calib-nav-hint" style="color:rgba(232,248,249,0.4)">Scroll to zoom · right-drag to pan</span>
+        <span id="calib-img-meta" style="color:rgba(232,248,249,0.45);font-size:11px;margin-left:auto"></span>
+      </div>
+    </div>
+
+    <div id="calib-capture">
+      <div class="wiz-shot-form">
+        <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin-bottom:10px"><span class="wiz-step-num">1</span>Enter this shot's distance and the known object's width</div>
+        <div class="dist-input-row">
+          <label>Distance (m):</label>
+          <input type="number" id="wiz-dist-inp" step="0.001" min="0" placeholder="e.g. 8.000">
+        </div>
+        <div class="dist-input-row">
+          <label>Known object width (mm):</label>
+          <input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000">
+        </div>
+        <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Load this shot's photo, then click the two edges of the object</div>
+        <div class="wiz-btns" style="margin-bottom:8px">
+          <button class="btn-ghost btn-small" id="btn-wiz-load-img" onclick="loadCalibImageClick()">📷 Load calibration photo</button>
+          <input type="file" id="wiz-image-file" accept="image/*" style="display:none" onchange="loadCalibImage(event)">
+        </div>
+        <div id="wiz-span-hint">Load this shot's calibration photo first.</div>
+        <div class="wiz-btns">
+          <button class="btn btn-primary btn-small" id="btn-wiz-add" onclick="addCalibShot()">Add this shot</button>
+          <button class="btn-ghost btn-small" onclick="resetWizShot()">Clear points</button>
+        </div>
+      </div>
+
+      <div class="wiz-shots-list" id="wiz-shots-list"></div>
+      <div class="wiz-fit-summary" id="wiz-fit-summary" style="display:none"></div>
+
+      <div class="wiz-btns">
+        <input type="text" id="wiz-name-inp" placeholder="Camera & lens — e.g. iPhone 15 main 1×" maxlength="60" style="width:100%;margin-bottom:6px">
+        <input type="text" id="wiz-note-inp" placeholder="Optional note — settings, site, date" maxlength="120" style="width:100%;margin-bottom:8px">
+      </div>
+      <div class="wiz-btns" style="margin-top:4px">
+        <button class="btn btn-success" id="btn-wiz-save" onclick="saveCalibProfile()">Save camera profile</button>
+        <button class="btn btn-nav" onclick="calibrateAnother()">Reset calibration</button>
+      </div>
+      <div id="calib-save-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+      <div id="calib-saved-msg" style="display:none;font-size:12px;color:#34d399;margin-top:8px"></div>
+    </div>
+
+    <div class="calib-screen-nav">
+      <button class="btn btn-primary" onclick="startMeasuringFromCalib()">Back to measurements →</button>
+    </div>
+  </div>
+
+  <div id="formula-screen" style="display:none">
+    <div class="calib-screen-title">Approach B — empirical formula</div>
+    <div class="calib-screen-sub">Approach B estimates crack width directly from image resolution, using a calibrated function. The default constants suit general use; a specific camera and site will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference).</div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Formula constants</div>
+      <div class="formula-input-row">
+        <label>Coefficient (c):</label>
+        <input type="number" id="bcoeff-inp-scr" step="0.001" value="0.357" oninput="onFormulaChangeScr()">
+        <span class="formula-default">default 0.357</span>
+      </div>
+      <div class="formula-input-row">
+        <label>Exponent (α):</label>
+        <input type="number" id="bexp-inp-scr" step="0.01" value="0.16" oninput="onFormulaChangeScr()">
+        <span class="formula-default">default 0.16</span>
+      </div>
+      <div class="wiz-btns" style="margin-top:10px">
+        <button class="btn-ghost btn-small" id="btn-formula-reset-scr" style="display:none" onclick="resetFormula()">Reset to default</button>
+        <span id="formula-active-badge-scr" style="font-size:12px;color:#0cbbcc;display:none;align-self:center">· modified from default</span>
+      </div>
+    </div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Saved formula profiles</div>
+      <div class="profile-row">
+        <select id="profile-select-scr" onchange="onProfileSelectScr()">
+          <option value="">— Default (0.357, 0.16) —</option>
+        </select>
+        <div class="profile-btns">
+          <button class="btn-ghost btn-small" id="btn-profile-delete-scr" onclick="deleteProfileScr()" style="display:none">Delete</button>
+          <button class="btn-ghost btn-small" id="btn-prof-export-one-scr" onclick="exportOneProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
+        </div>
+      </div>
+      <div class="profile-note" id="profile-note-scr"></div>
+      <div id="profile-save-form-scr" style="margin-top:8px">
+        <input type="text" id="profile-name-inp-scr" placeholder="Profile name — e.g. DJI Air 3S 24 mm" maxlength="60" style="width:100%;margin-bottom:6px">
+        <input type="text" id="profile-desc-inp-scr" placeholder="Optional note — surface colour, material, date" maxlength="120" style="width:100%;margin-bottom:8px">
+        <div class="wiz-btns">
+          <button class="btn btn-success" onclick="saveProfileScr()">Save formula profile</button>
+        </div>
+        <div id="formula-save-msg-scr" style="display:none;font-size:12px;margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="avg-title">Calibrate from measurements</div>
+      <div class="calib-screen-sub" style="margin-bottom:10px">Fit constants from calibration points you collected at Step 4 (measurements of cracks whose width you already knew). Add points across a wide resolution range, then fit.</div>
+      <div class="profile-row">
+        <select id="calib-dataset-select-scr" onchange="onCalibDatasetSelectScr()">
+          <option value="">— Select a dataset —</option>
+        </select>
+        <div class="profile-btns">
+          <button class="btn-ghost btn-small" id="btn-calib-ds-delete" onclick="deleteCalibDatasetScr()" style="display:none">Delete dataset</button>
+          <button class="btn-ghost btn-small" id="btn-calib-ds-export" onclick="exportOneCalibDataset()" style="display:none">↓ Export</button>
+          <button class="btn-ghost btn-small" onclick="exportCalibDatasets()">↓ Export all</button>
+          <button class="btn-ghost btn-small" onclick="importCalibDatasetsClick()">↑ Import</button>
+          <input type="file" id="calib-ds-import-file" accept=".json,application/json" style="display:none" onchange="importCalibDatasets(event)">
+        </div>
+      </div>
+      <div id="calib-gate-status" style="font-size:12px;margin:10px 0"></div>
+      <div id="calib-records-list" class="wiz-shots-list"></div>
+      <div id="calib-fit-summary" class="wiz-fit-summary" style="display:none"></div>
+      <div class="wiz-btns" style="margin-top:10px">
+        <button class="btn btn-success" id="btn-calib-fit" onclick="fitAndFinaliseDataset()" disabled>Fit &amp; save constants</button>
+      </div>
+      <div id="calib-fit-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+    </div>
+
+    <div class="calib-screen-nav">
+      <button class="btn btn-primary" onclick="showScreen('workflow')">Back to measurement →</button>
+    </div>
+  </div>
+
+  <div id="log-screen" style="display:none">
+    <div class="calib-screen-title">Measurement log</div>
+    <div class="calib-screen-sub">Every completed analysis is recorded here for the session, so you can measure a whole site and export the results to a spreadsheet. Stored on this device only.</div>
+
+    <div class="avg-section" style="margin-bottom:14px">
+      <div class="log-controls-row">
+        <label class="log-toggle"><input type="checkbox" id="autolog-toggle" onchange="setAutoLog(this.checked)"> Automatically log every measurement</label>
+        <span id="log-count" style="font-size:12px;color:rgba(232,248,249,0.6)"></span>
+      </div>
+      <div class="log-btns">
+        <button class="btn btn-primary" onclick="exportMeasLogCSV()">↓ Export CSV</button>
+        <button class="btn btn-nav" onclick="clearMeasLog()">Clear log</button>
+      </div>
+      <div id="log-msg" style="display:none;font-size:12px;margin-top:8px"></div>
+    </div>
+
+    <div id="log-list"></div>
+
+    <div class="calib-screen-nav">
+      <button class="btn btn-primary" onclick="showScreen('workflow')">Back to measurement →</button>
+    </div>
+  </div>
+
+  <footer id="app-footer">
+    <div class="social-row">
+      <a href="mailto:okroge@tuta.com" title="Email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/in/egorv/" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.3c0-1.26-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21h-4z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@byegorvolkov" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.3-.42-4.88a2.55 2.55 0 0 0-1.8-1.8C19.2 5 12 5 12 5s-7.2 0-8.78.42a2.55 2.55 0 0 0-1.8 1.8C1 8.7 1 12 1 12s0 3.3.42 4.88a2.55 2.55 0 0 0 1.8 1.8C4.8 19 12 19 12 19s7.2 0 8.78-.42a2.55 2.55 0 0 0 1.8-1.8C23 15.3 23 12 23 12zM9.75 15.02v-6.04L15.5 12z"/></svg>
+      </a>
+    </div>
+    <div class="footer-note">Patent pending. All rights reserved — please get in touch for licensing.</div>
+  </footer>
+</div>
+
+<script>
+
+const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+
+function bilinearLum(data,x,y,W,H){
+  x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));
+  const x0=Math.floor(x),x1=Math.min(x0+1,W-1),y0=Math.floor(y),y1=Math.min(y0+1,H-1);
+  const fx=x-x0,fy=y-y0;
+  const lum=(px,py)=>{const i=(py*W+px)*4;return 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];};
+  return lum(x0,y0)*(1-fx)*(1-fy)+lum(x1,y0)*fx*(1-fy)+lum(x0,y1)*(1-fx)*fy+lum(x1,y1)*fx*fy;
+}
+
+
+
+
+function extractAllProfiles(pixels,p1,p2,nLines){
+  const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<4)return null;
+  const px=-dy/len,py=dx/len,n=Math.ceil(len),half=Math.floor(nLines/2);
+  const profiles=[];
+  for(let k=-half;k<=half;k++){
+    const line=[];
+    for(let i=0;i<n;i++){const t=n>1?i/(n-1):0;line.push(bilinearLum(pixels.data,p1.x+t*dx+k*px,p1.y+t*dy+k*py,pixels.width,pixels.height));}
+    profiles.push(line);
+  }
+  return profiles;
+}
+
+async function analyzeViaWorker(profiles, opts, pxPerMm){
+  const pin=sessionStorage.getItem('dcg_pin')||'';
+  const resp=await fetch(WORKER_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'analyze',pin,profiles,options:opts,pxPerMm}),
+  });
+  const data=await resp.json();
+  if(!data.ok||!Array.isArray(data.prof)||!Array.isArray(data.base)) throw new Error('analysis service unavailable');
+  return data;
+}
+
+
+function approachB(area,pxMmOrig){
+  const calib=S.bCoeff*256*Math.pow(pxMmOrig,S.bExp);
+  return{width:area/calib,calib};
+}
+
+const S={
+  step:1,
+  imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
+  zoom:1,panX:0,panY:0,isPanning:false,panAnchor:null,
+  iMode:null,scaleMode:'twopoint',scalePts:[],realDist:'',directPx:'',pxMm:null,
+  drawStart:null,drawCur:null,measLine:null,nLines:40,
+  doAlign:false,avgMethod:'mean',doAdaptive:false,
+  results:null,busy:false,
+  cropLeft:null,cropRight:null,cropLeftStr:'',cropRightStr:'',
+  tilt:0,bow:0,shift:0,showBaseCorr:false,
+  bCoeff:0.357,bExp:0.16,    // Approach B empirical formula constants (overridable)
+  profiles:[],activeProfile:'',   // saved camera profiles + currently selected id
+  scaleProfiles:[],activeScaleProfile:'',   // distance-scale profiles (Pro) + selected id
+  calibDatasets:[],activeCalibDataset:'',    // Approach B formula-calibration datasets (Pro)
+  measLog:[],autoLog:true,                    // session measurement log (both tiers)
+  photoName:'',                               // filename of the loaded crack photo
+  staleClient:false,                          // set if Worker reports a newer min client version
+  scaleDist:'',                    // distance (m) entered in distance+profile scale mode
+  calibShots:[],                   // (legacy field, retained harmlessly)
+  calibActive:false,               // whether the calibration wizard is capturing
+  screen:'workflow',               // 'workflow' | 'calibrate'
+  calib:{                          // fully independent calibration screen state
+    imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
+    zoom:1,panX:0,panY:0,scalePts:[],imageLoaded:false,reused:false,shots:[]
+  },
+  touchMode:'navigate',
+  live:null,         // live recalculation output
+  chartGeom:null,    // chart coordinate system
+  chartDrag:null,    // 'left' | 'right' | null
+};
+
+const $=id=>document.getElementById(id);
+
+let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
+
+const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
+const CLIENT_VERSION = 129;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
+const DEMO_IMAGE_URL = 'https://raw.githubusercontent.com/volkov596/digitalcrackgauge/refs/heads/main/example-photo.jpg';
+
+function applyInterfaceMode(tier){
+  INTERFACE_MODE = (tier === 'lite') ? 'simple' : 'pro';
+  const badge = $('mode-badge');
+  if (badge) badge.textContent = (INTERFACE_MODE === 'simple') ? 'LITE' : 'PRO';
+  if (INTERFACE_MODE === 'simple') {
+    document.body.classList.add('simple');
+
+    S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false;
+    const a=$('chk-align'); if(a)a.checked=true;
+    const ad=$('chk-adaptive'); if(ad)ad.checked=false;
+    const med=document.querySelector('input[name="avgMethod"][value="median"]');
+    if(med)med.checked=true;
+  }
+  setCalibMode('measure');
+
+  $('pin-overlay').style.display = 'none';
+  $('app').style.display = 'block';
+  maybeShowBackupReminder();
+  if (S.staleClient) { const vb=$('version-bar'); if(vb) vb.style.display='block'; }
+}
+
+async function checkPin(){
+  const input = $('pin-input'), btn = $('pin-btn'), msg = $('pin-msg');
+  const pin = input.value.trim();
+  if (!/^\d{6}$/.test(pin)) { msg.textContent = 'Enter a 6-digit code.'; return; }
+  btn.disabled = true; msg.style.color = 'rgba(232,248,249,0.5)'; msg.textContent = 'Checking…';
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action:'login', pin, client: CLIENT_VERSION }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      try { sessionStorage.setItem('dcg_tier', data.tier); sessionStorage.setItem('dcg_pin', pin); } catch(e){}
+      // Stale-client check (advisory only)
+      if (typeof data.minClient === 'number' && CLIENT_VERSION < data.minClient) {
+        S.staleClient = true;
+      }
+      applyInterfaceMode(data.tier);
+    } else if (data.error === 'region') {
+      // Geo-blocked: show a clear message and the author's contacts (already on this screen)
+      msg.style.color = '#f87171';
+      msg.textContent = 'Access outside Australia and New Zealand requires the author\u2019s permission. Please get in touch.';
+      btn.disabled = false;
+    } else {
+      msg.style.color = '#f87171'; msg.textContent = 'Invalid code.';
+      btn.disabled = false; input.select();
+    }
+  } catch (e) {
+    msg.style.color = '#f87171';
+    msg.textContent = 'Could not verify code. Check your connection.';
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = $('pin-input');
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+  let remembered = null;
+  try { remembered = sessionStorage.getItem('dcg_tier'); } catch(e){}
+  if (remembered === 'lite' || remembered === 'pro') applyInterfaceMode(remembered);
+});
+
+let calibMode = 'measure';   // Measure is the default
+
+function calibFields(){
+  return INTERFACE_MODE==='simple'
+    ? {widthId:'simp-width',  coeffId:'simp-coeff',  coeffDp:2, toggle:['cmode-calibrate','cmode-measure']}
+    : {widthId:'calib-width', coeffId:'calib-area',  coeffDp:2, toggle:['cmode-calibrate-pro','cmode-measure-pro']};
+}
+
+function setCalibMode(mode){
+  calibMode = mode;
+  const f = calibFields();
+  const [calBtn,measBtn] = f.toggle;
+  if($(calBtn))  $(calBtn).classList.toggle('active',  mode==='calibrate');
+  if($(measBtn)) $(measBtn).classList.toggle('active', mode==='measure');
+  const widthInp=$(f.widthId), coeffInp=$(f.coeffId);
+  if(!widthInp||!coeffInp) return;
+  if(mode==='calibrate'){
+    widthInp.readOnly=false; widthInp.classList.remove('readonly-field');
+    coeffInp.readOnly=true;  coeffInp.classList.add('readonly-field');
+  } else {
+    coeffInp.readOnly=false; coeffInp.classList.remove('readonly-field');
+    widthInp.readOnly=true;  widthInp.classList.add('readonly-field');
+  }
+  recomputeCalib();
+}
+
+function onSimpWidthInput(){ if(calibMode!=='calibrate')setCalibMode('calibrate'); recomputeCalib(); }
+function onSimpCoeffInput(){ if(calibMode!=='measure')  setCalibMode('measure');   recomputeCalib(); }
+function onProWidthInput(){  if(calibMode!=='calibrate')setCalibMode('calibrate'); recomputeCalib(); }
+function onProAreaInput(){   if(calibMode!=='measure')  setCalibMode('measure');   recomputeCalib(); }
+
+function currentArea(){
+  const dv=(S.live&&(S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0))?S.live:S.results;
+  return dv?dv.area:null;
+}
+
+function recomputeCalib(){
+  const f=calibFields(), area=currentArea();
+  const widthInp=$(f.widthId), coeffInp=$(f.coeffId);
+  if(!widthInp||!coeffInp) return;
+  if(calibMode==='calibrate'){
+    const w=parseFloat(widthInp.value);
+    const coeff=(area&&w&&w>0)?(area/w):null;
+    coeffInp.value = coeff!==null?coeff.toFixed(f.coeffDp):'';
+  } else {
+    const coeff=parseFloat(coeffInp.value);
+    const w=(area&&coeff&&coeff>0)?(area/coeff):null;
+    widthInp.value = w!==null?w.toFixed(4):'';
+  }
+  const aw=calibAWidth(area);
+  updateAResult(aw!==null?parseFloat(aw):null);
+}
+
+function calibAWidth(area){
+  const f=calibFields();
+  if(calibMode==='calibrate'){
+    const w=parseFloat($(f.widthId).value);
+    return (area&&w&&w>0)?w.toFixed(4):null;       // calibrate: A = the known width
+  } else {
+    const coeff=parseFloat($(f.coeffId).value);
+    return (area&&coeff&&coeff>0)?(area/coeff).toFixed(4):null;
+  }
+}
+
+function updateAResult(width){
+  const el=$('r-a'); if(!el) return;
+  if(width!==null&&isFinite(width)){
+    el.innerHTML=`${width.toFixed(3)} <span class="r-unit">mm</span>`;
+    $('a-hint').style.display='none';
+    $('card-a').className='result-card a-active';
+    $('a-tag').style.color='#0cbbcc';$('a-method').style.color='rgba(12,187,204,0.75)';
+    el.style.color='#0cbbcc';
+  } else {
+    el.innerHTML=`—.— <span class="r-unit">mm</span>`;
+    $('a-hint').style.display='';
+    $('card-a').className='result-card';
+    $('a-tag').style.color='';$('a-method').style.color='';
+    el.style.color='rgba(232,248,249,0.3)';
+  }
+}
+
+function resetCalibPanel(){
+  setCalibMode('measure');
+}
+
+function paintCanvas(){
+  const onCalib=S.screen==='calibrate';
+  const src=onCalib?S.calib:S;
+  const canvas=onCalib?$('calib-canvas'):$('img-canvas');
+  if(!canvas||!src.imgEl||src.dispW===0)return;
+  canvas.width=src.dispW;canvas.height=src.dispH;
+  const ctx=canvas.getContext('2d');
+  ctx.save();
+  ctx.translate(src.panX,src.panY);ctx.scale(src.zoom,src.zoom);
+  ctx.drawImage(src.imgEl,0,0,src.dispW,src.dispH);
+  const iZ=1/src.zoom;
+  // On the calibration screen, only scale points (A/B markers) are drawn.
+  if(onCalib){
+    const sp=src.scalePts;
+    if(sp.length>0){
+      ctx.save();
+      if(sp.length===2){ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*iZ;ctx.setLineDash([4*iZ,3*iZ]);ctx.beginPath();ctx.moveTo(sp[0].x,sp[0].y);ctx.lineTo(sp[1].x,sp[1].y);ctx.stroke();ctx.setLineDash([]);}
+      sp.forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,8*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*iZ}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+      ctx.restore();
+    }
+    ctx.restore();
+    return;
+  }
+
+  const drawBand=(p1,p2)=>{
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,l=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(l<2)return;
+    const nx=-ddy/l,ny=ddx/l,bh=(S.nLines/2)*S.dispScale;
+    ctx.save();
+    ctx.fillStyle='rgba(12,187,204,0.12)';ctx.strokeStyle='rgba(12,187,204,0.30)';ctx.lineWidth=iZ;
+    ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(12,187,204,0.50)';ctx.setLineDash([2*iZ,2*iZ]);
+    ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+    ctx.setLineDash([6*iZ,3*iZ]);ctx.strokeStyle='#0cbbcc';ctx.lineWidth=2*iZ;
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+    [p1,p2].forEach(pt=>{ctx.fillStyle='#081a1e';ctx.strokeStyle='#0cbbcc';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,5*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();});
+    ctx.restore();
+  };
+
+  if(S.measLine)drawBand(S.measLine.p1,S.measLine.p2);
+  else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
+
+  if(S.scalePts.length>0){
+    ctx.save();
+    if(S.scalePts.length===2){ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*iZ;ctx.setLineDash([4*iZ,3*iZ]);ctx.beginPath();ctx.moveTo(S.scalePts[0].x,S.scalePts[0].y);ctx.lineTo(S.scalePts[1].x,S.scalePts[1].y);ctx.stroke();ctx.setLineDash([]);}
+    S.scalePts.forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,8*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*iZ}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawChart(){
+  if(INTERFACE_MODE==='simple')return;   // chart hidden in simple mode
+  const canvas=$('chart-canvas');
+  if(!canvas||!S.results)return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const cssW=canvas.offsetWidth,cssH=canvas.offsetHeight||220;
+  if(cssW===0)return;
+  canvas.width=cssW*dpr;canvas.height=cssH*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=cssW,H=cssH;
+
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+  const chartData=isAdj&&S.live?.corrChartData?S.live.corrChartData:S.results.chartData;
+  const crackMm=isAdj&&S.live?S.live.crackMm:S.results.crackMm;
+  const cLmm=isAdj&&S.live?S.live.cropLeftMm:S.results.boundLeft;
+  const cRmm=isAdj&&S.live?S.live.cropRightMm:S.results.boundRight;
+  const baseChanged=isAdj&&(S.live?.baselineChanged||false);
+
+  if(!chartData||!chartData.length)return;
+
+  const ml=48,mr=14,mt=16,mb=38;
+  const pw=W-ml-mr,ph=H-mt-mb;
+
+  const allY=chartData.flatMap(d=>{const v=[d.Profile,d.Baseline];if(d.OrigBaseline!==undefined)v.push(d.OrigBaseline);return v;});
+  const xMin=chartData[0].mm,xMax=chartData[chartData.length-1].mm;
+  const yMin=Math.floor(Math.min(...allY)-3),yMax=Math.ceil(Math.max(...allY)+3);
+
+  const xPx=mm=>ml+(mm-xMin)/(xMax-xMin)*pw;
+  const yPx=lum=>mt+(1-(lum-yMin)/(yMax-yMin))*ph;
+  const pxToMm=px=>xMin+(px-ml)/pw*(xMax-xMin);
+
+  S.chartGeom={ml,mr,mt,mb,pw,ph,xMin,xMax,yMin,yMax,xPx,yPx,pxToMm,cssW,cssH};
+
+  ctx.fillStyle='rgba(6,20,24,0.9)';ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+  const xTicks=niceTicks(xMin,xMax,6),yTicks=niceTicks(yMin,yMax,5);
+  xTicks.forEach(v=>{const x=xPx(v);ctx.beginPath();ctx.moveTo(x,mt);ctx.lineTo(x,mt+ph);ctx.stroke();});
+  yTicks.forEach(v=>{const y=yPx(v);ctx.beginPath();ctx.moveTo(ml,y);ctx.lineTo(ml+pw,y);ctx.stroke();});
+
+  const cLpx=Math.max(ml,xPx(cLmm)),cRpx=Math.min(ml+pw,xPx(cRmm));
+  ctx.fillStyle='rgba(12,187,204,0.08)';ctx.fillRect(cLpx,mt,cRpx-cLpx,ph);
+
+  ctx.strokeStyle='rgba(12,187,204,0.2)';ctx.lineWidth=1;
+  ctx.strokeRect(ml,mt,pw,ph);
+
+  ctx.fillStyle='rgba(232,248,249,0.45)';ctx.font='10px monospace';ctx.textAlign='center';
+  xTicks.forEach(v=>{ctx.fillText(v.toFixed(1),xPx(v),mt+ph+14);});
+  ctx.textAlign='right';
+  yTicks.forEach(v=>{ctx.fillText(v.toFixed(0),ml-4,yPx(v)+3);});
+
+  ctx.fillStyle='rgba(232,248,249,0.45)';ctx.font='11px sans-serif';
+  ctx.textAlign='center';ctx.fillText('Distance (mm)',ml+pw/2,H-4);
+  ctx.save();ctx.translate(12,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Luminance',0,0);ctx.restore();
+
+  ctx.save();ctx.beginPath();ctx.rect(ml,mt,pw,ph);ctx.clip();
+
+  if(baseChanged&&chartData[0].OrigBaseline!==undefined){
+    ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();chartData.forEach((d,i)=>{const x=xPx(d.mm),y=yPx(d.OrigBaseline);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);
+  }
+
+  ctx.strokeStyle='#f87171';ctx.lineWidth=1.5;
+  ctx.setLineDash(baseChanged?[]:[5,3]);
+  ctx.beginPath();chartData.forEach((d,i)=>{const x=xPx(d.mm),y=yPx(d.Baseline);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);
+
+  ctx.strokeStyle='#2563eb';ctx.lineWidth=1.5;
+  ctx.beginPath();chartData.forEach((d,i)=>{const x=xPx(d.mm),y=yPx(d.Profile);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+
+  const cxPx=xPx(crackMm);
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(cxPx,mt);ctx.lineTo(cxPx,mt+ph);ctx.stroke();ctx.setLineDash([]);
+
+  ctx.restore(); // end clip
+
+  const drawHandle=(xmm,side)=>{
+    const x=Math.max(ml,Math.min(ml+pw,xPx(xmm)));
+    ctx.strokeStyle='#0cbbcc';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x,mt);ctx.lineTo(x,mt+ph);ctx.stroke();
+
+    ctx.fillStyle='#0cbbcc';
+    ctx.beginPath();
+    if(side==='left'){ctx.moveTo(x,mt);ctx.lineTo(x+7,mt-6);ctx.lineTo(x,mt-6);}
+    else{ctx.moveTo(x,mt);ctx.lineTo(x-7,mt-6);ctx.lineTo(x,mt-6);}
+    ctx.closePath();ctx.fill();
+  };
+  drawHandle(cLmm,'left');drawHandle(cRmm,'right');
+
+  $('chart-subtitle').textContent=`Blue = profile · ${baseChanged?'red = corrected baseline · gray dashed = original':'red dashed = baseline'} · amber = crack centre · blue shading = integration region · drag handles to adjust`;
+}
+
+function niceTicks(min,max,count=5){
+  const range=max-min;
+  const step=Math.pow(10,Math.floor(Math.log10(range/count)));
+  const nice=[1,2,5,10].find(s=>range/(step*s)<=count+1)*step;
+  const start=Math.ceil(min/nice)*nice;
+  const ticks=[];for(let v=start;v<=max+1e-10;v+=nice)ticks.push(+v.toFixed(8));
+  return ticks;
+}
+
+function recompute(){
+  if(!S.results?.prof)return;
+  const{prof,baseArr,pxMm_pd,midIdx,boundLeftIdx,boundRightIdx}=S.results;
+  const n=prof.length,half=n/2;
+
+  const cL=Math.max(0,Math.min(n-1,S.cropLeft!==null?Math.round(S.cropLeft*pxMm_pd):boundLeftIdx));
+  const cR=Math.max(0,Math.min(n-1,S.cropRight!==null?Math.round(S.cropRight*pxMm_pd):boundRightIdx));
+
+  let pre=0;const ms=Math.floor(n*0.1),me=Math.ceil(n*0.9);
+  for(let i=ms;i<me;i++){const r=baseArr[i]-prof[i];if(Math.abs(r)>Math.abs(pre))pre=r;}
+  const preSign=pre>=0?1:-1;
+  let pivotIdx=midIdx,pivotVal=-Infinity;
+  for(let i=cL;i<=Math.min(cR,n-1);i++){const r=preSign*(baseArr[i]-prof[i]);if(r>pivotVal){pivotVal=r;pivotIdx=i;}}
+
+  const corrBase=baseArr.map((b,i)=>{const t=(i-pivotIdx)/half;return b+S.tilt*t+S.bow*t*t+S.shift;});
+
+  let peakRes=0;
+  const midS=Math.floor(n*0.1),midE=Math.ceil(n*0.9);
+  for(let i=midS;i<midE;i++){const r=corrBase[i]-prof[i];if(Math.abs(r)>Math.abs(peakRes))peakRes=r;}
+  const sign=peakRes>=0?1:-1;
+  const dx=1/pxMm_pd;
+  let area=0;
+  for(let i=cL;i<Math.min(cR,n-1);i++){
+    const r1=Math.max(0,sign*(corrBase[i]-prof[i]));
+    const r2=Math.max(0,sign*(corrBase[i+1]-prof[i+1]));
+    area+=0.5*(r1+r2)*dx;
+  }
+
+  const{width}=approachB(area,S.pxMm);
+
+  let peakIdx=cL,peakVal=-Infinity;
+  for(let i=cL;i<=Math.min(cR,n-1);i++){const r=sign*(corrBase[i]-prof[i]);if(r>peakVal){peakVal=r;peakIdx=i;}}
+
+  const stride=Math.max(1,Math.floor(n/300));
+  const baselineChanged=S.tilt!==0||S.bow!==0||S.shift!==0;
+  const corrChartData=prof.reduce((acc,v,i)=>{
+    if(i%stride===0){const pt={mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+corrBase[i].toFixed(1)};if(baselineChanged)pt.OrigBaseline=+baseArr[i].toFixed(1);acc.push(pt);}
+    return acc;
+  },[]);
+
+  S.live={area:+area.toFixed(4),width:+width.toFixed(4),crackMm:+(peakIdx/pxMm_pd).toFixed(3),cropLeftMm:S.cropLeft!==null?S.cropLeft:S.results.boundLeft,cropRightMm:S.cropRight!==null?S.cropRight:S.results.boundRight,baselineChanged,corrChartData};
+
+  updateResultsDisplay();
+  drawChart();
+}
+
+function formulaModified(){
+  return Math.abs(S.bCoeff-0.357)>1e-9||Math.abs(S.bExp-0.16)>1e-9;
+}
+function getDisplayValues(){
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+
+  const useLive=(isAdj||formulaModified())&&S.live;
+  const base = !useLive
+    ? {bWidth:S.results.width,area:S.results.area,cL:S.results.boundLeft,cR:S.results.boundRight}
+    : {bWidth:S.live.width,area:S.live.area,cL:S.live.cropLeftMm,cR:S.live.cropRightMm};
+
+  const aWidth = calibAWidth(base.area);
+  return {bWidth:base.bWidth, aWidth, area:base.area, cL:base.cL, cR:base.cR};
+}
+
+function buildStepBar(){
+  const labels=['Upload','Scale','Measure','Results'];
+  const bar=$('step-bar');bar.innerHTML='';
+  labels.forEach((label,i)=>{
+    const n=i+1;
+    const item=document.createElement('div');item.className='step-item';
+    const row=document.createElement('div');row.className='step-row';
+    const lLine=document.createElement('div');lLine.className='step-line'+(i===0?' invis':'');lLine.id=`sl-${n}`;
+    const circle=document.createElement('div');circle.className='step-circle';circle.id=`sc-${n}`;circle.textContent=n;
+    const rLine=document.createElement('div');rLine.className='step-line'+(i===3?' invis':'');rLine.id=`sr-${n}`;
+    row.append(lLine,circle,rLine);
+    const lbl=document.createElement('span');lbl.className='step-lbl';lbl.id=`sl-lbl-${n}`;lbl.textContent=label;
+    item.append(row,lbl);bar.append(item);
+  });
+}
+
+function buildAuxBar(){
+  const bar=$('aux-bar');if(!bar)return;
+  bar.innerHTML='';
+  // Camera calibration circle (Pro)
+  const item=document.createElement('div');item.className='aux-item pro-only';
+  item.onclick=()=>showScreen(S.screen==='calibrate'?'workflow':'calibrate');
+  const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
+  const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';
+  item.append(circle,lbl);bar.append(item);
+  // Approach B formula circle (Pro)
+  const item2=document.createElement('div');item2.className='aux-item pro-only';
+  item2.onclick=()=>showScreen(S.screen==='formula'?'workflow':'formula');
+  const circle2=document.createElement('div');circle2.className='aux-circle';circle2.id='aux-formula';circle2.textContent='B';
+  const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';
+  item2.append(circle2,lbl2);bar.append(item2);
+  // Measurement log circle (both tiers)
+  const item3=document.createElement('div');item3.className='aux-item';
+  item3.onclick=()=>showScreen(S.screen==='log'?'workflow':'log');
+  const circle3=document.createElement('div');circle3.className='aux-circle';circle3.id='aux-log';circle3.textContent='L';
+  const lbl3=document.createElement('span');lbl3.className='aux-lbl';lbl3.textContent='Log';
+  item3.append(circle3,lbl3);bar.append(item3);
+}
+function updateAuxBar(){
+  const c=$('aux-calib');
+  if(c){const hasData=S.scaleProfiles.length>0;
+    c.className='aux-circle'+(S.screen==='calibrate'?' active':(hasData?' has-data':''));}
+  const f=$('aux-formula');
+  if(f){const modified=formulaModified()||S.profiles.length>0||S.calibDatasets.length>0;
+    f.className='aux-circle'+(S.screen==='formula'?' active':(modified?' has-data':''));}
+  updateLogAux();
+}
+
+function updateStepBar(){
+  for(let n=1;n<=4;n++){
+    const circle=$(`sc-${n}`),lbl=$(`sl-lbl-${n}`);
+    const lLine=$(`sl-${n}`),rLine=$(`sr-${n}`);
+    if(S.step>n){circle.className='step-circle done';circle.textContent='✓';}
+    else if(S.step===n){circle.className='step-circle active';circle.textContent=n;}
+    else{circle.className='step-circle';circle.textContent=n;}
+    lbl.className='step-lbl'+(S.step===n?' active':'');
+    if(lLine&&n>1)lLine.style.background=S.step>n-1?'#0cbbcc':'rgba(255,255,255,0.12)';
+    if(rLine&&n<4)rLine.style.background=S.step>n?'#0cbbcc':'rgba(255,255,255,0.12)';
+  }
+}
+
+function showStep(n){
+  S.step=n;
+  [1,2,3,4].forEach(i=>{const p=$(`panel-${i}`);if(p)p.className='panel'+(i===n?' show':'');});
+  const showCanvas=n>=2&&S.dispW>0;
+  $('canvas-wrap').className=showCanvas?'show':'';
+
+  if(isTouch){
+    if(n===4){S.touchMode='navigate';}
+    else if(n===2||n===3){S.touchMode='draw';}
+    updateTouchModeBtn();
+  }
+  if(n===4){renderFcalibSelect();updateFcalibCount();}
+  updateResWarn();
+  updateStepBar();
+}
+function updateResWarn(){
+  const el=$('res-warn-overlay');if(!el)return;
+  if(S.step!==3||!S.pxMm||!(S.pxMm>0)){el.style.display='none';return;}
+  const working=S.pxMm*(S.resizeFactor||1);
+  if(working<0.5){
+    el.className='danger';
+    el.textContent='Measurements below 0.5 px/mm are not recommended — proceed only if you know what you are doing.';
+    el.style.display='block';
+  } else if(working<2){
+    el.className='warn';
+    el.textContent='Reliable measurement below 2 px/mm requires a sound understanding of the tool\u2019s limitations and some experience.';
+    el.style.display='block';
+  } else {
+    el.style.display='none';
+  }
+}
+
+function showErr(msg){
+  $('err-msg').textContent=msg;
+  $('err-bar').className='show';
+}
+function clearErr(){$('err-bar').className='';}
+
+function updateZoom(){$('zoom-label').textContent=S.zoom.toFixed(1)+'×';}
+
+function updateMetaBar(){
+  if(!S.imgMeta)return;
+  const m=S.imgMeta;
+  const el=$('img-meta');
+  el.innerHTML=`<span>|</span><span>${m.origW}×${m.origH}</span><span>${m.mp} MP</span><span>${m.format}</span><span>8-bit RGBA</span>`+(m.resized?'<span style="color:#d97706">⚠ resized</span>':'');
+  el.className='show';
+}
+
+function updateQualityIndicator(){
+  if(!S.pxMm){$('q-badge').innerHTML='';return;}
+  const q=S.pxMm*Math.sqrt(S.nLines);
+  const tier=q>100?{l:"Can't be any better",segs:5,col:'#34d399',bg:'rgba(52,211,153,.12)',br:'rgba(52,211,153,.3)'}:
+              q>=51?{l:'Good',segs:4,col:'#6ee7b7',bg:'rgba(110,231,183,.10)',br:'rgba(110,231,183,.28)'}:
+              q>=26?{l:'Should be fine',segs:3,col:'#0cbbcc',bg:'rgba(12,187,204,.10)',br:'rgba(12,187,204,.28)'}:
+              q>=13?{l:'Acceptable',segs:2,col:'#fbbf24',bg:'rgba(251,191,36,.10)',br:'rgba(251,191,36,.28)'}:
+                    {l:'Better than nothing',segs:1,col:'#f87171',bg:'rgba(248,113,113,.10)',br:'rgba(248,113,113,.28)'};
+  const segs=[1,2,3,4,5].map(s=>`<span class="q-seg" style="background:${s<=tier.segs?tier.col:'rgba(255,255,255,0.15)'}"></span>`).join('');
+  $('q-badge').innerHTML=`<span class="q-badge" style="background:${tier.bg};border:1px solid ${tier.br};color:${tier.col}"><span class="q-segs">${segs}</span><span style="font-family:monospace;font-size:11px">${q.toFixed(0)}</span><span style="font-size:11px;font-weight:500">${tier.l}</span></span>`;
+}
+
+function updateBandWidth(){
+  const bw=$('band-width');
+  if(S.pxMm)bw.textContent=`≈ ±${(S.nLines/2/S.pxMm).toFixed(1)} mm band`;
+  else bw.textContent='';
+}
+
+function updateScaleHint(){
+  const hint=$('scale-hint');
+  if(S.scaleMode==='direct'){
+    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px" placeholder="e.g. 5.2"><span>pixels / mm</span></div>';
+    const inp=$('direct-px-inp');if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;};}
+    return;
+  }
+  const intro='The tool needs a known distance in the image to convert pixels to millimetres. ';
+  if(S.scalePts.length===0)hint.innerHTML=intro+'Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size';
+  else if(S.scalePts.length===1)hint.innerHTML='Now click <strong>point B</strong> at the other end of that known distance';
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px" placeholder="e.g. 100"><span>mm</span><button class="btn-ghost btn-small" onclick="resetScalePts()">↺ Reset</button></div>`;
+  const inp=$('real-dist-inp');if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;};}
+}
+
+function switchScaleMode(mode){
+  S.scaleMode=mode;S.scalePts=[];S.realDist='';S.directPx='';
+  const tw=$('tab-twopoint');
+  tw.className='tab'+(mode==='twopoint'?' active':'');
+  tw.textContent='Click two reference points';
+  $('tab-direct').className='tab'+(mode==='direct'?' active':'');
+  const td=$('tab-distance');if(td)td.className='tab pro-only'+(mode==='distance'?' active':'');
+  const distPanel=$('scale-distance-panel');
+  const hintCard=$('scale-hint');
+  if(mode==='distance'){
+    if(distPanel)distPanel.style.display='';
+    if(hintCard)hintCard.style.display='none';
+    renderScaleProfileSelect();
+    onDistanceInput();
+  } else {
+    if(distPanel)distPanel.style.display='none';
+    if(hintCard)hintCard.style.display='';
+    updateScaleHint();
+  }
+  paintCanvas();
+}
+
+function resetScalePts(){S.scalePts=[];updateScaleHint();paintCanvas();}
+
+/* ═══════════════════════════════════════════════════════════
+   DISTANCE + CAMERA PROFILE scale mode (Pro)
+═══════════════════════════════════════════════════════════ */
+function renderScaleProfileSelect(){
+  const sel=$('scale-profile-select');
+  if(sel){
+    const cur=S.activeScaleProfile;
+    sel.innerHTML='<option value="">— Select a calibrated camera —</option>'+
+      S.scaleProfiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    sel.value=cur;
+    const del=$('btn-scale-prof-delete');if(del)del.style.display=cur?'':'none';
+  }
+  // Mirror into the calibration screen's dropdown
+  const selC=$('scale-profile-select-cal');
+  if(selC){
+    selC.innerHTML='<option value="">— No profile selected —</option>'+
+      S.scaleProfiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    selC.value='';
+    const delC=$('btn-scale-prof-delete-cal');if(delC)delC.style.display='none';
+    const noteC=$('scale-prof-note-cal');if(noteC)noteC.textContent='';
+  }
+}
+function onScaleProfileSelectCal(){
+  const id=$('scale-profile-select-cal').value;
+  const delC=$('btn-scale-prof-delete-cal');if(delC)delC.style.display=id?'':'none';
+  const expC=$('btn-scale-prof-export-one');if(expC)expC.style.display=id?'':'none';
+  const noteC=$('scale-prof-note-cal');
+  if(noteC){
+    const p=S.scaleProfiles.find(x=>x.id===id);
+    noteC.textContent=p?`r = ${p.k.toFixed(3)} · d^${p.p.toFixed(3)}${p.rmsePct!=null?`  ·  fit ±${p.rmsePct.toFixed(1)}%`:''}${p.note?`  ·  ${p.note}`:''}`:'';
+  }
+}
+function deleteScaleProfileCal(){
+  const id=$('scale-profile-select-cal').value;if(!id)return;
+  const p=S.scaleProfiles.find(x=>x.id===id);
+  if(p&&!confirm(`Delete camera profile “${p.name}”?`))return;
+  S.scaleProfiles=S.scaleProfiles.filter(x=>x.id!==id);
+  if(S.activeScaleProfile===id)S.activeScaleProfile='';
+  persistScaleProfiles();
+  renderScaleProfileSelect();
+}
+function onScaleProfileSelect(){
+  S.activeScaleProfile=$('scale-profile-select').value;
+  $('btn-scale-prof-delete').style.display=S.activeScaleProfile?'':'none';
+  onDistanceInput();
+}
+function onDistanceInput(){
+  S.scaleDist=$('dist-inp')?$('dist-inp').value:'';
+  const out=$('dist-result');if(!out)return;
+  const d=parseFloat(S.scaleDist);
+  const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+  if(!prof){out.textContent='';return;}
+  if(!(d>0)){out.innerHTML='<span style="color:rgba(232,248,249,0.4)">Enter a distance to compute resolution.</span>';return;}
+  const r=resolutionFromProfile(prof,d);
+  if(r&&r>0){
+    out.innerHTML=`Predicted resolution: <strong>${r.toFixed(3)} px/mm</strong>`;
+  } else {
+    out.innerHTML='<span style="color:#f87171">Could not compute resolution.</span>';
+  }
+}
+function deleteScaleProfile(){
+  const id=S.activeScaleProfile;if(!id)return;
+  S.scaleProfiles=S.scaleProfiles.filter(p=>p.id!==id);
+  S.activeScaleProfile='';
+  persistScaleProfiles();
+  renderScaleProfileSelect();
+  onDistanceInput();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CALIBRATION SCREEN (Pro) — independent of measurement state
+═══════════════════════════════════════════════════════════ */
+function showScreen(name){
+  S.screen=name;
+  const wf=$('workflow-container'),cs=$('calibrate-screen'),fs=$('formula-screen'),ls=$('log-screen');
+  if(wf)wf.style.display='none';
+  if(cs)cs.style.display='none';
+  if(fs)fs.style.display='none';
+  if(ls)ls.style.display='none';
+  if(name==='calibrate'){
+    if(cs)cs.style.display='block';
+    enterCalibScreen();
+  } else if(name==='formula'){
+    if(fs)fs.style.display='block';
+    enterFormulaScreen();
+  } else if(name==='log'){
+    if(ls)ls.style.display='block';
+    enterLogScreen();
+  } else {
+    if(wf)wf.style.display='block';
+    calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
+    requestAnimationFrame(paintCanvas);
+  }
+  updateAuxBar();
+}
+function enterLogScreen(){
+  const t=$('autolog-toggle');if(t)t.checked=S.autoLog;
+  renderMeasLog();
+}
+function renderMeasLog(){
+  const list=$('log-list');if(!list)return;
+  const cnt=$('log-count');if(cnt)cnt.textContent=S.measLog.length?`${S.measLog.length} measurement${S.measLog.length===1?'':'s'}`:'';
+  if(!S.measLog.length){list.innerHTML='<div style="font-size:12px;color:rgba(232,248,249,0.4);padding:8px 0">No measurements logged yet. Completed analyses appear here'+(S.autoLog?' automatically.':' when you add them.')+'</div>';return;}
+  const rows=S.measLog.map((e,i)=>{
+    const t=new Date(e.timestamp);
+    const ts=isNaN(t)?'':`${t.toLocaleDateString()} ${t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    const A=e.widthA!=null?e.widthA.toFixed(3):'—';
+    const B=e.widthB!=null?e.widthB.toFixed(3):'—';
+    const photo=e.photoName?escapeHtml(e.photoName):'(unnamed)';
+    return `<div class="log-row">
+      <div class="log-row-main">
+        <span class="log-idx">${i+1}</span>
+        <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm &nbsp; <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span></span>
+        <button class="wiz-shot-del" onclick="deleteLogEntry('${e.id}')" title="Delete">✕</button>
+      </div>
+      <div class="log-row-sub">${ts} · ${photo}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}</div>
+      <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
+    </div>`;
+  }).join('');
+  list.innerHTML=rows;
+}
+function updateLogAux(){
+  const c=$('aux-log');if(!c)return;
+  c.className='aux-circle'+(S.screen==='log'?' active':(S.measLog.length?' has-data':''));
+}
+
+function enterCalibScreen(){
+  // If the measurement flow already has an image, offer it as the starting shot image
+  if(!S.calib.imageLoaded&&S.imgEl){
+    S.calib.imgEl=S.imgEl;S.calib.pixels=S.pixels;
+    S.calib.dispW=S.dispW;S.calib.dispH=S.dispH;S.calib.dispScale=S.dispScale;
+    S.calib.resizeFactor=S.resizeFactor;S.calib.imgMeta=S.imgMeta;
+    S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
+    S.calib.imageLoaded=true;S.calib.reused=true;   // flag: this is the crack photo, likely not a calibration shot
+  }
+  renderScaleProfileSelect();
+  renderWizShots();updateWizImageState();updateWizSpanHint();
+  updateCalibUploadPrompt();
+  requestAnimationFrame(paintCanvas);
+}
+
+function updateCalibUploadPrompt(){
+  const prompt=$('calib-upload-prompt'),cap=$('calib-capture'),cw=$('calib-canvas-wrap');
+  if(S.calib.imageLoaded){
+    if(prompt)prompt.style.display='none';
+    if(cap)cap.style.display='block';
+    if(cw)cw.className='show';
+    const m=$('calib-img-meta');
+    if(m&&S.calib.imgMeta)m.textContent=`${S.calib.imgMeta.origW}×${S.calib.imgMeta.origH} · ${S.calib.imgMeta.mp} MP${S.calib.imgMeta.resized?' · resized':''}`;
+  } else {
+    if(prompt)prompt.style.display='block';
+    if(cap)cap.style.display='block';
+    if(cw)cw.className='';
+  }
+}
+
+function openCalibWizard(){ showScreen('calibrate'); }   // legacy entry point → new screen
+function calibrateFromStep2(){
+  if(!confirm('This opens the camera calibration screen and leaves the measurement workflow. Your current image and scale are kept. Continue?'))return;
+  showScreen('calibrate');
+}
+
+function loadCalibImageClick(){$('wiz-image-file').click();}
+function loadCalibImage(ev){
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  clearErr();
+  decodeImage(file,d=>{
+    S.calib.imgEl=d.imgEl;S.calib.pixels=d.pixels;
+    S.calib.dispW=d.dispW;S.calib.dispH=d.dispH;S.calib.dispScale=d.dispScale;
+    S.calib.resizeFactor=d.resizeFactor;S.calib.imgMeta=d.imgMeta;
+    S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
+    S.calib.imageLoaded=true;S.calib.reused=false;
+    updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();updateCalibZoom();
+    requestAnimationFrame(paintCanvas);
+  });
+  ev.target.value='';
+}
+function updateWizImageState(){
+  const loadBtn=$('btn-wiz-load-img');
+  if(loadBtn)loadBtn.textContent=S.calib.imageLoaded?'↻ Load a different photo':'📷 Load calibration photo';
+}
+function resetWizShot(){
+  S.calib.scalePts=[];updateWizSpanHint();paintCanvas();
+}
+function updateWizSpanHint(){
+  const h=$('wiz-span-hint');if(!h)return;
+  if(!S.calib.imageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot\u2019s calibration photo first.</span>';return;}
+  const sp=S.calib.scalePts;
+  if(sp.length===0){
+    const caution=S.calib.reused?'<span style="color:rgba(251,191,36,0.85);display:block;margin-bottom:5px">⚠ This is your crack photo. Load an actual calibration photo (known object at a known distance) unless this shot really contains one.</span>':'';
+    h.innerHTML=caution+'Click <strong>point A</strong> on one edge of the known object.';
+  }
+  else if(sp.length===1)h.innerHTML='Now click <strong>point B</strong> on the opposite edge.';
+  else{
+    const dx=sp[1].x-sp[0].x,dy=sp[1].y-sp[0].y;
+    const spanOrig=Math.hypot(dx,dy)/S.calib.dispScale/S.calib.resizeFactor;
+    h.innerHTML=`Object spans <strong>${spanOrig.toFixed(1)} px</strong>. Enter distance &amp; width above, then “Add this shot”.`;
+  }
+}
+function addCalibShot(){
+  if(!S.calib.imageLoaded){showErr('Load this shot\u2019s calibration photo first.');return;}
+  const d=parseFloat($('wiz-dist-inp').value);
+  const w=parseFloat($('wiz-width-inp').value);
+  if(!(d>0)){showErr('Enter this shot\u2019s distance (m).');return;}
+  if(!(w>0)){showErr('Enter the known object width (mm).');return;}
+  if(S.calib.scalePts.length<2){showErr('Click the two edges of the object on the image.');return;}
+  const sp=S.calib.scalePts;
+  const dx=sp[1].x-sp[0].x,dy=sp[1].y-sp[0].y;
+  const spanOrig=Math.hypot(dx,dy)/S.calib.dispScale/S.calib.resizeFactor;
+  const r=spanOrig/w;
+  if(!(r>0)){showErr('Measured span is zero — re-click the edges.');return;}
+  if(S.calib.shots.length>=5){showErr('Maximum 5 shots. Delete one to add another.');return;}
+  S.calib.shots.push({d,w,span:+spanOrig.toFixed(2),r});
+  clearErr();
+  S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;   // fresh photo for the next shot
+  $('wiz-dist-inp').value='';$('wiz-width-inp').value='';
+  renderWizShots();updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();paintCanvas();
+}
+function deleteCalibShot(i){
+  S.calib.shots.splice(i,1);
+  renderWizShots();
+}
+function renderWizShots(){
+  const list=$('wiz-shots-list');if(!list)return;
+  const shots=S.calib.shots;
+  if(!shots.length){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">No shots yet. Add 3–5 across your expected distance range.</div>';}
+  else{
+    const fit=fitScalePowerLaw(shots);
+    list.innerHTML=shots.map((s,i)=>{
+      let resid='';
+      if(fit){const pred=fit.k*Math.pow(s.d,fit.p);const rp=Math.abs(pred-s.r)/s.r*100;
+        const col=rp<1?'#34d399':rp<2?'#fbbf24':'#f87171';
+        resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(2)}%</span>`;}
+      return `<div class="wiz-shot-item"><span>${s.d.toFixed(3)} m · ${s.w.toFixed(1)} mm · ${s.span.toFixed(0)} px → <strong>${s.r.toFixed(3)} px/mm</strong></span>${resid}<button class="wiz-shot-del" onclick="deleteCalibShot(${i})" title="Remove">✕</button></div>`;
+    }).join('');
+  }
+  updateWizFitSummary();
+}
+function updateWizFitSummary(){
+  const box=$('wiz-fit-summary');if(!box)return;
+  const n=S.calib.shots.length;
+  if(n<2){box.style.display='none';return;}
+  const fit=fitScalePowerLaw(S.calib.shots);
+  if(!fit){box.style.display='block';box.innerHTML='<span class="fit-bad">Fit failed — distances must differ between shots.</span>';return;}
+  box.style.display='block';
+  let quality='';
+  if(n<3){
+    quality='<span class="fit-warn">Add a 3rd shot to get a fit-quality estimate.</span>';
+  } else {
+    const e=fit.rmsePct;
+    const cls=e<1?'fit-good':e<2?'fit-warn':'fit-bad';
+    const word=e<0.5?'excellent':e<1?'good':e<2?'acceptable':'something isn\u2019t right — check for an outlier or zoom change';
+    quality=`Fit quality: <span class="${cls}">±${e.toFixed(2)}% (${word})</span>`;
+  }
+  box.innerHTML=`Power-law fit from ${n} shot${n>1?'s':''}: <strong>r = ${fit.k.toFixed(3)} · d<sup>${fit.p.toFixed(3)}</sup></strong><br>${quality}`;
+}
+function hasUnsavedCalib(){
+  // Unsaved if there are shots that don't already match the active saved profile
+  return S.calib.shots.length>0;
+}
+function calibSaveMsg(text,ok){
+  const m=$('calib-save-msg');if(!m)return;
+  if(!text){m.style.display='none';m.textContent='';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+}
+function saveCalibProfile(){
+  if(S.calib.shots.length<3){calibSaveMsg('Add at least 3 shots before saving.',false);return;}
+  const fit=fitScalePowerLaw(S.calib.shots);
+  if(!fit){calibSaveMsg('Fit failed — shots must be at different distances.',false);return;}
+  const name=$('wiz-name-inp').value.trim();
+  if(!name){calibSaveMsg('Give the camera profile a name.',false);$('wiz-name-inp').focus();return;}
+  const note=$('wiz-note-inp').value.trim();
+  let p=S.scaleProfiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  const data={name,note,k:fit.k,p:fit.p,rmsePct:fit.rmsePct,points:S.calib.shots.map(s=>({...s})),date:new Date().toISOString().slice(0,10)};
+  if(p){Object.assign(p,data);}
+  else{p={id:'sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),...data};S.scaleProfiles.push(p);}
+  S.activeScaleProfile=p.id;
+  persistScaleProfiles();
+  calibSaveMsg('',true);
+  // Clear the capture form (profile now saved) but stay on the screen
+  S.calib.shots=[];S.calib.scalePts=[];
+  ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
+  renderWizShots();renderScaleProfileSelect();updateWizSpanHint();
+  const msg=$('calib-saved-msg');if(msg){msg.textContent=`Saved “${name}”. Reset to calibrate another, or start measuring.`;msg.style.display='block';setTimeout(()=>{if(msg)msg.style.display='none';},4000);}
+}
+function calibrateAnother(){
+  if(hasUnsavedCalib()){
+    if(!confirm('You have unsaved calibration shots. Discard them and start a new calibration?'))return;
+  }
+  S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
+  ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
+  S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
+  calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
+  renderWizShots();updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();paintCanvas();
+}
+function startMeasuringFromCalib(){
+  if(hasUnsavedCalib()){
+    if(!confirm('You have unsaved calibration shots. Leave without saving?'))return;
+  }
+  // Fully reset the calibration capture state so re-entry starts fresh
+  S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
+  S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
+  calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
+  showScreen('workflow');
+  // If a crack image is loaded go to Scale, otherwise Upload
+  if(S.imgEl&&S.dispW>0){
+    S.iMode='scale';$('img-canvas').style.cursor='crosshair';
+    showStep(2);
+    // If the user just saved a profile, pre-select it in the distance tab
+    if(S.activeScaleProfile){switchScaleMode('distance');onDistanceInput();}
+    else updateScaleHint();
+  } else {
+    showStep(1);
+  }
+}
+
+/* ── Scale-profile export / import ── */
+function sanitizeFilename(name){
+  return String(name).trim().replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,30)||'profile';
+}
+function downloadJSON(data,filename){
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
+  else{const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+  markExported();
+}
+
+/* ── Backup reminder (passive, ~weekly) ── */
+const LAST_EXPORT_KEY='dcg_last_export_v1';
+const BACKUP_REMIND_DAYS=7;
+function markExported(){
+  try{storageSet(LAST_EXPORT_KEY,String(Date.now()));}catch(e){}
+  const b=$('backup-bar');if(b)b.style.display='none';
+}
+function hasBackupWorthyData(){
+  return (S.scaleProfiles&&S.scaleProfiles.length>0)
+      || (S.profiles&&S.profiles.length>0)
+      || (S.calibDatasets&&S.calibDatasets.length>0)
+      || (S.measLog&&S.measLog.length>0);
+}
+function maybeShowBackupReminder(){
+  if(!hasBackupWorthyData())return;
+  let last=0;
+  try{const v=storageGet(LAST_EXPORT_KEY);last=v?parseInt(v,10):0;}catch(e){last=0;}
+  const days=(Date.now()-last)/86400000;
+  if(!last||days>=BACKUP_REMIND_DAYS){
+    const b=$('backup-bar');if(b)b.style.display='flex';
+  }
+}
+function dismissBackupReminder(){
+  const b=$('backup-bar');if(b)b.style.display='none';
+}
+function exportScaleProfiles(){
+  // Export all camera (distance-scale) profiles as a dated bundle
+  if(!S.scaleProfiles.length){showErr('No camera profiles to export yet.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:S.scaleProfiles},null,2);
+  downloadJSON(data,`DCG_camera_profiles_${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportOneScaleProfile(){
+  // Export only the profile selected in the calibration-screen dropdown
+  const id=$('scale-profile-select-cal')?$('scale-profile-select-cal').value:'';
+  const p=S.scaleProfiles.find(x=>x.id===id);
+  if(!p){showErr('Select a camera profile to export.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:[p]},null,2);
+  downloadJSON(data,`DCG_camera_${sanitizeFilename(p.name)}.json`);
+}
+function importScaleProfilesClick(){$('scale-import-file').click();}
+function importScaleProfiles(ev){
+  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const incoming=Array.isArray(obj)?obj:(obj.profiles||[]);
+      const valid=incoming.filter(p=>p&&p.name&&isFinite(p.k)&&isFinite(p.p));
+      if(!valid.length){showErr('No valid camera profiles in that file.');ev.target.value='';return;}
+      let added=0;
+      valid.forEach(p=>{
+        const exists=S.scaleProfiles.find(x=>x.name.toLowerCase()===String(p.name).toLowerCase());
+        const clean={
+          id:exists?exists.id:('sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+          name:String(p.name).slice(0,60),k:+p.k,p:+p.p,
+          rmsePct:isFinite(p.rmsePct)?+p.rmsePct:null,
+          points:Array.isArray(p.points)?p.points.filter(s=>isFinite(s.d)&&isFinite(s.r)):[],
+          note:p.note?String(p.note).slice(0,120):'',date:p.date||''
+        };
+        if(exists){Object.assign(exists,clean);}else{S.scaleProfiles.push(clean);added++;}
+      });
+      persistScaleProfiles();
+      renderScaleProfileSelect();
+      clearErr();
+    }catch(err){showErr('Could not read that file — is it a valid camera-profiles export?');}
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function updateDrawHint(){
+  const verb=isTouch?'Tap and drag':'Click and drag';
+  $('draw-hint').innerHTML=S.measLine?
+    '<span style="color:#059669">✓ Line set. Adjust options below, then click Analyze.</span>':
+    `<strong>${verb} across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.`;
+  $('btn-analyze').disabled=!S.measLine||S.busy;
+}
+
+function updateScaleDisplay(){
+  const txt=S.pxMm?`${S.pxMm.toFixed(3)} px/mm`:'';
+  $('scale-display').textContent=txt;
+  $('scale-display-3').textContent=txt;
+}
+
+function updateResultsDisplay(){
+  if(!S.results)return;
+  if(INTERFACE_MODE==='simple'){
+
+    const{bWidth}=getDisplayValues();
+    const bStr=bWidth<0.001?'<0.001':bWidth.toFixed(3);
+    if($('r-b'))$('r-b').innerHTML=`${bStr}<span class="r-unit">mm</span>`;
+    recomputeCalib();
+    return;
+  }
+  const{bWidth,aWidth,area,cL,cR}=getDisplayValues();
+  const bStr=bWidth<0.001?'<0.001':bWidth.toFixed(3);
+  $('r-b').innerHTML=`${bStr}<span class="r-unit">mm</span>`;
+  if(aWidth){
+    $('r-a').innerHTML=`${(+aWidth).toFixed(3)}<span class="r-unit">mm</span>`;
+    $('a-hint').style.display='none';
+    $('card-a').className='result-card a-active';
+    $('a-tag').style.color='#0cbbcc';$('a-method').style.color='rgba(12,187,204,0.75)';
+    $('r-a').style.color='#0cbbcc';
+  } else {
+    $('r-a').innerHTML='—.—<span class="r-unit"> mm</span>';
+    $('a-hint').style.display='';
+    $('card-a').className='result-card';
+    $('a-tag').style.color='';$('a-method').style.color='';
+    $('r-a').style.color='rgba(232,248,249,0.3)';
+  }
+  const r=S.results;
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+  $('stats-row').innerHTML=
+    `<div>scale: ${S.pxMm.toFixed(3)} px/mm · area: ${area} lum·mm${isAdj?' (adjusted)':''} · calib 1mm: ${r.calib} lum·mm</div>`+
+    `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}</div>`+
+    `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?' (auto-bounded)':''}</div>`;
+  updateCropUI();
+}
+
+function updateCropUI(){
+  const isCustom=S.cropLeft!==null||S.cropRight!==null;
+  $('crop-badge').style.display=isCustom?'':'none';
+  $('btn-reset-crop').style.display=isCustom?'':'none';
+  $('crop-auto-hint').style.display=isCustom?'none':'';
+}
+
+function resetCrop(){
+  S.cropLeft=null;S.cropRight=null;
+  if(S.results){S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);}
+  $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
+  S.live=null;updateResultsDisplay();drawChart();
+}
+
+function commitCropLeft(str){
+  const v=parseFloat(str);
+  const cR=S.cropRight!==null?S.cropRight:S.results?.boundRight??Infinity;
+  if(!isNaN(v)&&v>=0&&v<cR){S.cropLeft=+v.toFixed(3);S.cropLeftStr=v.toFixed(3);}
+  else{S.cropLeftStr=(S.cropLeft??S.results?.boundLeft??0).toFixed(3);}
+  $('crop-l-inp').value=S.cropLeftStr;recompute();
+}
+function commitCropRight(str){
+  const v=parseFloat(str);
+  const cL=S.cropLeft!==null?S.cropLeft:S.results?.boundLeft??0;
+  const max=S.results?.prof?(S.results.prof.length/S.results.pxMm_pd):999;
+  if(!isNaN(v)&&v>cL){const cv=Math.min(max,v);S.cropRight=+cv.toFixed(3);S.cropRightStr=cv.toFixed(3);}
+  else{S.cropRightStr=(S.cropRight??S.results?.boundRight??0).toFixed(3);}
+  $('crop-r-inp').value=S.cropRightStr;recompute();
+}
+
+function toggleTouchMode(){
+  S.touchMode=S.touchMode==='navigate'?'draw':'navigate';
+  updateTouchModeBtn();
+}
+function updateTouchModeBtn(){
+  const btn=$('btn-touch-mode'),hint=$('touch-mode-hint');
+  if(!btn)return;
+  if(S.touchMode==='navigate'){
+    btn.textContent='✋ Navigate';btn.style.background='';btn.style.color='';
+    if(hint)hint.textContent='Single finger: pan  ·  Two fingers: pinch zoom';
+  } else {
+    btn.textContent='✏️ Measure';btn.style.background='#2563eb';btn.style.color='#fff';
+    if(hint)hint.textContent=S.step===2?'Tap to place A / B points  ·  Two fingers: pinch zoom':'Single finger: draw line  ·  Two fingers: pinch zoom';
+  }
+}
+function toggleBaseCorr(){
+  S.showBaseCorr=!S.showBaseCorr;
+  $('base-controls').style.display=S.showBaseCorr?'block':'none';
+  $('base-toggle-txt').textContent=(S.showBaseCorr?'▾':'▸')+' Baseline correction';
+}
+function resetBaseCorr(){S.tilt=0;S.bow=0;S.shift=0;$('tilt-slider').value=0;$('bow-slider').value=0;$('shift-slider').value=0;$('tilt-val').textContent='0.0';$('bow-val').textContent='0.0';$('shift-val').textContent='0.0';$('base-active-badge').style.display='none';$('btn-base-reset').style.display='none';recompute();}
+function setTilt(v){S.tilt=v;$('tilt-slider').value=v;$('tilt-val').textContent=(v>0?'+':'')+v.toFixed(1);updateBaseActive();recompute();}
+function setBow(v){S.bow=v;$('bow-slider').value=v;$('bow-val').textContent=(v>0?'+':'')+v.toFixed(1);updateBaseActive();recompute();}
+function setShift(v){S.shift=v;$('shift-slider').value=v;$('shift-val').textContent=(v>0?'+':'')+v.toFixed(1);updateBaseActive();recompute();}
+function updateBaseActive(){const on=S.tilt!==0||S.bow!==0||S.shift!==0;$('base-active-badge').style.display=on?'':'none';$('btn-base-reset').style.display=on?'':'none';}
+function onTiltChange(){S.tilt=parseFloat($('tilt-slider').value);$('tilt-val').textContent=(S.tilt>0?'+':'')+S.tilt.toFixed(1);updateBaseActive();recompute();}
+function onBowChange(){S.bow=parseFloat($('bow-slider').value);$('bow-val').textContent=(S.bow>0?'+':'')+S.bow.toFixed(1);updateBaseActive();recompute();}
+function onShiftChange(){S.shift=parseFloat($('shift-slider').value);$('shift-val').textContent=(S.shift>0?'+':'')+S.shift.toFixed(1);updateBaseActive();recompute();}
+function onCalibChange(){if(S.results){recompute();updateResultsDisplay();}}
+
+function toggleFormula(){
+  const open=$('formula-controls').style.display==='none';
+  $('formula-controls').style.display=open?'block':'none';
+  $('formula-toggle-txt').textContent=(open?'▾':'▸')+' Approach B formula';
+}
+function onFormulaChange(){
+  const c=parseFloat($('bcoeff-inp').value),e=parseFloat($('bexp-inp').value);
+  if(isFinite(c)&&c>0)S.bCoeff=c;
+  if(isFinite(e))S.bExp=e;
+
+  if(S.activeProfile){
+    const p=S.profiles.find(x=>x.id===S.activeProfile);
+    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
+      S.activeProfile='';
+      if($('profile-select'))$('profile-select').value='';
+      $('btn-profile-delete').style.display='none';
+      $('profile-note').textContent='';
+    }
+  }
+  updateFormulaActive();
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(S.bCoeff);
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value=String(S.bExp);
+  if(S.results)recompute();
+}
+function resetFormula(){
+  S.bCoeff=0.357;S.bExp=0.16;
+  $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value='0.357';
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value='0.16';
+  S.activeProfile='';
+  if($('profile-select'))$('profile-select').value='';
+  if($('profile-select-scr'))$('profile-select-scr').value='';
+  if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
+  if($('btn-profile-delete-scr'))$('btn-profile-delete-scr').style.display='none';
+  if($('profile-note'))$('profile-note').textContent='';
+  if($('profile-note-scr'))$('profile-note-scr').textContent='';
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+function updateFormulaActive(){
+  const on=formulaModified();
+  $('formula-active-badge').style.display=on?'':'none';
+  $('btn-formula-reset').style.display=on?'':'none';
+  // Mirror onto the standalone formula screen
+  const b2=$('formula-active-badge-scr');if(b2)b2.style.display=on?'':'none';
+  const r2=$('btn-formula-reset-scr');if(r2)r2.style.display=on?'':'none';
+}
+
+/* ── Standalone Approach B formula screen (mirrors the Step-4 box) ── */
+function syncFormulaInputs(){
+  // Push current constants into BOTH views' inputs
+  if($('bcoeff-inp'))$('bcoeff-inp').value=String(S.bCoeff);
+  if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(S.bCoeff);
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value=String(S.bExp);
+}
+function enterFormulaScreen(){
+  syncFormulaInputs();
+  renderProfileList();          // refreshes both dropdowns
+  updateFormulaActive();
+  renderCalibDatasetSelectScr();renderCalibRecords();
+  const note=$('profile-note-scr');
+  if(note){const p=S.profiles.find(x=>x.id===S.activeProfile);note.textContent=p&&p.desc?p.desc:'';}
+}
+function onFormulaChangeScr(){
+  // Read the screen inputs into state, then run the shared change logic
+  const c=parseFloat($('bcoeff-inp-scr').value),e=parseFloat($('bexp-inp-scr').value);
+  if(isFinite(c)&&c>0)S.bCoeff=c;
+  if(isFinite(e))S.bExp=e;
+  // Mirror into the step-4 inputs so they agree
+  if($('bcoeff-inp'))$('bcoeff-inp').value=String(S.bCoeff);
+  if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
+  // Deselect a profile if we've diverged from it
+  if(S.activeProfile){
+    const p=S.profiles.find(x=>x.id===S.activeProfile);
+    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
+      S.activeProfile='';
+      if($('profile-select'))$('profile-select').value='';
+      if($('profile-select-scr'))$('profile-select-scr').value='';
+      if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
+      if($('btn-profile-delete-scr'))$('btn-profile-delete-scr').style.display='none';
+      if($('profile-note'))$('profile-note').textContent='';
+      if($('profile-note-scr'))$('profile-note-scr').textContent='';
+    }
+  }
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+function onProfileSelectScr(){
+  // Mirror the screen dropdown selection into the shared select and reuse onProfileSelect
+  const id=$('profile-select-scr').value;
+  if($('profile-select'))$('profile-select').value=id;
+  onProfileSelect();          // updates state + step-4 inputs
+  syncFormulaInputs();        // reflect into screen inputs
+  // Update screen-local UI
+  const p=S.profiles.find(x=>x.id===id);
+  const note=$('profile-note-scr');if(note)note.textContent=p&&p.desc?p.desc:'';
+  const del=$('btn-profile-delete-scr');if(del)del.style.display=id?'':'none';
+  const exp=$('btn-prof-export-one-scr');if(exp)exp.style.display=id?'':'none';
+}
+function deleteProfileScr(){
+  const id=$('profile-select-scr').value;if(!id)return;
+  const p=S.profiles.find(x=>x.id===id);
+  if(p&&!confirm(`Delete formula profile “${p.name}”?`))return;
+  if($('profile-select'))$('profile-select').value=id;
+  S.activeProfile=id;
+  deleteProfile();            // shared delete
+  syncFormulaInputs();
+}
+function saveProfileScr(){
+  const name=$('profile-name-inp-scr').value.trim();
+  const msg=$('formula-save-msg-scr');
+  if(!name){if(msg){msg.textContent='Give the profile a name.';msg.style.color='#fbbf24';msg.style.display='block';}$('profile-name-inp-scr').focus();return;}
+  const desc=$('profile-desc-inp-scr').value.trim();
+  let p=S.profiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(p){p.c=+S.bCoeff;p.a=+S.bExp;p.n=S.nLines;p.desc=desc;}
+  else{p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,c:+S.bCoeff,a:+S.bExp,n:S.nLines,desc};S.profiles.push(p);}
+  S.activeProfile=p.id;
+  persistProfiles();
+  renderProfileList();
+  $('profile-name-inp-scr').value='';$('profile-desc-inp-scr').value='';
+  const note=$('profile-note-scr');if(note)note.textContent=desc||'';
+  if(msg){msg.textContent=`Saved “${name}”.`;msg.style.color='#34d399';msg.style.display='block';setTimeout(()=>{if(msg)msg.style.display='none';},4000);}
+}
+
+const PROFILE_KEY='dcg_camera_profiles_v1';
+const SCALE_PROFILE_KEY='dcg_scale_profiles_v1';
+
+function storageGet(key){
+  try{return window.localStorage.getItem(key);}catch(e){return null;}
+}
+function storageSet(key,val){
+  try{window.localStorage.setItem(key,val);return true;}catch(e){return false;}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DISTANCE-SCALE PROFILES  (Pro only) — separate from Approach B
+   Power law: resolution r (px/mm) = k · d^p   (d in metres)
+   Fitted in log-log space from 3–5 calibration shots.
+═══════════════════════════════════════════════════════════ */
+function fitScalePowerLaw(points){
+  const pts=points.filter(p=>p.d>0&&p.r>0);
+  if(pts.length<2)return null;
+  const xs=pts.map(p=>Math.log(p.d)),ys=pts.map(p=>Math.log(p.r)),n=pts.length;
+  const sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0);
+  const sxy=xs.reduce((a,x,i)=>a+x*ys[i],0),sx2=xs.reduce((a,x)=>a+x*x,0);
+  const denom=n*sx2-sx*sx;
+  if(Math.abs(denom)<1e-12)return null;
+  const p=(n*sxy-sx*sy)/denom;
+  const k=Math.exp((sy-p*sx)/n);
+  let rmsePct=null;
+  if(pts.length>=3){
+    let ss=0;pts.forEach(pt=>{const pred=k*Math.pow(pt.d,p);ss+=Math.pow((pred-pt.r)/pt.r,2);});
+    rmsePct=Math.sqrt(ss/pts.length)*100;
+  }
+  return{k,p,rmsePct};
+}
+function resolutionFromProfile(profile,distance){
+  if(!profile||!isFinite(profile.k)||!isFinite(profile.p)||!(distance>0))return null;
+  return profile.k*Math.pow(distance,profile.p);
+}
+function loadScaleProfiles(){
+  const raw=storageGet(SCALE_PROFILE_KEY);
+  if(raw){
+    try{
+      const arr=JSON.parse(raw);
+      if(Array.isArray(arr))S.scaleProfiles=arr.filter(p=>p&&p.id&&p.name&&isFinite(p.k)&&isFinite(p.p));
+    }catch(e){S.scaleProfiles=[];}
+  }
+}
+function persistScaleProfiles(){
+  storageSet(SCALE_PROFILE_KEY,JSON.stringify(S.scaleProfiles));
+  updateAuxBar();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APPROACH B FORMULA-CALIBRATION DATASETS (Pro only)
+   Each record: {pxMm, knownWidth, area, date}.
+   Fit calib_per_mm = area/knownWidth against px/mm as a power law:
+     calib_per_mm = K · (px/mm)^P   →   c = K/256,  α = P
+   Finalise requires ≥8 records AND max/min px/mm ratio ≥16.
+═══════════════════════════════════════════════════════════ */
+const CALIB_DATASET_KEY='dcg_formula_datasets_v1';
+const MEAS_LOG_KEY='dcg_measurement_log_v1';
+const AUTO_LOG_KEY='dcg_autolog_v1';
+
+function loadMeasLog(){
+  const raw=storageGet(MEAS_LOG_KEY);
+  if(raw){try{const a=JSON.parse(raw);if(Array.isArray(a))S.measLog=a;}catch(e){S.measLog=[];}}
+  const al=storageGet(AUTO_LOG_KEY);
+  if(al!==null&&al!==undefined&&al!=='')S.autoLog=(al==='1'||al===true||al==='true');
+}
+function persistMeasLog(){storageSet(MEAS_LOG_KEY,JSON.stringify(S.measLog));}
+function setAutoLog(on){S.autoLog=!!on;storageSet(AUTO_LOG_KEY,on?'1':'0');}
+
+function addLogEntry(silent){
+  if(!S.results){if(!silent)logMsg('Run an analysis first.',false);return;}
+  const dv=getDisplayValues();
+  const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+  const entry={
+    id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    timestamp:new Date().toISOString(),
+    photoName:S.photoName||'',
+    resolution:+(+S.pxMm).toFixed(3),
+    scaleMode:S.scaleMode||'',
+    distance:(S.scaleMode==='distance'&&S.scaleDist)?+S.scaleDist:null,
+    cameraProfile:prof?prof.name:'',
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+(+dv.aWidth).toFixed(4):null,
+    widthB:+(+dv.bWidth).toFixed(4),
+    cropLeft:+(+dv.cL).toFixed(3),cropRight:+(+dv.cR).toFixed(3),
+    resolutionMP:S.imgMeta?S.imgMeta.mp:'',
+    note:''
+  };
+  S.measLog.push(entry);
+  persistMeasLog();
+  if(S.screen==='log')renderMeasLog();
+  updateLogAux();
+  if(!silent)logMsg(`Added — ${S.measLog.length} in log.`,true);
+}
+function deleteLogEntry(id){
+  S.measLog=S.measLog.filter(e=>e.id!==id);
+  persistMeasLog();renderMeasLog();updateLogAux();
+}
+function clearMeasLog(){
+  if(!S.measLog.length)return;
+  if(!confirm(`Clear all ${S.measLog.length} logged measurements? This cannot be undone.`))return;
+  S.measLog=[];persistMeasLog();renderMeasLog();updateLogAux();
+}
+function updateLogNote(id,val){
+  const e=S.measLog.find(x=>x.id===id);if(e){e.note=val;persistMeasLog();}
+}
+function logMsg(text,ok){
+  const m=$('log-msg');if(!m)return;
+  if(!text){m.style.display='none';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+  setTimeout(()=>{if(m)m.style.display='none';},3500);
+}
+function csvEscape(v){
+  if(v===null||v===undefined)return '';
+  const s=String(v);
+  return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function exportMeasLogCSV(){
+  if(!S.measLog.length){logMsg('No measurements to export yet.',false);return;}
+  const cols=[['timestamp','Timestamp'],['photoName','Photo'],['resolution','px/mm'],
+    ['scaleMode','Scale mode'],['distance','Distance (m)'],['cameraProfile','Camera profile'],
+    ['widthA','Width A (mm)'],['widthB','Width B (mm)'],
+    ['cropLeft','Window from (mm)'],['cropRight','Window to (mm)'],
+    ['resolutionMP','Image MP'],['note','Note']];
+  const header=cols.map(c=>csvEscape(c[1])).join(',');
+  const rows=S.measLog.map(e=>cols.map(c=>csvEscape(e[c[0]])).join(','));
+  const csv=[header,...rows].join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const name=`DCG_measurement_log_${new Date().toISOString().slice(0,10)}.csv`;
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
+  else{const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+  markExported();
+}
+
+
+const CALIB_MIN_RECORDS=8;
+const CALIB_MIN_RATIO=16;
+
+function loadCalibDatasets(){
+  const raw=storageGet(CALIB_DATASET_KEY);
+  if(raw){
+    try{
+      const arr=JSON.parse(raw);
+      if(Array.isArray(arr))S.calibDatasets=arr.filter(d=>d&&d.id&&d.name&&Array.isArray(d.records));
+    }catch(e){S.calibDatasets=[];}
+  }
+}
+function persistCalibDatasets(){
+  storageSet(CALIB_DATASET_KEY,JSON.stringify(S.calibDatasets));
+}
+function activeDataset(){
+  return S.calibDatasets.find(d=>d.id===S.activeCalibDataset)||null;
+}
+function createCalibDataset(name){
+  const d={id:'cd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:name||('Dataset '+(S.calibDatasets.length+1)),note:'',records:[],c:null,a:null,rmsePct:null,fittedDate:null,date:new Date().toISOString().slice(0,10)};
+  S.calibDatasets.push(d);S.activeCalibDataset=d.id;persistCalibDatasets();
+  return d;
+}
+function calibResolutionRatio(records){
+  const rs=records.map(r=>r.pxMm).filter(v=>v>0);
+  if(rs.length<2)return 0;
+  return Math.max(...rs)/Math.min(...rs);
+}
+function fitCalibDataset(ds){
+  // Reuse the power-law fitter: map pxMm→d, calib_per_mm→r
+  const pts=ds.records.filter(r=>r.pxMm>0&&r.knownWidth>0&&r.area>0)
+    .map(r=>({d:r.pxMm,r:r.area/r.knownWidth}));
+  const fit=fitScalePowerLaw(pts);
+  if(!fit)return null;
+  return{c:fit.k/256,a:fit.p,rmsePct:fit.rmsePct};
+}
+function calibGateState(ds){
+  const n=ds?ds.records.length:0;
+  const ratio=ds?calibResolutionRatio(ds.records):0;
+  return{n,ratio,okN:n>=CALIB_MIN_RECORDS,okRatio:ratio>=CALIB_MIN_RATIO,canFit:n>=CALIB_MIN_RECORDS&&ratio>=CALIB_MIN_RATIO,ideal:n>=16};
+}
+
+/* ── Step-4 capture panel ── */
+function toggleFcalib(){
+  const c=$('fcalib-controls'),t=$('fcalib-toggle-txt');
+  const open=c.style.display==='none';
+  c.style.display=open?'block':'none';
+  t.textContent=(open?'▾':'▸')+' Calibrate the Approach B formula (advanced)';
+  if(open){renderFcalibSelect();updateFcalibCount();}
+}
+function renderFcalibSelect(){
+  const sel=$('fcalib-dataset-select');if(!sel)return;
+  sel.innerHTML='<option value="">— Select or create a dataset —</option>'+
+    S.calibDatasets.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.records.length})</option>`).join('');
+  sel.value=S.activeCalibDataset||'';
+}
+function onFcalibDatasetSelect(){
+  S.activeCalibDataset=$('fcalib-dataset-select').value;
+  updateFcalibCount();
+}
+function newFcalibDataset(){
+  const name=prompt('Name this calibration dataset (e.g. "DJI Air 3S · concrete"):');
+  if(name===null)return;
+  const nm=name.trim();if(!nm){return;}
+  createCalibDataset(nm);
+  renderFcalibSelect();renderCalibDatasetSelectScr();updateFcalibCount();
+  fcalibMsg(`Created “${nm}”. Save points into it below.`,true);
+}
+function fcalibMsg(text,ok){
+  const m=$('fcalib-msg');if(!m)return;
+  if(!text){m.style.display='none';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+}
+function updateFcalibCount(){
+  const el=$('fcalib-count');if(!el)return;
+  const ds=activeDataset();
+  if(!ds){el.textContent='';return;}
+  const g=calibGateState(ds);
+  el.textContent=`${g.n} point${g.n===1?'':'s'} · range ${g.ratio>0?g.ratio.toFixed(1)+'×':'—'}`;
+}
+function saveCalibPoint(){
+  if(!S.results){fcalibMsg('Run an analysis first.',false);return;}
+  const ds=activeDataset();
+  if(!ds){fcalibMsg('Select or create a dataset first.',false);return;}
+  const w=parseFloat($('fcalib-width-inp').value);
+  if(!(w>0)){fcalibMsg('Enter the known crack width (mm).',false);$('fcalib-width-inp').focus();return;}
+  const rec={pxMm:+S.pxMm,knownWidth:+w,area:+S.results.area,date:new Date().toISOString().slice(0,10)};
+  ds.records.push(rec);
+  persistCalibDatasets();
+  renderFcalibSelect();updateFcalibCount();
+  if(S.screen==='formula')renderCalibRecords();
+  const g=calibGateState(ds);
+  let extra='';
+  if(g.canFit)extra=' Ready to fit on the Approach B screen.';
+  else if(!g.okN)extra=` Need ${CALIB_MIN_RECORDS-g.n} more (min ${CALIB_MIN_RECORDS}).`;
+  else if(!g.okRatio)extra=` Widen the resolution range to ${CALIB_MIN_RATIO}× (now ${g.ratio.toFixed(1)}×).`;
+  fcalibMsg(`Saved: ${w.toFixed(3)} mm at ${S.pxMm.toFixed(3)} px/mm.${extra}`,true);
+  $('fcalib-width-inp').value='';
+}
+
+/* ── Approach B screen: dataset fitting ── */
+function renderCalibDatasetSelectScr(){
+  const sel=$('calib-dataset-select-scr');if(!sel)return;
+  sel.innerHTML='<option value="">— Select a dataset —</option>'+
+    S.calibDatasets.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.records.length})</option>`).join('');
+  sel.value=S.activeCalibDataset||'';
+  const has=!!activeDataset();
+  const del=$('btn-calib-ds-delete');if(del)del.style.display=has?'':'none';
+  const exp=$('btn-calib-ds-export');if(exp)exp.style.display=has?'':'none';
+}
+function onCalibDatasetSelectScr(){
+  S.activeCalibDataset=$('calib-dataset-select-scr').value;
+  renderCalibDatasetSelectScr();renderCalibRecords();
+}
+function deleteCalibDatasetScr(){
+  const ds=activeDataset();if(!ds)return;
+  if(!confirm(`Delete dataset “${ds.name}” and its ${ds.records.length} points?`))return;
+  S.calibDatasets=S.calibDatasets.filter(d=>d.id!==ds.id);
+  S.activeCalibDataset='';
+  persistCalibDatasets();
+  renderCalibDatasetSelectScr();renderCalibRecords();renderFcalibSelect();
+}
+function deleteCalibRecord(i){
+  const ds=activeDataset();if(!ds)return;
+  ds.records.splice(i,1);
+  persistCalibDatasets();
+  renderCalibRecords();renderFcalibSelect();updateFcalibCount();
+}
+function renderCalibRecords(){
+  const list=$('calib-records-list');if(!list)return;
+  const ds=activeDataset();
+  if(!ds){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">Select a dataset to see its points.</div>';
+    updateCalibGateStatus();updateCalibFitSummary();return;}
+  if(!ds.records.length){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">No points yet. Collect them at Step 4.</div>';}
+  else{
+    const fit=fitCalibDataset(ds);
+    list.innerHTML=ds.records.map((r,i)=>{
+      const cpm=r.area/r.knownWidth;
+      let resid='';
+      if(fit){const pred=(fit.c*256)*Math.pow(r.pxMm,fit.a);const rp=Math.abs(pred-cpm)/cpm*100;
+        const col=rp<5?'#34d399':rp<12?'#fbbf24':'#f87171';
+        resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(1)}%</span>`;}
+      return `<div class="wiz-shot-item"><span>${r.pxMm.toFixed(2)} px/mm · ${r.knownWidth.toFixed(3)} mm · area ${r.area.toFixed(1)} → <strong>${cpm.toFixed(1)}</strong> lum·mm/mm</span>${resid}<button class="wiz-shot-del" onclick="deleteCalibRecord(${i})" title="Remove">✕</button></div>`;
+    }).join('');
+  }
+  updateCalibGateStatus();updateCalibFitSummary();
+}
+function updateCalibGateStatus(){
+  const box=$('calib-gate-status');if(!box)return;
+  const ds=activeDataset();
+  if(!ds){box.innerHTML='';return;}
+  const g=calibGateState(ds);
+  const nCls=g.okN?'fit-good':'fit-warn',rCls=g.okRatio?'fit-good':'fit-warn';
+  const nTxt=`<span class="${nCls}">${g.n} / ${CALIB_MIN_RECORDS} points${g.ideal?' ✓ ideal':''}</span>`;
+  const rTxt=`<span class="${rCls}">${g.ratio>0?g.ratio.toFixed(1):'0'}× / ${CALIB_MIN_RATIO}× resolution range</span>`;
+  box.innerHTML=`${nTxt} &nbsp;·&nbsp; ${rTxt}`;
+  const btn=$('btn-calib-fit');if(btn)btn.disabled=!g.canFit;
+}
+function updateCalibFitSummary(){
+  const box=$('calib-fit-summary');if(!box)return;
+  const ds=activeDataset();
+  if(!ds||ds.records.length<2){box.style.display='none';return;}
+  const fit=fitCalibDataset(ds);
+  if(!fit){box.style.display='none';return;}
+  box.style.display='block';
+  let q='';
+  if(fit.rmsePct!=null){
+    const e=fit.rmsePct;
+    const cls=e<12?'fit-good':e<16?'fit-warn':'fit-bad';
+    const word=e<8?'excellent':e<12?'good':e<16?'acceptable':'high scatter — check for outliers';
+    q=`<br>Fit quality: <span class="${cls}">±${e.toFixed(1)}% (${word})</span>`;
+  }
+  box.innerHTML=`Preview fit: <strong>c = ${fit.c.toFixed(3)}, α = ${fit.a.toFixed(3)}</strong>${q}`;
+}
+function fitAndFinaliseDataset(){
+  const ds=activeDataset();if(!ds)return;
+  const g=calibGateState(ds);
+  if(!g.canFit){calibFitMsg(`Need ${CALIB_MIN_RECORDS}+ points and ${CALIB_MIN_RATIO}× range first.`,false);return;}
+  const fit=fitCalibDataset(ds);
+  if(!fit||!isFinite(fit.c)||!isFinite(fit.a)){calibFitMsg('Fit failed — check the points for bad values.',false);return;}
+  ds.c=fit.c;ds.a=fit.a;ds.rmsePct=fit.rmsePct;ds.fittedDate=new Date().toISOString().slice(0,10);
+  persistCalibDatasets();
+  // Apply the fitted constants to the live Approach B formula
+  S.bCoeff=+fit.c.toFixed(4);S.bExp=+fit.a.toFixed(4);
+  S.activeProfile='';
+  if($('profile-select'))$('profile-select').value='';
+  if($('profile-select-scr'))$('profile-select-scr').value='';
+  syncFormulaInputs();updateFormulaActive();
+  if(S.results)recompute();
+  calibFitMsg(`Fitted c = ${fit.c.toFixed(3)}, α = ${fit.a.toFixed(3)} and applied to the formula. Save it as a named profile above to keep it.`,true);
+  updateCalibFitSummary();
+}
+function calibFitMsg(text,ok){
+  const m=$('calib-fit-msg');if(!m)return;
+  if(!text){m.style.display='none';return;}
+  m.textContent=text;m.style.color=ok?'#34d399':'#fbbf24';m.style.display='block';
+}
+function exportCalibDatasets(){
+  if(!S.calibDatasets.length){calibFitMsg('No datasets to export yet.',false);return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'formula-datasets',version:1,datasets:S.calibDatasets},null,2);
+  downloadJSON(data,`DCG_formula_datasets_${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportOneCalibDataset(){
+  const ds=activeDataset();if(!ds){calibFitMsg('Select a dataset to export.',false);return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'formula-datasets',version:1,datasets:[ds]},null,2);
+  downloadJSON(data,`DCG_formula_${sanitizeFilename(ds.name)}.json`);
+}
+function importCalibDatasetsClick(){$('calib-ds-import-file').click();}
+function importCalibDatasets(ev){
+  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const arr=obj.datasets||obj;
+      if(!Array.isArray(arr))throw 0;
+      let added=0;
+      arr.forEach(d=>{
+        if(d&&d.name&&Array.isArray(d.records)){
+          d.id='cd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+added;
+          S.calibDatasets.push(d);added++;
+        }
+      });
+      persistCalibDatasets();renderCalibDatasetSelectScr();renderCalibRecords();renderFcalibSelect();
+      calibFitMsg(`Imported ${added} dataset${added===1?'':'s'}.`,true);
+    }catch(err){calibFitMsg('Could not read that file.',false);}
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+function loadProfiles(){
+  const raw=storageGet(PROFILE_KEY);
+  if(raw){
+    try{
+      const arr=JSON.parse(raw);
+      if(Array.isArray(arr))S.profiles=arr.filter(p=>p&&p.id&&p.name&&isFinite(p.c)&&isFinite(p.a));
+    }catch(e){S.profiles=[];}
+  }
+  renderProfileList();
+}
+function persistProfiles(){
+  storageSet(PROFILE_KEY,JSON.stringify(S.profiles));
+}
+function renderProfileList(){
+  const cur=S.activeProfile;
+  const opts='<option value="">— Default (0.357, 0.16) —</option>'+
+    S.profiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  const sel=$('profile-select');
+  if(sel){sel.innerHTML=opts;sel.value=cur;
+    $('btn-profile-delete').style.display=cur?'':'none';
+    const e1=$('btn-prof-export-one');if(e1)e1.style.display=cur?'':'none';}
+  const selS=$('profile-select-scr');
+  if(selS){selS.innerHTML=opts;selS.value=cur;
+    const d2=$('btn-profile-delete-scr');if(d2)d2.style.display=cur?'':'none';
+    const e2=$('btn-prof-export-one-scr');if(e2)e2.style.display=cur?'':'none';}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function onProfileSelect(){
+  const id=$('profile-select').value;
+  S.activeProfile=id;
+  if(!id){
+
+    S.bCoeff=0.357;S.bExp=0.16;
+    $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+    $('profile-note').textContent='';
+  } else {
+    const p=S.profiles.find(x=>x.id===id);
+    if(p){
+      S.bCoeff=p.c;S.bExp=p.a;
+      $('bcoeff-inp').value=String(p.c);$('bexp-inp').value=String(p.a);
+      if(isFinite(p.n)&&p.n>0){
+        S.nLines=p.n;
+        if($('nlines-slider')){$('nlines-slider').value=p.n;$('nlines-val').textContent=p.n;}
+        updateBandWidth();updateQualityIndicator();
+        if(S.step<4)paintCanvas();
+      }
+      $('profile-note').textContent=p.desc?p.desc:'';
+    }
+  }
+  $('btn-profile-delete').style.display=id?'':'none';
+  const expOne=$('btn-prof-export-one');if(expOne)expOne.style.display=id?'':'none';
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+
+function showProfileSaveForm(){
+  $('pf-c').textContent=(+S.bCoeff).toString();
+  $('pf-a').textContent=(+S.bExp).toString();
+  $('pf-n').textContent=String(S.nLines);
+  const active=S.profiles.find(x=>x.id===S.activeProfile);
+  $('profile-name-inp').value=active?active.name:'';
+  $('profile-desc-inp').value=active?(active.desc||''):'';
+  $('profile-save-form').className='show';
+  $('profile-name-inp').focus();
+}
+function hideProfileSaveForm(){$('profile-save-form').className='';}
+
+function saveProfile(){
+  const name=$('profile-name-inp').value.trim();
+  if(!name){$('profile-name-inp').focus();return;}
+  const desc=$('profile-desc-inp').value.trim();
+
+  let p=S.profiles.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(p){
+    p.c=+S.bCoeff;p.a=+S.bExp;p.n=S.nLines;p.desc=desc;
+  } else {
+    p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,c:+S.bCoeff,a:+S.bExp,n:S.nLines,desc};
+    S.profiles.push(p);
+  }
+  S.activeProfile=p.id;
+  persistProfiles();
+  renderProfileList();
+  hideProfileSaveForm();
+  $('profile-note').textContent=desc||'';
+}
+
+function deleteProfile(){
+  const id=S.activeProfile;
+  if(!id)return;
+  S.profiles=S.profiles.filter(p=>p.id!==id);
+  S.activeProfile='';
+  persistProfiles();
+  renderProfileList();
+  $('profile-note').textContent='';
+
+  S.bCoeff=0.357;S.bExp=0.16;
+  $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+  updateFormulaActive();
+  if(S.results)recompute();
+}
+
+function exportProfiles(){
+  // Export all Approach B formula profiles as a dated bundle
+  if(!S.profiles.length){showErr('No profiles to export yet.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'approachB-profiles',version:1,profiles:S.profiles},null,2);
+  downloadJSON(data,`DCG_approachB_profiles_${new Date().toISOString().slice(0,10)}.json`);
+}
+function exportOneProfile(){
+  // Export only the Approach B profile currently selected
+  const id=S.activeProfile;
+  const p=S.profiles.find(x=>x.id===id);
+  if(!p){showErr('Select a formula profile to export.');return;}
+  const data=JSON.stringify({tool:'Digital Crack Gauge',type:'approachB-profiles',version:1,profiles:[p]},null,2);
+  downloadJSON(data,`DCG_approachB_${sanitizeFilename(p.name)}.json`);
+}
+function importProfilesClick(){$('profile-import-file').click();}
+function importProfiles(ev){
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const obj=JSON.parse(e.target.result);
+      const incoming=Array.isArray(obj)?obj:(obj.profiles||[]);
+      const valid=incoming.filter(p=>p&&p.name&&isFinite(p.c)&&isFinite(p.a));
+      if(!valid.length){showErr('No valid profiles found in that file.');ev.target.value='';return;}
+      let added=0;
+      valid.forEach(p=>{
+        const exists=S.profiles.find(x=>x.name.toLowerCase()===String(p.name).toLowerCase());
+        const clean={
+          id:exists?exists.id:('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+          name:String(p.name).slice(0,60),c:+p.c,a:+p.a,
+          n:(isFinite(p.n)&&p.n>0)?Math.round(p.n):40,
+          desc:p.desc?String(p.desc).slice(0,120):''
+        };
+        if(exists){Object.assign(exists,clean);}else{S.profiles.push(clean);added++;}
+      });
+      persistProfiles();
+      renderProfileList();
+      clearErr();
+      $('profile-note').textContent=`Imported ${valid.length} profile${valid.length>1?'s':''} (${added} new).`;
+    }catch(err){showErr('Could not read that file — is it a valid profiles export?');}
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();paintCanvas();}
+
+// Decode an image file into working pixels + geometry, without touching app flow.
+// Calls cb({imgEl, pixels, dispW, dispH, dispScale, resizeFactor, imgMeta}) on success.
+function decodeImage(file, cb){
+  if(!file)return;
+  if(!file.type.startsWith('image/')){showErr('Please upload a JPEG, PNG or WebP file.');return;}
+  const fmt=file.type.replace('image/','').toUpperCase().replace('JPG','JPEG');
+  const reader=new FileReader();
+  reader.onerror=()=>showErr('Could not read this file. Please try again.');
+  reader.onload=evt=>{
+    const img=new Image();
+    img.onerror=()=>showErr('This file does not appear to be a valid image.');
+    img.onload=()=>{
+      const origW=img.width,origH=img.height,totalPx=origW*origH,MAX_MP=50e6;
+      let pw=origW,ph=origH,rf=1;
+      if(totalPx>MAX_MP){rf=Math.sqrt(MAX_MP/totalPx);pw=Math.round(origW*rf);ph=Math.round(origH*rf);}
+      const MAX_DISP=640;
+      const dw=Math.min(pw,MAX_DISP),dh=Math.round(dw*ph/pw),ds=dw/pw;
+      const oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
+      oc.getContext('2d').drawImage(img,0,0,pw,ph);
+      let pd;try{pd=oc.getContext('2d').getImageData(0,0,pw,ph);}catch(e){showErr('Cannot read pixel data from this image.');return;}
+      cb({
+        imgEl:img,pixels:{data:pd.data,width:pw,height:ph},
+        dispW:dw,dispH:dh,dispScale:ds,resizeFactor:rf,
+        imgMeta:{origW,origH,mp:(origW*origH/1e6).toFixed(1),format:fmt,resized:totalPx>MAX_MP}
+      });
+    };
+    img.src=evt.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadDemoImage(ev){
+  if(ev)ev.preventDefault();
+  if(!DEMO_IMAGE_URL){showErr('The example photo isn\u2019t available yet.');return;}
+  clearErr();
+  const link=$('demo-link');const orig=link?link.textContent:'';
+  if(link)link.textContent='Loading example…';
+  fetch(DEMO_IMAGE_URL)
+    .then(r=>{if(!r.ok)throw new Error('fetch failed');return r.blob();})
+    .then(blob=>{
+      if(!blob.type||blob.type.indexOf('image')!==0)throw new Error('not an image');
+      let f=blob;
+      try{f=new File([blob],'example_crack.jpg',{type:blob.type});}catch(e){}
+      loadFile(f);
+      if(link)link.textContent=orig;
+    })
+    .catch(()=>{
+      if(link)link.textContent=orig;
+      showErr('Couldn\u2019t load the example photo. Please try uploading your own.');
+    });
+}
+function loadFile(file){
+  clearErr();
+  S.photoName=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
+  decodeImage(file,d=>{
+    S.imgEl=d.imgEl;S.pixels=d.pixels;
+    S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
+    S.imgMeta=d.imgMeta;
+    S.zoom=1;S.panX=0;S.panY=0;
+    S.iMode='scale';S.scalePts=[];S.measLine=null;S.results=null;
+    resetAdjustments();
+    const canvas=$('img-canvas');
+    canvas.style.cursor='crosshair';
+    showStep(2);updateMetaBar();updateScaleHint();updateScaleDisplay();
+    requestAnimationFrame(paintCanvas);
+  });
+}
+
+function confirmScale(){
+  clearErr();let px=null;
+  if(S.scaleMode==='twopoint'){
+    if(S.scalePts.length<2){showErr('Click two reference points on the image first.');return;}
+    const dx=S.scalePts[1].x-S.scalePts[0].x,dy=S.scalePts[1].y-S.scalePts[0].y;
+    const imgDist=Math.sqrt(dx*dx+dy*dy)/S.dispScale/S.resizeFactor;
+    const mm=parseFloat(S.realDist);
+    if(!mm||mm<=0){showErr('Enter the real-world distance between A and B in mm.');return;}
+    px=imgDist/mm;
+  } else if(S.scaleMode==='distance'){
+    const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+    if(!prof){showErr('Select a calibrated camera profile.');return;}
+    const d=parseFloat(S.scaleDist);
+    if(!(d>0)){showErr('Enter the camera-to-crack distance in metres.');return;}
+    const rOrig=resolutionFromProfile(prof,d);   // original-camera px/mm
+    if(!rOrig||rOrig<=0){showErr('Could not compute resolution from that profile.');return;}
+    // S.pxMm is stored in ORIGINAL-image px/mm (runAnalysis multiplies by resizeFactor
+    // to reach the working image). The profile already yields original-camera px/mm.
+    px=rOrig;
+    S.scalePts=[];                                 // no A/B markers belong on the crack image
+  } else {
+    px=parseFloat(S.directPx);
+    if(!px||px<=0){showErr('Enter a valid pixels/mm value.');return;}
+  }
+  S.pxMm=px;updateScaleDisplay();updateQualityIndicator();updateBandWidth();
+  S.iMode='draw';$('img-canvas').style.cursor='crosshair';
+  showStep(3);updateDrawHint();
+}
+
+function runAnalysis(){
+  if(!S.measLine||!S.pxMm||!S.pixels||S.busy)return;
+  S.busy=true;clearErr();
+  $('btn-analyze').textContent='Analyzing…';$('btn-analyze').disabled=true;
+  setTimeout(async ()=>{
+    try{
+      const p1={x:S.measLine.p1.x/S.dispScale,y:S.measLine.p1.y/S.dispScale};
+      const p2={x:S.measLine.p2.x/S.dispScale,y:S.measLine.p2.y/S.dispScale};
+      const doAlign=$('chk-align').checked;
+      const avgMethod=document.querySelector('input[name="avgMethod"]:checked')?.value||'mean';
+      const doAdaptive=$('chk-adaptive').checked;
+      S.doAlign=doAlign;S.avgMethod=avgMethod;S.doAdaptive=doAdaptive;
+      const allProfiles=extractAllProfiles(S.pixels,p1,p2,S.nLines);
+      if(!allProfiles||!allProfiles.length){showErr('Line too short — draw it longer.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
+      const pxMm_pd=S.pxMm*S.resizeFactor;
+      const r=await analyzeViaWorker(allProfiles,{doAlign,method:avgMethod,doAdaptive},pxMm_pd);
+      const prof=r.prof,base=r.base,area=r.area,isDep=r.isDep,left=r.left,right=r.right;
+      if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
+      const{width,calib}=approachB(area,S.pxMm);
+      const stride=Math.max(1,Math.floor(prof.length/300));
+      const chartData=prof.reduce((acc,v,i)=>{if(i%stride===0)acc.push({mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+base[i].toFixed(1)});return acc;},[]);
+      let minIdx=0;
+      if(isDep){let mv=Infinity;prof.forEach((v,i)=>{if(v<mv){mv=v;minIdx=i;}});}
+      else{let mv=-Infinity;prof.forEach((v,i)=>{if(v>mv){mv=v;minIdx=i;}});}
+      const opts=[];
+      if(doAlign)opts.push('aligned');
+      opts.push({mean:'mean',median:'median',gaussian:'gaussian weighted'}[avgMethod]);
+      if(doAdaptive)opts.push('adaptive');
+      S.results={
+        area:+area.toFixed(4),width:+width.toFixed(4),calib:+calib.toFixed(2),
+        chartData,isDep,crackMm:+(minIdx/pxMm_pd).toFixed(3),
+        boundLeft:+(left/pxMm_pd).toFixed(3),boundRight:+(right/pxMm_pd).toFixed(3),
+        boundLeftIdx:left,boundRightIdx:right,
+        prof:[...prof],baseArr:[...base],pxMm_pd,midIdx:minIdx,
+        optsLabel:opts.join(' · '),
+        linesTotal:allProfiles.length,
+        linesKept:doAdaptive?Math.max(2,Math.round(allProfiles.length*0.7)):allProfiles.length,
+      };
+      resetAdjustments();
+      S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
+      $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
+      showStep(4);
+      updateResultsDisplay();
+      requestAnimationFrame(drawChart);
+      if(S.autoLog)addLogEntry(true);
+    }catch(ex){showErr('Analysis failed: '+ex.message);}
+    S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=!S.measLine;
+  },100);
+}
+
+function saveImage(){
+  if(!S.results||!S.imgEl||!S.pixels)return;
+  const pw=S.pixels.width,ph=S.pixels.height;
+  // Annotation scale is a fixed fraction of image size, so elements occupy the
+  // same visual proportion on every photo regardless of resolution (kept small).
+  const s=Math.hypot(pw,ph)/2600;
+  const canvas=document.createElement('canvas');canvas.width=pw;canvas.height=ph;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(S.imgEl,0,0,pw,ph);
+  const toPx=pt=>({x:pt.x/S.dispScale,y:pt.y/S.dispScale});
+  const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
+  const drawLabel=(text,cx,cy,bg)=>{const fs=15*s;ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=6*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
+  if(S.scalePts&&S.scalePts.length===2){
+    const a=toPx(S.scalePts[0]),b=toPx(S.scalePts[1]);
+    ctx.save();ctx.strokeStyle='#d97706';ctx.lineWidth=2*s;ctx.setLineDash([8*s,5*s]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,9*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+
+    if(S.scaleMode==='twopoint'&&S.realDist){
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const ddx=b.x-a.x,ddy=b.y-a.y,dlen=Math.sqrt(ddx*ddx+ddy*ddy);
+      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*24*s,mid.y+py*24*s,'rgba(160,90,0,.90)');}
+    }
+    ctx.restore();
+  }
+  if(S.measLine){
+    const p1=toPx(S.measLine.p1),p2=toPx(S.measLine.p2);
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(len>1){
+      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2;
+      ctx.save();ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      const{bWidth,aWidth}=getDisplayValues();
+      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+      const lOff=bh+50*s;
+      const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
+      const upPerp={x:-downPerp.x,y:-downPerp.y};
+      drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
+      drawLabel(`B: ${bWidth<0.001?'<0.001':bWidth.toFixed(3)} mm`,mid.x+downPerp.x*lOff,mid.y+downPerp.y*lOff,'rgba(5,100,85,.90)');
+      ctx.restore();
+    }
+  }
+  const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
+  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px  ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
+  ctx.font=`${mfs}px monospace`;
+  const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
+  const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
+  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,ph-stripH,stripW,stripH);
+  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
+  mLines.forEach((line,i)=>ctx.fillText(line,mpad,ph-stripH+mpad+i*mlineH));
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob);
+    if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
+      window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
+    } else {
+      const a=document.createElement('a');a.href=url;a.download='crack_measurement.png';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    }
+  },'image/png');
+}
+
+function saveZoomedImage(){
+  if(!S.results||!S.imgEl||!S.pixels)return;
+
+  const bx0=Math.max(0,-S.panX/S.zoom),bx1=Math.min(S.dispW,(S.dispW-S.panX)/S.zoom);
+  const by0=Math.max(0,-S.panY/S.zoom),by1=Math.min(S.dispH,(S.dispH-S.panY)/S.zoom);
+
+  const px0=bx0/S.dispScale,py0=by0/S.dispScale;
+  const rW=(bx1-bx0)/S.dispScale,rH=(by1-by0)/S.dispScale;
+  if(rW<10||rH<10)return;
+
+  const expScale=Math.min(1920/rW,Math.max(1,1200/rW));
+  const outW=Math.round(rW*expScale),outH=Math.round(rH*expScale);
+  // Same-proportion, resolution-independent annotation scale (matches saveImage)
+  const s=Math.hypot(outW,outH)/2600;
+  const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+  const ctx=canvas.getContext('2d');
+
+  const natW=S.imgEl.naturalWidth||S.pixels.width,natH=S.imgEl.naturalHeight||S.pixels.height;
+  const pdToNatX=natW/S.pixels.width,pdToNatY=natH/S.pixels.height;
+  ctx.drawImage(S.imgEl,px0*pdToNatX,py0*pdToNatY,rW*pdToNatX,rH*pdToNatY,0,0,outW,outH);
+
+  const toEx=pt=>({x:(pt.x/S.dispScale-px0)*expScale,y:(pt.y/S.dispScale-py0)*expScale});
+
+  const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
+  const drawLabel=(text,cx,cy,bg)=>{const fs=15*s;ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=6*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
+
+  if(S.scalePts&&S.scalePts.length===2){
+    const a=toEx(S.scalePts[0]),b=toEx(S.scalePts[1]);
+    ctx.save();ctx.strokeStyle='#d97706';ctx.lineWidth=2*s;ctx.setLineDash([8*s,5*s]);
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
+    [a,b].forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,9*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+    if(S.scaleMode==='twopoint'&&S.realDist){
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const ddx=b.x-a.x,ddy=b.y-a.y,dlen=Math.sqrt(ddx*ddx+ddy*ddy);
+      if(dlen>0){let px=-ddy/dlen,py=ddx/dlen;if(py>0){px=-px;py=-py;}drawLabel(`${parseFloat(S.realDist).toFixed(1)} mm`,mid.x+px*24*s,mid.y+py*24*s,'rgba(160,90,0,.90)');}
+    }
+    ctx.restore();
+  }
+
+  if(S.measLine){
+    const p1=toEx(S.measLine.p1),p2=toEx(S.measLine.p2);
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(len>1){
+      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2*expScale;
+      ctx.save();
+      ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;
+      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+      const{bWidth,aWidth}=getDisplayValues();
+      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+      const lOff=bh+50*s;
+      const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
+      const upPerp={x:-downPerp.x,y:-downPerp.y};
+      drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
+      drawLabel(`B: ${bWidth<0.001?'<0.001':bWidth.toFixed(3)} mm`,mid.x+downPerp.x*lOff,mid.y+downPerp.y*lOff,'rgba(5,100,85,.90)');
+      ctx.restore();
+    }
+  }
+
+  const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
+  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
+  ctx.font=`${mfs}px monospace`;
+  const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
+  const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
+  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,outH-stripH,stripW,stripH);
+  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
+  mLines.forEach((line,i)=>ctx.fillText(line,mpad,outH-stripH+mpad+i*mlineH));
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
+      window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
+    } else {
+      a.href=url;a.download='crack_measurement_zoom.png';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    }
+  },'image/png');
+}
+
+function resetAdjustments(){
+  S.cropLeft=null;S.cropRight=null;S.cropLeftStr='';S.cropRightStr='';
+  S.tilt=0;S.bow=0;S.shift=0;S.showBaseCorr=false;S.live=null;
+  $('tilt-slider').value=0;$('bow-slider').value=0;$('shift-slider').value=0;
+  $('tilt-val').textContent='0.0';$('bow-val').textContent='0.0';$('shift-val').textContent='0.0';
+  $('base-active-badge').style.display='none';$('btn-base-reset').style.display='none';
+  $('base-controls').style.display='none';
+  $('base-toggle-txt').textContent='▸ Baseline correction';
+}
+
+function resetAll(){
+  S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
+  S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.realDist='';S.directPx='';S.pxMm=null;
+  S.drawStart=null;S.drawCur=null;S.measLine=null;S.nLines=40;S.results=null;S.busy=false;
+  resetAdjustments();clearErr();
+  S.bCoeff=0.357;S.bExp=0.16;S.activeProfile='';
+  if($('bcoeff-inp')){$('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';}
+  if($('formula-active-badge')){$('formula-active-badge').style.display='none';$('btn-formula-reset').style.display='none';}
+  if($('formula-controls')){$('formula-controls').style.display='none';$('formula-toggle-txt').textContent='▸ Approach B formula';}
+  if($('profile-save-form'))$('profile-save-form').className='';
+  if($('profile-note'))$('profile-note').textContent='';
+  renderProfileList();
+  $('canvas-wrap').className='';
+  $('nlines-slider').value=40;$('nlines-val').textContent='40';
+  $('q-badge').innerHTML='';$('band-width').textContent='';
+  $('scale-display').textContent='';$('scale-display-3').textContent='';
+  $('chk-align').checked=false;$('chk-adaptive').checked=false;
+  document.querySelectorAll('input[name="avgMethod"]').forEach(r=>{r.checked=r.value==='mean';});
+  S.scaleDist='';S.activeScaleProfile='';
+  if($('dist-inp'))$('dist-inp').value='';
+  switchScaleMode('twopoint');
+  resetCalibPanel();
+  showStep(1);
+}
+
+function goBack(){
+  S.measLine=null;S.iMode='scale';
+  $('img-canvas').style.cursor='crosshair';
+  showStep(2);
+  // Restore the UI for whichever scale mode is active (not just two-point)
+  if(S.scaleMode==='distance'){
+    const distPanel=$('scale-distance-panel'),hintCard=$('scale-hint');
+    if(distPanel)distPanel.style.display='';
+    if(hintCard)hintCard.style.display='none';
+    renderScaleProfileSelect();
+    if($('dist-inp'))$('dist-inp').value=S.scaleDist||'';
+    onDistanceInput();
+  } else {
+    updateScaleHint();
+  }
+  paintCanvas();
+}
+
+function redrawLine(){
+  S.measLine=null;S.iMode='draw';S.results=null;S.live=null;
+  resetCalibPanel();
+  $('img-canvas').style.cursor='crosshair';
+  showStep(3);updateDrawHint();paintCanvas();
+}
+
+const imgCanvas=$('img-canvas');
+const zoomRef={current:1},panXRef={current:0},panYRef={current:0};
+const dispWRef={current:0},dispHRef={current:0};
+
+function getImgCanvasPos(e){
+  const r=imgCanvas.getBoundingClientRect();
+  const cx=(e.clientX-r.left)*(S.dispW/r.width);
+  const cy=(e.clientY-r.top)*(S.dispH/r.height);
+  return{x:(cx-S.panX)/S.zoom,y:(cy-S.panY)/S.zoom};
+}
+function getRawImgPos(e){
+  const r=imgCanvas.getBoundingClientRect();
+  return{x:(e.clientX-r.left)*(S.dispW/r.width),y:(e.clientY-r.top)*(S.dispH/r.height)};
+}
+
+// Calibration screen canvas — click to place object-edge points into S.calib.scalePts
+const calibCanvas=$('calib-canvas');
+let calibPanning=false,calibPanAnchor=null,calibPinch=null,calibSingle=null;
+function calibRawPos(clientX,clientY){
+  const r=calibCanvas.getBoundingClientRect();
+  return{x:(clientX-r.left)*(S.calib.dispW/r.width),y:(clientY-r.top)*(S.calib.dispH/r.height)};
+}
+if(calibCanvas){
+  // Right-drag pan; left-click places edge points
+  calibCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+  calibCanvas.addEventListener('mousedown',e=>{
+    if(!S.calib.imageLoaded)return;
+    if(e.button===2){
+      const raw=calibRawPos(e.clientX,e.clientY);
+      calibPanning=true;calibPanAnchor={rx:raw.x,ry:raw.y,px:S.calib.panX,py:S.calib.panY};
+      e.preventDefault();return;
+    }
+    const raw=calibRawPos(e.clientX,e.clientY);
+    const pos={x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom};
+    if(S.calib.scalePts.length<2){S.calib.scalePts.push(pos);updateWizSpanHint();paintCanvas();}
+  });
+  calibCanvas.addEventListener('mousemove',e=>{
+    if(!calibPanning)return;
+    const raw=calibRawPos(e.clientX,e.clientY);
+    S.calib.panX=calibPanAnchor.px+(raw.x-calibPanAnchor.rx);
+    S.calib.panY=calibPanAnchor.py+(raw.y-calibPanAnchor.ry);
+    paintCanvas();
+  });
+  window.addEventListener('mouseup',()=>{calibPanning=false;});
+  calibCanvas.addEventListener('wheel',e=>{
+    if(!S.calib.imageLoaded)return;
+    e.preventDefault();
+    const fac=e.deltaY>0?0.85:1.18;
+    const raw=calibRawPos(e.clientX,e.clientY);
+    const newZoom=Math.min(20,Math.max(0.5,S.calib.zoom*fac));
+    const ratio=newZoom/S.calib.zoom;
+    S.calib.panX=raw.x-(raw.x-S.calib.panX)*ratio;
+    S.calib.panY=raw.y-(raw.y-S.calib.panY)*ratio;
+    S.calib.zoom=newZoom;
+    updateCalibZoom();paintCanvas();
+  },{passive:false});
+  // Touch: two-finger pinch-zoom+pan, single-finger pan, tap places point
+  calibCanvas.addEventListener('touchstart',e=>{
+    if(!S.calib.imageLoaded)return;
+    e.preventDefault();
+    if(e.touches.length>=2){
+      const a=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      const b=calibRawPos(e.touches[1].clientX,e.touches[1].clientY);
+      calibPinch={dist:Math.hypot(a.x-b.x,a.y-b.y),midRawX:(a.x+b.x)/2,midRawY:(a.y+b.y)/2,zoom:S.calib.zoom,panX:S.calib.panX,panY:S.calib.panY};
+      calibSingle=null;
+    } else if(e.touches.length===1){
+      const raw=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      calibSingle={rx:raw.x,ry:raw.y,px:S.calib.panX,py:S.calib.panY,moved:false};
+    }
+  },{passive:false});
+  calibCanvas.addEventListener('touchmove',e=>{
+    if(!S.calib.imageLoaded)return;
+    e.preventDefault();
+    if(e.touches.length>=2&&calibPinch){
+      const a=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      const b=calibRawPos(e.touches[1].clientX,e.touches[1].clientY);
+      const dist=Math.hypot(a.x-b.x,a.y-b.y);
+      const midX=(a.x+b.x)/2,midY=(a.y+b.y)/2;
+      const newZoom=Math.min(20,Math.max(0.5,calibPinch.zoom*(dist/calibPinch.dist)));
+      const imgMidX=(calibPinch.midRawX-calibPinch.panX)/calibPinch.zoom;
+      const imgMidY=(calibPinch.midRawY-calibPinch.panY)/calibPinch.zoom;
+      S.calib.zoom=newZoom;
+      S.calib.panX=midX-newZoom*imgMidX;
+      S.calib.panY=midY-newZoom*imgMidY;
+      updateCalibZoom();paintCanvas();
+    } else if(e.touches.length===1&&calibSingle){
+      const raw=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      if(Math.hypot(raw.x-calibSingle.rx,raw.y-calibSingle.ry)>12)calibSingle.moved=true;
+      S.calib.panX=calibSingle.px+(raw.x-calibSingle.rx);
+      S.calib.panY=calibSingle.py+(raw.y-calibSingle.ry);
+      paintCanvas();
+    }
+  },{passive:false});
+  calibCanvas.addEventListener('touchend',e=>{
+    if(!S.calib.imageLoaded)return;
+    if(calibSingle&&!calibSingle.moved&&e.changedTouches.length===1&&S.calib.scalePts.length<2){
+      const raw=calibRawPos(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+      S.calib.scalePts.push({x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom});
+      updateWizSpanHint();paintCanvas();
+    }
+    calibPinch=null;calibSingle=null;
+  },{passive:false});
+}
+function updateCalibZoom(){const l=$('calib-zoom-label');if(l)l.textContent=S.calib.zoom.toFixed(1)+'×';}
+function resetCalibView(){S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;updateCalibZoom();paintCanvas();}
+
+
+imgCanvas.addEventListener('mousedown',e=>{
+  if(e.button===2){const raw=getRawImgPos(e);S.isPanning=true;S.panAnchor={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY};e.preventDefault();return;}
+  if(S.step===4)return;
+  const pos=getImgCanvasPos(e);
+  if(S.iMode==='scale'&&S.scaleMode==='twopoint'){
+    if(S.scalePts.length<2){
+      S.scalePts.push(pos);
+      if(S.scalePts.length===2){
+        const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
+      }
+      updateScaleHint();paintCanvas();
+    }
+  } else if(S.iMode==='draw'){
+    S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;
+  }
+});
+
+imgCanvas.addEventListener('mousemove',e=>{
+  if(S.isPanning&&S.panAnchor){const raw=getRawImgPos(e);S.panX=S.panAnchor.px+(raw.x-S.panAnchor.rx);S.panY=S.panAnchor.py+(raw.y-S.panAnchor.ry);panXRef.current=S.panX;panYRef.current=S.panY;paintCanvas();return;}
+  if(S.iMode==='draw'&&S.drawStart){S.drawCur=getImgCanvasPos(e);paintCanvas();}
+});
+
+imgCanvas.addEventListener('mouseup',e=>{
+  if(S.isPanning){S.isPanning=false;S.panAnchor=null;return;}
+  if(S.iMode==='draw'&&S.drawStart){
+    const pos=getImgCanvasPos(e);
+    const dx=pos.x-S.drawStart.x,dy=pos.y-S.drawStart.y;
+    if(Math.sqrt(dx*dx+dy*dy)>5){S.measLine={p1:{...S.drawStart},p2:{...pos}};updateDrawHint();}
+    S.drawStart=null;S.drawCur=null;paintCanvas();
+  }
+});
+
+imgCanvas.addEventListener('mouseleave',()=>{if(!S.isPanning){S.drawStart=null;S.drawCur=null;}});
+imgCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+imgCanvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const fac=e.deltaY>0?0.85:1.18;
+  const r=imgCanvas.getBoundingClientRect();
+  const cx=(e.clientX-r.left)*(S.dispW/r.width);
+  const cy=(e.clientY-r.top)*(S.dispH/r.height);
+  const newZoom=Math.min(20,Math.max(0.5,S.zoom*fac));
+  const ratio=newZoom/S.zoom;
+  S.panX=cx-(cx-S.panX)*ratio;S.panY=cy-(cy-S.panY)*ratio;S.zoom=newZoom;
+  panXRef.current=S.panX;panYRef.current=S.panY;zoomRef.current=S.zoom;
+  updateZoom();paintCanvas();
+},{passive:false});
+
+$('btn-reset-view').onclick=()=>{S.zoom=1;S.panX=0;S.panY=0;updateZoom();paintCanvas();};
+
+let pinchStart=null,singleTouchPan=null,touchDraw=false;
+
+function getRawTouchPos(t){
+  const r=imgCanvas.getBoundingClientRect();
+  return{x:(t.clientX-r.left)*(S.dispW/r.width),y:(t.clientY-r.top)*(S.dispH/r.height)};
+}
+function getImgTouchPos(t){
+  const{x:cx,y:cy}=getRawTouchPos(t);
+  return{x:(cx-S.panX)/S.zoom,y:(cy-S.panY)/S.zoom};
+}
+
+imgCanvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length>=2){
+
+    const t1=e.touches[0],t2=e.touches[1];
+    const r=imgCanvas.getBoundingClientRect();
+    const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
+    const midRawY=((t1.clientY+t2.clientY)/2-r.top)*(S.dispH/r.height);
+    pinchStart={dist:Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY),
+      zoom:S.zoom,panX:S.panX,panY:S.panY,midRawX,midRawY};
+    touchDraw=false;singleTouchPan=null;S.drawStart=null;S.drawCur=null;
+    return;
+  }
+  const touch=e.touches[0];
+  const raw=getRawTouchPos(touch);
+
+  singleTouchPan={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY,moved:false};
+
+  if(S.step===3&&S.iMode==='draw'&&S.touchMode==='draw'){
+    const pos=getImgTouchPos(touch);
+    S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;touchDraw=true;
+    singleTouchPan=null;
+  } else {
+    touchDraw=false;
+  }
+},{passive:false});
+
+imgCanvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length>=2&&pinchStart){
+    const t1=e.touches[0],t2=e.touches[1];
+    const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
+    const r=imgCanvas.getBoundingClientRect();
+    const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
+    const midRawY=((t1.clientY+t2.clientY)/2-r.top)*(S.dispH/r.height);
+    const newZoom=Math.min(20,Math.max(0.5,pinchStart.zoom*(dist/pinchStart.dist)));
+
+    const imgMidX=(pinchStart.midRawX-pinchStart.panX)/pinchStart.zoom;
+    const imgMidY=(pinchStart.midRawY-pinchStart.panY)/pinchStart.zoom;
+    S.zoom=newZoom;S.panX=midRawX-newZoom*imgMidX;S.panY=midRawY-newZoom*imgMidY;
+    updateZoom();paintCanvas();
+    return;
+  }
+  const touch=e.touches[0];
+  if(touchDraw&&S.drawStart){
+    S.drawCur=getImgTouchPos(touch);paintCanvas();
+  } else if(singleTouchPan){
+    const raw=getRawTouchPos(touch);
+    const dx=raw.x-singleTouchPan.rx,dy=raw.y-singleTouchPan.ry;
+    if(Math.sqrt(dx*dx+dy*dy)>12)singleTouchPan.moved=true;
+    if(singleTouchPan.moved){
+      S.panX=singleTouchPan.px+dx;S.panY=singleTouchPan.py+dy;
+      updateZoom();paintCanvas();
+    }
+  }
+},{passive:false});
+
+imgCanvas.addEventListener('touchend',e=>{
+  e.preventDefault();
+  if(touchDraw&&S.drawStart&&S.drawCur){
+
+    const dx=S.drawCur.x-S.drawStart.x,dy=S.drawCur.y-S.drawStart.y;
+    if(Math.sqrt(dx*dx+dy*dy)>5){S.measLine={p1:{...S.drawStart},p2:{...S.drawCur}};updateDrawHint();}
+    S.drawStart=null;S.drawCur=null;touchDraw=false;paintCanvas();
+  } else if(singleTouchPan&&!singleTouchPan.moved){
+
+    if(S.step===2&&S.iMode==='scale'&&S.scaleMode==='twopoint'&&S.scalePts.length<2){
+      const pos=getImgTouchPos(e.changedTouches[0]);
+      S.scalePts.push(pos);
+      if(S.scalePts.length===2){
+        const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
+      }
+      updateScaleHint();paintCanvas();
+    }
+  }
+  pinchStart=null;singleTouchPan=null;touchDraw=false;
+},{passive:false});
+
+const chartCanvas=$('chart-canvas');
+
+function getChartPos(e){
+  const r=chartCanvas.getBoundingClientRect();
+  return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+
+function hitHandle(x,hitW){
+  hitW=hitW||10;
+  const g=S.chartGeom;if(!g)return null;
+  const cLpx=g.xPx(S.cropLeft!==null?S.cropLeft:S.results?.boundLeft??0);
+  const cRpx=g.xPx(S.cropRight!==null?S.cropRight:S.results?.boundRight??0);
+  if(Math.abs(x-cLpx)<hitW)return'left';
+  if(Math.abs(x-cRpx)<hitW)return'right';
+  return null;
+}
+
+chartCanvas.addEventListener('mousedown',e=>{
+  if(e.button!==0||!S.results)return;
+  const{x}=getChartPos(e);
+  S.chartDrag=hitHandle(x);
+  if(S.chartDrag)e.preventDefault();
+});
+
+chartCanvas.addEventListener('mousemove',e=>{
+  if(!S.chartGeom||!S.results)return;
+  const{x}=getChartPos(e);
+  if(S.chartDrag){
+    const g=S.chartGeom;
+    const mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
+    if(S.chartDrag==='left'){
+      const cR=S.cropRight!==null?S.cropRight:S.results.boundRight;
+      const v=Math.min(mm,cR-0.001);
+      S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
+      $('crop-l-inp').value=S.cropLeftStr;
+    } else {
+      const cL=S.cropLeft!==null?S.cropLeft:S.results.boundLeft;
+      const maxV=S.results.prof?(S.results.prof.length/S.results.pxMm_pd):g.xMax;
+      const v=Math.max(mm,cL+0.001);
+      S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
+      $('crop-r-inp').value=S.cropRightStr;
+    }
+    updateCropUI();recompute();
+  } else {
+    chartCanvas.style.cursor=hitHandle(x)?'ew-resize':'default';
+  }
+});
+
+document.addEventListener('mouseup',()=>{S.chartDrag=null;});
+chartCanvas.addEventListener('mouseleave',()=>{if(!S.chartDrag)chartCanvas.style.cursor='default';});
+
+chartCanvas.addEventListener('touchstart',e=>{
+  if(!S.results||e.touches.length!==1)return;
+  e.preventDefault();
+  const r=chartCanvas.getBoundingClientRect();
+  const x=e.touches[0].clientX-r.left;
+  S.chartDrag=hitHandle(x,24); // 24px hit area for fingers
+},{passive:false});
+
+chartCanvas.addEventListener('touchmove',e=>{
+  if(!S.chartDrag||!S.chartGeom||!S.results)return;
+  e.preventDefault();
+  const r=chartCanvas.getBoundingClientRect();
+  const x=e.touches[0].clientX-r.left;
+  const g=S.chartGeom,mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
+  if(S.chartDrag==='left'){
+    const cR=S.cropRight!==null?S.cropRight:S.results.boundRight;
+    const v=Math.min(mm,cR-0.001);S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
+    $('crop-l-inp').value=S.cropLeftStr;
+  } else {
+    const cL=S.cropLeft!==null?S.cropLeft:S.results.boundLeft;
+    const maxV=S.results.prof?(S.results.prof.length/S.results.pxMm_pd):g.xMax;
+    const v=Math.max(mm,cL+0.001);S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
+    $('crop-r-inp').value=S.cropRightStr;
+  }
+  updateCropUI();recompute();
+},{passive:false});
+
+chartCanvas.addEventListener('touchend',()=>{S.chartDrag=null;});
+
+$('file-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
+$('camera-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
+
+// Paste an image to upload — only on the Step-1 upload screen, and not while typing in a field.
+window.addEventListener('paste',e=>{
+  if(S.screen!=='workflow'||S.step!==1)return;
+  const t=e.target;
+  if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;
+  const items=e.clipboardData&&e.clipboardData.items;
+  if(!items)return;
+  for(let i=0;i<items.length;i++){
+    if(items[i].type&&items[i].type.indexOf('image')===0){
+      const blob=items[i].getAsFile();
+      if(blob){
+        e.preventDefault();
+        if(!blob.name){try{Object.defineProperty(blob,'name',{value:`pasted_image_${Date.now()}.png`});}catch(err){}}
+        loadFile(blob);
+      }
+      return;
+    }
+  }
+});
+$('err-close').addEventListener('click',clearErr);
+
+const dz=$('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dragover');});
+dz.addEventListener('dragenter',e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dragover');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+
+$('crop-l-inp').addEventListener('blur',()=>commitCropLeft($('crop-l-inp').value));
+$('crop-l-inp').addEventListener('keydown',e=>{if(e.key==='Enter'){commitCropLeft(e.target.value);e.target.blur();}});
+$('crop-r-inp').addEventListener('blur',()=>commitCropRight($('crop-r-inp').value));
+$('crop-r-inp').addEventListener('keydown',e=>{if(e.key==='Enter'){commitCropRight(e.target.value);e.target.blur();}});
+
+$('chk-adaptive').addEventListener('change',e=>{$('adaptive-warn').style.display=e.target.checked&&!$('chk-align').checked?'block':'none';});
+$('chk-align').addEventListener('change',()=>{$('adaptive-warn').style.display=$('chk-adaptive').checked&&!$('chk-align').checked?'block':'none';});
+
+window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);});
+
+buildStepBar();
+buildAuxBar();
+updateStepBar();
+showStep(1);
+loadProfiles();
+loadScaleProfiles();
+loadCalibDatasets();
+loadMeasLog();
+updateAuxBar();
+
+if(isTouch){
+  $('touch-mode-bar').style.display='flex';
+  $('nav-hint').textContent='Pinch to zoom · drag to pan';
+  const ch=$('calib-nav-hint');if(ch)ch.textContent='Pinch to zoom · drag to pan';
+  const tp=$('btn-take-photo');if(tp)tp.style.display='';
+  updateTouchModeBtn();
+}
+</script>
+</body>
+</html>
