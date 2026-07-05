@@ -341,7 +341,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
       <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
       <input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none">
-      <div id="demo-link-row"><a id="demo-link" href="#" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
+      <div id="demo-link-row"><a id="demo-link" href="https://volkov596.github.io/digitalcrackgauge/images/example-photo.jpg" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
     </div>
   </div>
 
@@ -1603,7 +1603,6 @@ function updateCalibUploadPrompt(){
   }
 }
 
-function openCalibWizard(){ showScreen('calibrate'); }   // legacy entry point → new screen
 function calibrateFromStep2(){
   if(!confirm('This opens the camera calibration screen and leaves the measurement workflow. Your current image and scale are kept. Continue?'))return;
   showScreen('calibrate');
@@ -1953,7 +1952,6 @@ function updateBaseActive(){const on=S.tilt!==0||S.bow!==0||S.shift!==0;$('base-
 function onTiltChange(){S.tilt=parseFloat($('tilt-slider').value);$('tilt-val').textContent=(S.tilt>0?'+':'')+S.tilt.toFixed(1);updateBaseActive();recompute();}
 function onBowChange(){S.bow=parseFloat($('bow-slider').value);$('bow-val').textContent=(S.bow>0?'+':'')+S.bow.toFixed(1);updateBaseActive();recompute();}
 function onShiftChange(){S.shift=parseFloat($('shift-slider').value);$('shift-val').textContent=(S.shift>0?'+':'')+S.shift.toFixed(1);updateBaseActive();recompute();}
-function onCalibChange(){if(S.results){recompute();updateResultsDisplay();}}
 
 function toggleFormula(){
   const open=$('formula-controls').style.display==='none';
