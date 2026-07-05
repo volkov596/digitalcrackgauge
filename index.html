@@ -29,6 +29,10 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 #backup-bar{display:none;align-items:flex-start;gap:10px;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(217,119,6,0.12);color:#fbbf24;font-size:12px;line-height:1.5;border:1px solid rgba(217,119,6,0.3)}
 #backup-bar-text{flex:1}
 #backup-bar-close{background:none;border:none;color:#fbbf24;cursor:pointer;font-size:14px;padding:0;line-height:1;flex-shrink:0}
+#version-bar{display:none;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(37,99,235,0.14);color:#93c5fd;font-size:12px;line-height:1.5;border:1px solid rgba(37,99,235,0.35)}
+#demo-link-row{margin-top:16px;text-align:center}
+#demo-link{font-size:12px;color:rgba(12,187,204,0.85);text-decoration:none;border-bottom:1px dotted rgba(12,187,204,0.5);cursor:pointer}
+#demo-link:hover{color:#0cbbcc;border-bottom-color:#0cbbcc}
 #err-bar.show{display:flex;justify-content:space-between;align-items:center}
 #err-close{background:none;border:none;cursor:pointer;color:#fca5a5;font-size:16px;margin-left:10px}
 
@@ -44,7 +48,10 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 #drop-zone p.big{color:#e8f8f9;font-weight:500;font-size:15px;margin-bottom:6px}
 #drop-zone p.small{color:rgba(232,248,249,0.45);font-size:13px;margin-bottom:20px}
 
-#canvas-wrap{display:none;margin-bottom:0}
+#canvas-wrap{display:none;margin-bottom:0;position:relative}
+#res-warn-overlay{position:absolute;left:0;right:0;bottom:0;padding:8px 14px;font-size:12px;line-height:1.45;text-align:center;border-bottom-left-radius:8px;border-bottom-right-radius:8px;pointer-events:none;z-index:5}
+#res-warn-overlay.warn{background:rgba(217,119,6,0.82);color:#fff}
+#res-warn-overlay.danger{background:rgba(220,38,38,0.85);color:#fff}
 #canvas-wrap.show{display:block}
 #img-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none}
 #zoom-bar{display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.15);font-size:11px;color:rgba(232,248,249,0.4);flex-wrap:wrap;margin-bottom:12px}
@@ -299,11 +306,15 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.8-beta</div>
+  <div id="version-tag">v1.2.9-beta</div>
 
   <div id="backup-bar" style="display:none">
     <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
     <button id="backup-bar-close" onclick="dismissBackupReminder()" title="Dismiss">✕</button>
+  </div>
+
+  <div id="version-bar" style="display:none">
+    <span>A new version is available. Please hard-refresh the page (Ctrl+Shift+R / Cmd+Shift+R) to update. Continuing on this version may lead to errors.</span>
   </div>
 
   
@@ -330,6 +341,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
       <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
       <input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none">
+      <div id="demo-link-row"><a id="demo-link" href="#" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
     </div>
   </div>
 
@@ -340,6 +352,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <span id="touch-mode-hint" style="font-size:12px;color:#94a3b8">Single finger: pan · Two fingers: pinch zoom</span>
     </div>
     <canvas id="img-canvas"></canvas>
+    <div id="res-warn-overlay" style="display:none"></div>
     <div id="zoom-bar">
       <span id="zoom-label">1.0×</span>
       <button class="btn-ghost" id="btn-reset-view">Reset view</button>
@@ -883,6 +896,7 @@ const S={
   calibDatasets:[],activeCalibDataset:'',    // Approach B formula-calibration datasets (Pro)
   measLog:[],autoLog:true,                    // session measurement log (both tiers)
   photoName:'',                               // filename of the loaded crack photo
+  staleClient:false,                          // set if Worker reports a newer min client version
   scaleDist:'',                    // distance (m) entered in distance+profile scale mode
   calibShots:[],                   // (legacy field, retained harmlessly)
   calibActive:false,               // whether the calibration wizard is capturing
@@ -902,6 +916,8 @@ const $=id=>document.getElementById(id);
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
+const CLIENT_VERSION = 129;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
+const DEMO_IMAGE_URL = '';    // set to a GitHub Pages image URL to enable the "example photo" link
 
 function applyInterfaceMode(tier){
   INTERFACE_MODE = (tier === 'lite') ? 'simple' : 'pro';
@@ -921,6 +937,7 @@ function applyInterfaceMode(tier){
   $('pin-overlay').style.display = 'none';
   $('app').style.display = 'block';
   maybeShowBackupReminder();
+  if (S.staleClient) { const vb=$('version-bar'); if(vb) vb.style.display='block'; }
 }
 
 async function checkPin(){
@@ -932,12 +949,21 @@ async function checkPin(){
     const resp = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin }),
+      body: JSON.stringify({ action:'login', pin, client: CLIENT_VERSION }),
     });
     const data = await resp.json();
     if (data.ok) {
       try { sessionStorage.setItem('dcg_tier', data.tier); sessionStorage.setItem('dcg_pin', pin); } catch(e){}
+      // Stale-client check (advisory only)
+      if (typeof data.minClient === 'number' && CLIENT_VERSION < data.minClient) {
+        S.staleClient = true;
+      }
       applyInterfaceMode(data.tier);
+    } else if (data.error === 'region') {
+      // Geo-blocked: show a clear message and the author's contacts (already on this screen)
+      msg.style.color = '#f87171';
+      msg.textContent = 'Access outside Australia and New Zealand requires the author\u2019s permission. Please get in touch.';
+      btn.disabled = false;
     } else {
       msg.style.color = '#f87171'; msg.textContent = 'Invalid code.';
       btn.disabled = false; input.select();
@@ -1329,7 +1355,24 @@ function showStep(n){
     updateTouchModeBtn();
   }
   if(n===4){renderFcalibSelect();updateFcalibCount();}
+  updateResWarn();
   updateStepBar();
+}
+function updateResWarn(){
+  const el=$('res-warn-overlay');if(!el)return;
+  if(S.step!==3||!S.pxMm||!(S.pxMm>0)){el.style.display='none';return;}
+  const working=S.pxMm*(S.resizeFactor||1);
+  if(working<0.5){
+    el.className='danger';
+    el.textContent='Measurements below 0.5 px/mm are not recommended — proceed only if you know what you are doing.';
+    el.style.display='block';
+  } else if(working<2){
+    el.className='warn';
+    el.textContent='Reliable measurement below 2 px/mm requires a sound understanding of the tool\u2019s limitations and some experience.';
+    el.style.display='block';
+  } else {
+    el.style.display='none';
+  }
 }
 
 function showErr(msg){
@@ -2585,6 +2628,26 @@ function decodeImage(file, cb){
   reader.readAsDataURL(file);
 }
 
+function loadDemoImage(ev){
+  if(ev)ev.preventDefault();
+  if(!DEMO_IMAGE_URL){showErr('The example photo isn\u2019t available yet.');return;}
+  clearErr();
+  const link=$('demo-link');const orig=link?link.textContent:'';
+  if(link)link.textContent='Loading example…';
+  fetch(DEMO_IMAGE_URL)
+    .then(r=>{if(!r.ok)throw new Error('fetch failed');return r.blob();})
+    .then(blob=>{
+      if(!blob.type||blob.type.indexOf('image')!==0)throw new Error('not an image');
+      let f=blob;
+      try{f=new File([blob],'example_crack.jpg',{type:blob.type});}catch(e){}
+      loadFile(f);
+      if(link)link.textContent=orig;
+    })
+    .catch(()=>{
+      if(link)link.textContent=orig;
+      showErr('Couldn\u2019t load the example photo. Please try uploading your own.');
+    });
+}
 function loadFile(file){
   clearErr();
   S.photoName=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
