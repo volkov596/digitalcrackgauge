@@ -341,7 +341,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
       <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
       <input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none">
-      <div id="demo-link-row"><a id="demo-link" href="https://raw.githubusercontent.com/volkov596/digitalcrackgauge/refs/heads/main/example-photo.jpg" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
+      <div id="demo-link-row"><a id="demo-link" href="#" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
     </div>
   </div>
 
@@ -917,7 +917,7 @@ let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfac
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
 const CLIENT_VERSION = 129;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
-const DEMO_IMAGE_URL = '';    // set to a GitHub Pages image URL to enable the "example photo" link
+const DEMO_IMAGE_URL = 'https://raw.githubusercontent.com/volkov596/digitalcrackgauge/refs/heads/main/example-photo.jpg';
 
 function applyInterfaceMode(tier){
   INTERFACE_MODE = (tier === 'lite') ? 'simple' : 'pro';
