@@ -917,7 +917,7 @@ let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfac
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
 const CLIENT_VERSION = 129;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
-const DEMO_IMAGE_URL = 'https://raw.githubusercontent.com/volkov596/digitalcrackgauge/refs/heads/main/example-photo.jpg';
+const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
   INTERFACE_MODE = (tier === 'lite') ? 'simple' : 'pro';
