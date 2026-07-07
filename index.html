@@ -118,6 +118,11 @@ input[type=range]{accent-color:#0cbbcc}
 #btn-touch-mode{min-width:130px}
 
 .nav-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#result-nav-row{margin-bottom:16px}
+#meas-note-row{margin-bottom:12px}
+#meas-note-row label{display:block;font-size:12px;color:rgba(232,248,249,0.7);margin-bottom:5px}
+#meas-note-row input{width:100%;box-sizing:border-box;padding:8px 12px;font-size:13px;font-family:inherit;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.25);border-radius:7px;color:#e8f8f9}
+#meas-note-row input::placeholder{color:rgba(232,248,249,0.35)}
 
 @media(max-width:520px){
   body{padding:.9rem .65rem}
@@ -306,7 +311,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.9-beta</div>
+  <div id="version-tag">v1.2.10-beta</div>
 
   <div id="backup-bar" style="display:none">
     <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
@@ -457,6 +462,18 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <div class="r-method">Empirical Formula · estimate only</div>
         <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
       </div>
+    </div>
+
+    <div id="meas-note-row">
+      <label for="meas-note-inp">Measurement name</label>
+      <input type="text" id="meas-note-inp" maxlength="80" placeholder="e.g. north pier, mid-span — saved to the log and file names" oninput="onMeasNoteInput()">
+    </div>
+
+    <div class="nav-row" id="result-nav-row">
+      <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
+      <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
+      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
     </div>
 
     <div id="stats-row" class="pro-only"></div>
@@ -622,12 +639,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
-    <div class="nav-row">
-      <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
-      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
-      <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
-      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
-    </div>
   </div>
   </div><!-- /workflow-container -->
 
@@ -896,6 +907,7 @@ const S={
   calibDatasets:[],activeCalibDataset:'',    // Approach B formula-calibration datasets (Pro)
   measLog:[],autoLog:true,                    // session measurement log (both tiers)
   photoName:'',                               // filename of the loaded crack photo
+  lastLogId:'',                               // id of the log row for the current measurement
   staleClient:false,                          // set if Worker reports a newer min client version
   scaleDist:'',                    // distance (m) entered in distance+profile scale mode
   calibShots:[],                   // (legacy field, retained harmlessly)
@@ -916,7 +928,7 @@ const $=id=>document.getElementById(id);
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 129;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
+const CLIENT_VERSION = 1210;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1118,6 +1130,18 @@ function paintCanvas(){
     ctx.restore();
   }
   ctx.restore();
+
+  if(S.photoName){
+    const rect=canvas.getBoundingClientRect();
+    const scl=rect.width>0?src.dispW/rect.width:1;
+    const fs=11*scl,pad=8*scl;
+    ctx.save();
+    ctx.font=`${fs}px sans-serif`;
+    ctx.textAlign='right';ctx.textBaseline='top';
+    ctx.fillStyle='rgba(232,248,249,0.45)';
+    ctx.fillText(S.photoName,src.dispW-pad,pad);
+    ctx.restore();
+  }
 }
 
 function drawChart(){
@@ -2164,9 +2188,10 @@ function addLogEntry(silent){
     widthB:+(+dv.bWidth).toFixed(4),
     cropLeft:+(+dv.cL).toFixed(3),cropRight:+(+dv.cR).toFixed(3),
     resolutionMP:S.imgMeta?S.imgMeta.mp:'',
-    note:''
+    note:measNoteValue()
   };
   S.measLog.push(entry);
+  S.lastLogId=entry.id;
   persistMeasLog();
   if(S.screen==='log')renderMeasLog();
   updateLogAux();
@@ -2183,6 +2208,19 @@ function clearMeasLog(){
 }
 function updateLogNote(id,val){
   const e=S.measLog.find(x=>x.id===id);if(e){e.note=val;persistMeasLog();}
+}
+function measNoteValue(){const el=$('meas-note-inp');return el?el.value.trim():'';}
+function onMeasNoteInput(){
+  if(!S.lastLogId)return;
+  const e=S.measLog.find(x=>x.id===S.lastLogId);
+  if(e){e.note=measNoteValue();persistMeasLog();if(S.screen==='log')renderMeasLog();}
+}
+function photoStem(){const n=S.photoName||'';const i=n.lastIndexOf('.');return(i>0?n.slice(0,i):n)||'image';}
+function outFileName(zoom){
+  const raw=measNoteValue();
+  const suffix=raw?raw.replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60):'';
+  const tail=suffix||'measured_crack';
+  return `${photoStem()}_${tail}${zoom?'_zoom':''}.png`;
 }
 function logMsg(text,ok){
   const m=$('log-msg');if(!m)return;
@@ -2649,6 +2687,8 @@ function loadDemoImage(ev){
 function loadFile(file){
   clearErr();
   S.photoName=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
+  S.lastLogId='';
+  if($('meas-note-inp'))$('meas-note-inp').value='';
   decodeImage(file,d=>{
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
@@ -2800,7 +2840,7 @@ function saveImage(){
     if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
       window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
     } else {
-      const a=document.createElement('a');a.href=url;a.download='crack_measurement.png';
+      const a=document.createElement('a');a.href=url;a.download=outFileName(false);
       document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
     }
   },'image/png');
@@ -2883,7 +2923,7 @@ function saveZoomedImage(){
     if(/iPad|iPhone|iPod/.test(navigator.userAgent)){
       window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);
     } else {
-      a.href=url;a.download='crack_measurement_zoom.png';
+      a.href=url;a.download=outFileName(true);
       document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
     }
   },'image/png');
@@ -2900,26 +2940,24 @@ function resetAdjustments(){
 }
 
 function resetAll(){
+  // Clears the photo, line, results and per-photo entries, but keeps the user's
+  // settings so the next crack can be measured without re-selecting everything:
+  // scale mode + camera profile, profile-averaging (method/scan lines/alignment),
+  // the Approach B formula profile and constants, the self-calibration dataset,
+  // and the Approach A coefficient (which survives via its input value).
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
   S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.realDist='';S.directPx='';S.pxMm=null;
-  S.drawStart=null;S.drawCur=null;S.measLine=null;S.nLines=40;S.results=null;S.busy=false;
+  S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
+  S.scaleDist='';S.photoName='';S.lastLogId='';
   resetAdjustments();clearErr();
-  S.bCoeff=0.357;S.bExp=0.16;S.activeProfile='';
-  if($('bcoeff-inp')){$('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';}
-  if($('formula-active-badge')){$('formula-active-badge').style.display='none';$('btn-formula-reset').style.display='none';}
-  if($('formula-controls')){$('formula-controls').style.display='none';$('formula-toggle-txt').textContent='▸ Approach B formula';}
-  if($('profile-save-form'))$('profile-save-form').className='';
-  if($('profile-note'))$('profile-note').textContent='';
-  renderProfileList();
+  if($('dist-inp'))$('dist-inp').value='';
+  if($('meas-note-inp'))$('meas-note-inp').value='';
   $('canvas-wrap').className='';
-  $('nlines-slider').value=40;$('nlines-val').textContent='40';
   $('q-badge').innerHTML='';$('band-width').textContent='';
   $('scale-display').textContent='';$('scale-display-3').textContent='';
-  $('chk-align').checked=false;$('chk-adaptive').checked=false;
-  document.querySelectorAll('input[name="avgMethod"]').forEach(r=>{r.checked=r.value==='mean';});
-  S.scaleDist='';S.activeScaleProfile='';
-  if($('dist-inp'))$('dist-inp').value='';
-  switchScaleMode('twopoint');
+  // Re-apply the retained scale mode: clears entered reference points/values for
+  // the new photo while preserving the mode and selected camera profile.
+  switchScaleMode(S.scaleMode);
   resetCalibPanel();
   showStep(1);
 }
