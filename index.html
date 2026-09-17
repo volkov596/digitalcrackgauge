@@ -30,6 +30,7 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 #backup-bar-text{flex:1}
 #backup-bar-close{background:none;border:none;color:#fbbf24;cursor:pointer;font-size:14px;padding:0;line-height:1;flex-shrink:0}
 #version-bar{display:none;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(37,99,235,0.14);color:#93c5fd;font-size:12px;line-height:1.5;border:1px solid rgba(37,99,235,0.35)}
+#hd-busy{display:none;margin-bottom:.75rem;padding:9px 14px;border-radius:8px;background:rgba(12,187,204,0.12);color:#7fdbe4;font-size:12px;line-height:1.5;border:1px solid rgba(12,187,204,0.3)}
 #demo-link-row{margin-top:16px;text-align:center}
 #demo-link{font-size:12px;color:rgba(12,187,204,0.85);text-decoration:none;border-bottom:1px dotted rgba(12,187,204,0.5);cursor:pointer}
 #demo-link:hover{color:#0cbbcc;border-bottom-color:#0cbbcc}
@@ -58,6 +59,7 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 #zoom-label{font-family:monospace;color:#e8f8f9}
 #img-meta{margin-left:auto;color:rgba(12,187,204,0.2)}#img-meta.show{color:rgba(232,248,249,0.45)}
 #img-meta span{margin-left:6px}
+#img-meta span.hd-flag{color:#34d399;font-weight:600}
 
 .btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s,background .15s}
 .btn-primary{background:#0cbbcc;color:#081a1e}
@@ -182,6 +184,13 @@ input[type=range]{accent-color:#0cbbcc}
 #profile-name-inp{font-size:13px}
 .profile-meta-row{display:flex;gap:8px;align-items:center;font-size:11px;color:rgba(232,248,249,0.45);margin-top:4px}
 
+/* ── source precision panel ── */
+#hd-panel{display:none}
+#hd-tone{padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
+#hd-tone option{background:#0a3540;color:#e8f8f9}
+#hd-label{color:#34d399}
+#hd-tone-note{flex-basis:100%;line-height:1.45}
+
 /* ── Distance + camera profile scale mode (Pro) ── */
 #scale-distance-panel{margin-bottom:12px}
 .dist-input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
@@ -285,7 +294,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 .social-row svg{width:20px;height:20px;display:block}
 .footer-note{font-size:12px;color:rgba(232,248,249,0.4);line-height:1.6;max-width:560px;margin:0 auto;padding:0 16px}
 /* social row also on the pin screen */
-#pin-social{margin-top:30px}   
+#pin-social{margin-top:30px}
 </style>
 </head>
 <body>
@@ -311,7 +320,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.2.10-beta</div>
+  <div id="version-tag">v1.3.3-beta</div>
 
   <div id="backup-bar" style="display:none">
     <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
@@ -322,19 +331,21 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <span>A new version is available. Please hard-refresh the page (Ctrl+Shift+R / Cmd+Shift+R) to update. Continuing on this version may lead to errors.</span>
   </div>
 
-  
+  <div id="hd-busy"></div>
+
+
   <div id="step-bar"></div>
   <div id="aux-bar"></div>
 
-  
+
   <div id="err-bar"><span id="err-msg"></span><button id="err-close">✕</button></div>
 
   <div id="workflow-container">
   <div id="panel-1" class="panel show">
     <div id="info-grid">
-      <div><div class="info-head">Formats</div>JPEG · PNG · WebP</div>
-      <div><div class="info-head">Resolution</div>Up to 50 MP<br>Larger images auto-resized</div>
-      <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting</div>
+      <div><div class="info-head">Formats</div>JPEG · PNG · WebP<br>TIFF · 16-bit PNG</div>
+      <div><div class="info-head">Resolution</div>Up to 50 MP<br>24 MP for high bit depth<br>Larger images auto-resized</div>
+      <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting · 16-bit TIFF or PNG where available</div>
     </div>
     <div id="drop-zone">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -344,13 +355,13 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse files…</button>
         <button class="btn btn-primary" id="btn-take-photo" style="display:none" onclick="document.getElementById('camera-input').click()">📷 Take photo</button>
       </div>
-      <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/*" style="display:none">
+      <input id="file-input" type="file" accept="image/jpeg,image/png,image/jpg,image/webp,image/tiff,.tif,.tiff,image/*" style="display:none">
       <input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none">
       <div id="demo-link-row"><a id="demo-link" href="https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg" onclick="loadDemoImage(event)">New here? Try the workflow with an example photo →</a></div>
     </div>
   </div>
 
-  
+
   <div id="canvas-wrap">
     <div id="touch-mode-bar">
       <button id="btn-touch-mode" class="btn btn-nav" onclick="toggleTouchMode()">✋ Navigate</button>
@@ -366,8 +377,21 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
   </div>
 
-  
+
   <div id="panel-2" class="panel">
+    <div class="card blue-bg" id="hd-panel">
+      <div><strong id="hd-label"></strong> — read at full precision, without JPEG compression.</div>
+      <div class="input-row" style="margin-top:9px">
+        <label for="hd-tone">Tone response:</label>
+        <select id="hd-tone" onchange="onHdToneChange()">
+          <option value="srgb">sRGB / standard (default)</option>
+          <option value="linear">Linear</option>
+          <option value="g22">Gamma 2.2</option>
+        </select>
+        <span id="hd-tone-note"></span>
+      </div>
+    </div>
+
     <div class="tab-row">
       <button class="tab active" id="tab-twopoint" onclick="switchScaleMode('twopoint')">Click two reference points</button>
       <button class="tab" id="tab-direct" title="Use this if previously measured" onclick="switchScaleMode('direct')">Enter pixels/mm directly</button>
@@ -400,12 +424,13 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
     <div class="nav-row">
       <button class="btn btn-primary" id="btn-confirm-scale" onclick="confirmScale()">Confirm scale →</button>
+      <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
       <button class="btn btn-nav" onclick="resetAll()">Start over</button>
       <span id="scale-display" style="font-family:monospace;font-size:13px;color:#94a3b8"></span>
     </div>
   </div>
 
-  
+
   <div id="panel-3" class="panel">
     <div class="card" id="draw-hint"><strong>Click and drag across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.</div>
 
@@ -444,11 +469,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="nav-row">
       <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
       <button class="btn btn-nav" onclick="goBack()">← Back</button>
+      <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
       <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
     </div>
   </div>
 
-  
+
   <div id="panel-4" class="panel">
     <div id="result-cards">
       <div class="result-card" id="card-a">
@@ -465,7 +491,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
 
     <div id="meas-note-row">
-      <label for="meas-note-inp">Measurement name</label>
+      <label for="meas-note-inp">Measurement name <span style="font-weight:400;color:rgba(232,248,249,0.4)">· Enter saves it and loads the next photo</span></label>
       <input type="text" id="meas-note-inp" maxlength="80" placeholder="e.g. north pier, mid-span — saved to the log and file names" oninput="onMeasNoteInput()">
     </div>
 
@@ -474,6 +500,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
       <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
       <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+      <button class="btn btn-nav" id="btn-log-now" style="display:none" onclick="logNow()">＋ Log this measurement</button>
+      <button class="btn btn-success" id="btn-next-photo" onclick="nextPhoto()">Next photo →</button>
     </div>
 
     <div id="stats-row" class="pro-only"></div>
@@ -529,7 +557,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="calib-title">Approach A — Physical Reference Calibration</div>
       <div class="calib-sub pro-only">Two steps. <strong>Calibrate:</strong> analyse a photo of a reference crack of known width (same camera, distance and conditions), then enter that width — the tool computes a calibration coefficient. <strong>Measure:</strong> analyse your crack photo with that coefficient entered and the width is read directly. The coefficient survives “Start over”, so calibrate first, then load the crack photo. An inaccurate reference width feeds directly into every result, so measure it as precisely as you can.</div>
       <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
-      
+
       <div class="pro-only">
         <div id="calib-mode-toggle-pro">
           <button id="cmode-calibrate-pro" onclick="setCalibMode('calibrate')">Calibrate</button>
@@ -544,7 +572,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <span>lum·mm / mm</span>
         </div>
       </div>
-      
+
       <div class="simple-only">
         <div id="calib-mode-toggle">
           <button id="cmode-calibrate" onclick="setCalibMode('calibrate')">Calibrate</button>
@@ -702,7 +730,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Load this shot's photo, then click the two edges of the object</div>
         <div class="wiz-btns" style="margin-bottom:8px">
           <button class="btn-ghost btn-small" id="btn-wiz-load-img" onclick="loadCalibImageClick()">📷 Load calibration photo</button>
-          <input type="file" id="wiz-image-file" accept="image/*" style="display:none" onchange="loadCalibImage(event)">
+          <input type="file" id="wiz-image-file" accept="image/*,image/tiff,.tif,.tiff" style="display:none" onchange="loadCalibImage(event)">
         </div>
         <div id="wiz-span-hint">Load this shot's calibration photo first.</div>
         <div class="wiz-btns">
@@ -847,18 +875,370 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
 <script>
 
-const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const HD_MAX_PIXELS=24e6;
+const HD_PREVIEW_MAX=2560;
 
-function bilinearLum(data,x,y,W,H){
-  x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));
-  const x0=Math.floor(x),x1=Math.min(x0+1,W-1),y0=Math.floor(y),y1=Math.min(y0+1,H-1);
-  const fx=x-x0,fy=y-y0;
-  const lum=(px,py)=>{const i=(py*W+px)*4;return 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];};
-  return lum(x0,y0)*(1-fx)*(1-fy)+lum(x1,y0)*fx*(1-fy)+lum(x0,y1)*(1-fx)*fy+lum(x1,y1)*fx*fy;
+function hdSrgbEncode(l){
+  if(l<=0)return 0; if(l>=1)return 1;
+  return l<=0.0031308 ? 12.92*l : 1.055*Math.pow(l,1/2.4)-0.055;
+}
+function hdTone(v,tone){
+  if(tone==='linear')return hdSrgbEncode(v/65535)*255;
+  if(tone==='g22')return hdSrgbEncode(Math.pow(v/65535,2.2))*255;
+  return v*(255/65535);
+}
+
+function hdIsPng(u8){
+  return u8.length>32&&u8[0]===0x89&&u8[1]===0x50&&u8[2]===0x4E&&u8[3]===0x47&&u8[4]===0x0D&&u8[5]===0x0A&&u8[6]===0x1A&&u8[7]===0x0A;
+}
+function hdIsTiff(u8){
+  if(u8.length<8)return false;
+  const le=u8[0]===0x49&&u8[1]===0x49, be=u8[0]===0x4D&&u8[1]===0x4D;
+  if(!le&&!be)return false;
+  const m=le?(u8[2]|(u8[3]<<8)):((u8[2]<<8)|u8[3]);
+  return m===42||m===43;
+}
+function hdPngDepth(u8){
+  if(!hdIsPng(u8))return 0;
+  if(!(u8[12]===0x49&&u8[13]===0x48&&u8[14]===0x44&&u8[15]===0x52))return 0;
+  return u8[24];
+}
+function hdSniff(head,name){
+  const n=String(name||'').toLowerCase();
+  if(hdIsPng(head))return hdPngDepth(head)===16?'png16':null;
+  if(hdIsTiff(head))return 'tiff';
+  if(/\.tiff?$/.test(n))return 'tiff';
+  return null;
+}
+
+/* ── row sink: box-reduce source rows into the analysis buffer and the preview ── */
+function hdSink(w,h,maxPixels,previewMax,tone){
+  const sa=Math.min(1,Math.sqrt(maxPixels/(w*h)));
+  const aw=Math.max(1,Math.round(w*sa)),ah=Math.max(1,Math.round(h*sa));
+  const sp=Math.min(1,previewMax/Math.max(w,h));
+  const pw=Math.max(1,Math.round(w*sp)),ph=Math.max(1,Math.round(h*sp));
+  const xa=new Int32Array(w),xp=new Int32Array(w);
+  for(let x=0;x<w;x++){xa[x]=Math.min(aw-1,(x*aw/w)|0);xp[x]=Math.min(pw-1,(x*pw/w)|0);}
+  return{w,h,aw,ah,pw,ph,tone,xa,xp,
+    lum:new Uint16Array(aw*ah),
+    la:new Float64Array(aw),lc:new Uint32Array(aw),lty:-1,
+    prev:new Uint8ClampedArray(pw*ph*4),
+    pa:new Float64Array(pw*3),pc:new Uint32Array(pw),pty:-1};
+}
+function hdFlushLum(S){
+  if(S.lty<0)return;
+  const o=S.lty*S.aw;
+  for(let i=0;i<S.aw;i++)S.lum[o+i]=S.lc[i]?Math.round(S.la[i]/S.lc[i]):0;
+}
+function hdFlushPrev(S){
+  if(S.pty<0)return;
+  const o=S.pty*S.pw*4,t=S.tone;
+  for(let i=0;i<S.pw;i++){
+    const c=S.pc[i]||1,k=i*3,d=o+i*4;
+    S.prev[d]=hdTone(S.pa[k]/c,t);
+    S.prev[d+1]=hdTone(S.pa[k+1]/c,t);
+    S.prev[d+2]=hdTone(S.pa[k+2]/c,t);
+    S.prev[d+3]=255;
+  }
+}
+function hdRow(S,y,rowL,rowRGB){
+  const w=S.w,xa=S.xa,xp=S.xp;
+  const ty=Math.min(S.ah-1,(y*S.ah/S.h)|0);
+  if(ty!==S.lty){hdFlushLum(S);S.lty=ty;S.la.fill(0);S.lc.fill(0);}
+  for(let x=0;x<w;x++){const t=xa[x];S.la[t]+=rowL[x];S.lc[t]++;}
+  const py=Math.min(S.ph-1,(y*S.ph/S.h)|0);
+  if(py!==S.pty){hdFlushPrev(S);S.pty=py;S.pa.fill(0);S.pc.fill(0);}
+  if(rowRGB){
+    for(let x=0;x<w;x++){const t=xp[x]*3,s=x*3;S.pa[t]+=rowRGB[s];S.pa[t+1]+=rowRGB[s+1];S.pa[t+2]+=rowRGB[s+2];S.pc[xp[x]]++;}
+  }else{
+    for(let x=0;x<w;x++){const t=xp[x]*3,v=rowL[x];S.pa[t]+=v;S.pa[t+1]+=v;S.pa[t+2]+=v;S.pc[xp[x]]++;}
+  }
+}
+function hdFinish(S,extra){
+  hdFlushLum(S);hdFlushPrev(S);
+  return Object.assign({w:S.w,h:S.h,aw:S.aw,ah:S.ah,pw:S.pw,ph:S.ph,
+    lum:S.lum,preview:S.prev,tone:S.tone},extra);
+}
+
+/* ── inflate ── */
+function hdNeedInflate(){
+  if(typeof DecompressionStream==='undefined'){const e=new Error('this browser cannot decompress the file — a current Chrome, Edge, Firefox or Safari 16.4+ is needed');e.fallback=true;throw e;}
+}
+async function hdInflate(chunks){
+  hdNeedInflate();
+  const ds=new DecompressionStream('deflate');
+  const wtr=ds.writable.getWriter();
+  let perr=null;
+  const pump=(async()=>{try{for(const c of chunks)await wtr.write(c);await wtr.close();}catch(e){perr=e;}})();
+  let buf;
+  try{buf=await new Response(ds.readable).arrayBuffer();}
+  catch(e){await pump;throw new Error('compressed data is corrupt or truncated');}
+  await pump;
+  if(perr)throw new Error('compressed data is corrupt or truncated');
+  return new Uint8Array(buf);
+}
+
+/* ── PNG 16-bit ── */
+function hdPngUnfilter(ft,cur,prev,bpp,stride){
+  let i;
+  if(ft===0)return;
+  if(ft===1){for(i=bpp;i<stride;i++)cur[i]=(cur[i]+cur[i-bpp])&255;return;}
+  if(ft===2){for(i=0;i<stride;i++)cur[i]=(cur[i]+prev[i])&255;return;}
+  if(ft===3){for(i=0;i<stride;i++){const a=i>=bpp?cur[i-bpp]:0;cur[i]=(cur[i]+((a+prev[i])>>1))&255;}return;}
+  if(ft===4){
+    for(i=0;i<stride;i++){
+      const a=i>=bpp?cur[i-bpp]:0,b=prev[i],c=i>=bpp?prev[i-bpp]:0;
+      const p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);
+      cur[i]=(cur[i]+((pa<=pb&&pa<=pc)?a:(pb<=pc?b:c)))&255;
+    }
+    return;
+  }
+  throw new Error('unsupported PNG filter');
+}
+async function hdPngStream(idat,stride,bpp,h,onRow){
+  hdNeedInflate();
+  const ds=new DecompressionStream('deflate');
+  const wtr=ds.writable.getWriter();
+  const pump=(async()=>{try{for(const c of idat)await wtr.write(c);await wtr.close();}catch(e){}})();
+  const rdr=ds.readable.getReader();
+  const rowLen=stride+1;
+  let acc=new Uint8Array(Math.max(rowLen*2,1<<16)),len=0,off=0;
+  let prev=new Uint8Array(stride),cur=new Uint8Array(stride);
+  let y=0,fin=false;
+  while(!fin&&y<h){
+    let r;
+    try{r=await rdr.read();}
+    catch(e){try{await pump;}catch(e2){}throw new Error('PNG data is corrupt or truncated');}
+    if(r.done)fin=true;
+    if(r.value&&r.value.length){
+      if(len+r.value.length>acc.length){
+        const na=new Uint8Array(Math.max(acc.length*2,len+r.value.length));
+        na.set(acc.subarray(0,len));acc=na;
+      }
+      acc.set(r.value,len);len+=r.value.length;
+    }
+    while(len-off>=rowLen&&y<h){
+      const ft=acc[off];
+      cur.set(acc.subarray(off+1,off+rowLen));
+      off+=rowLen;
+      hdPngUnfilter(ft,cur,prev,bpp,stride);
+      onRow(y,cur);
+      y++;
+      const t=prev;prev=cur;cur=t;
+    }
+    if(off>0){acc.copyWithin(0,off,len);len-=off;off=0;}
+  }
+  try{await rdr.cancel();}catch(e){}
+  await pump;
+  if(y<h)throw new Error('PNG data is corrupt or truncated');
+}
+async function hdDecodePng(u8){
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+  let p=8,ih=null,gama=null,srgb=false;const idat=[];
+  while(p+8<=u8.length){
+    const len=dv.getUint32(p);
+    const t=String.fromCharCode(u8[p+4],u8[p+5],u8[p+6],u8[p+7]);
+    const d=p+8;
+    if(t==='IHDR')ih={w:dv.getUint32(d),h:dv.getUint32(d+4),depth:u8[d+8],color:u8[d+9],interlace:u8[d+12]};
+    else if(t==='IDAT')idat.push(u8.subarray(d,d+len));
+    else if(t==='gAMA')gama=dv.getUint32(d);
+    else if(t==='sRGB')srgb=true;
+    else if(t==='IEND')break;
+    p=d+len+4;
+    if(len>u8.length)break;
+  }
+  if(!ih||ih.depth!==16)return null;
+  if(ih.interlace!==0){const e=new Error('interlaced PNG — re-save without interlacing to keep 16-bit precision');e.fallback=true;throw e;}
+  const CH={0:1,2:3,4:2,6:4}[ih.color];
+  if(!CH)throw new Error('unsupported PNG colour type');
+  const w=ih.w,h=ih.h,bpp=CH*2,stride=w*bpp;
+  if(!(w>0&&h>0))throw new Error('bad PNG dimensions');
+  let tone='srgb';
+  if(!srgb&&gama&&Math.abs(gama-100000)<2000)tone='linear';
+  const S=hdSink(w,h,HD_MAX_PIXELS,HD_PREVIEW_MAX,tone);
+  const rowL=new Uint16Array(w),rowRGB=CH>=3?new Uint16Array(w*3):null;
+  await hdPngStream(idat,stride,bpp,h,(y,cur)=>{
+    if(CH<3){
+      for(let x=0;x<w;x++)rowL[x]=(cur[x*bpp]<<8)|cur[x*bpp+1];
+    }else{
+      for(let x=0;x<w;x++){
+        const k=x*bpp;
+        const r=(cur[k]<<8)|cur[k+1],g=(cur[k+2]<<8)|cur[k+3],b=(cur[k+4]<<8)|cur[k+5];
+        rowRGB[x*3]=r;rowRGB[x*3+1]=g;rowRGB[x*3+2]=b;
+        rowL[x]=(0.299*r+0.587*g+0.114*b)|0;
+      }
+    }
+    hdRow(S,y,rowL,rowRGB);
+  });
+  return hdFinish(S,{bits:16,fmt:'PNG',label:'16-bit PNG'});
+}
+
+/* ── TIFF ── */
+function hdPackBits(src,outLen){
+  const out=new Uint8Array(outLen);let i=0,o=0;
+  while(i<src.length&&o<outLen){
+    const n=(src[i++]<<24)>>24;
+    if(n>=0){for(let k=0;k<=n&&o<outLen&&i<src.length;k++)out[o++]=src[i++];}
+    else if(n!==-128){const b=src[i++];for(let k=0;k<1-n&&o<outLen;k++)out[o++]=b;}
+  }
+  return o<outLen?out.subarray(0,o):out;
+}
+function hdLzw(src,outLen){
+  const out=new Uint8Array(outLen);
+  const pfx=new Int32Array(4096),sfx=new Uint8Array(4096),stack=new Uint8Array(4096);
+  for(let i=0;i<256;i++){pfx[i]=-1;sfx[i]=i;}
+  let o=0,bit=0,cl=9,next=258,prev=-1;
+  const tb=src.length*8;
+  while(o<outLen){
+    if(bit+cl>tb)break;
+    let code=0;
+    for(let k=0;k<cl;k++){const b=bit+k;code=(code<<1)|((src[b>>3]>>(7-(b&7)))&1);}
+    bit+=cl;
+    if(code===257)break;
+    if(code===256){next=258;cl=9;prev=-1;continue;}
+    let sp=0,first;
+    if(code<next){
+      let k=code;
+      while(k>=0&&sp<4096){stack[sp++]=sfx[k];k=pfx[k];}
+      first=stack[sp-1];
+      while(sp>0&&o<outLen)out[o++]=stack[--sp];
+    }else{
+      if(prev<0)break;
+      let k=prev;
+      while(k>=0&&sp<4095){stack[sp++]=sfx[k];k=pfx[k];}
+      first=stack[sp-1];
+      while(sp>0&&o<outLen)out[o++]=stack[--sp];
+      if(o<outLen)out[o++]=first;
+    }
+    if(prev>=0&&next<4096){pfx[next]=prev;sfx[next]=first;next++;}
+    prev=code;
+    if(next+1>=(1<<cl)&&cl<12)cl++;
+  }
+  return o<outLen?out.subarray(0,o):out;
+}
+function hdTiffTags(u8,dv,le,off){
+  const g16=o=>dv.getUint16(o,le),g32=o=>dv.getUint32(o,le);
+  const n=g16(off),tags={};
+  const SZ={1:1,2:1,3:2,4:4,5:8,6:1,7:1,8:2,9:4,10:8,11:4,12:8};
+  for(let i=0;i<n;i++){
+    const e=off+2+i*12,tag=g16(e),ty=g16(e+2),cnt=g32(e+4);
+    const sz=SZ[ty]||1,total=sz*cnt;
+    const vo=total<=4?e+8:g32(e+8);
+    const lim=Math.min(cnt,1e6),v=[];
+    for(let k=0;k<lim;k++){
+      const o=vo+k*sz;
+      if(o+sz>u8.length){break;}
+      if(ty===3)v.push(g16(o));
+      else if(ty===4)v.push(g32(o));
+      else if(ty===5)v.push(g32(o)/(g32(o+4)||1));
+      else if(ty===8)v.push(dv.getInt16(o,le));
+      else if(ty===9)v.push(dv.getInt32(o,le));
+      else if(ty===11)v.push(dv.getFloat32(o,le));
+      else if(ty===12)v.push(dv.getFloat64(o,le));
+      else v.push(u8[o]);
+    }
+    tags[tag]=v;
+  }
+  return tags;
+}
+async function hdDecodeTiff(u8){
+  if(!hdIsTiff(u8))throw new Error('not a TIFF file');
+  const le=u8[0]===0x49;
+  const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+  if(dv.getUint16(2,le)===43)throw new Error('BigTIFF is not supported — re-save as standard TIFF');
+  const T=hdTiffTags(u8,dv,le,dv.getUint32(4,le));
+  const one=(k,d)=>T[k]&&T[k].length?T[k][0]:d;
+  const w=one(256,0),h=one(257,0);
+  if(!(w>0&&h>0))throw new Error('TIFF has no image dimensions');
+  if(T[322]||T[324])throw new Error('tiled TIFF is not supported — re-save as a stripped TIFF');
+  const bpsArr=T[258]&&T[258].length?T[258]:[one(258,1)];
+  const spp=one(277,bpsArr.length>1?bpsArr.length:1);
+  const bps=bpsArr[0];
+  if(bpsArr.some(b=>b!==bps))throw new Error('mixed bit depths are not supported');
+  if(bps!==8&&bps!==16&&bps!==32)throw new Error('unsupported TIFF bit depth: '+bps);
+  const sf=one(339,1);
+  if(sf===2)throw new Error('signed-integer TIFF is not supported — re-save as unsigned');
+  if(bps===32&&sf!==3)throw new Error('32-bit integer TIFF is not supported');
+  if(sf!==1&&sf!==3)throw new Error('unsupported TIFF sample format');
+  const comp=one(259,1);
+  const photo=one(262,spp>=3?2:1);
+  if(photo>2)throw new Error('unsupported TIFF colour model (palette, CMYK and YCbCr are not supported)');
+  if(one(284,1)!==1)throw new Error('planar TIFF is not supported — re-save as interleaved');
+  const pred=one(317,1);
+  if(pred!==1&&pred!==2)throw new Error('unsupported TIFF predictor');
+  const offs=T[273]||[],cnts=T[279]||[];
+  if(!offs.length)throw new Error('TIFF has no image data');
+  const rps=Math.min(h,one(278,h)||h);
+  const bytesPerSample=bps/8;
+  const rowBytes=Math.ceil(w*spp*bps/8);
+  const tone=(bps===32)?'linear':'srgb';
+  const S=hdSink(w,h,HD_MAX_PIXELS,HD_PREVIEW_MAX,tone);
+  const rowL=new Uint16Array(w),rowRGB=spp>=3?new Uint16Array(w*3):null;
+  const maxV=bps===8?255:65535;
+  const N=w*spp,samp=new Float64Array(N);
+  let y=0;
+  for(let s=0;s<offs.length&&y<h;s++){
+    const rows=Math.min(rps,h-y);
+    const expect=rowBytes*rows;
+    const start=offs[s],len=cnts[s]!==undefined?cnts[s]:expect;
+    const raw=u8.subarray(start,Math.min(u8.length,start+len));
+    let data;
+    if(comp===1)data=raw;
+    else if(comp===32773)data=hdPackBits(raw,expect);
+    else if(comp===5)data=hdLzw(raw,expect);
+    else if(comp===8||comp===32946)data=await hdInflate([raw]);
+    else throw new Error('unsupported TIFF compression ('+comp+')');
+    if(data.length<expect)throw new Error('TIFF image data is corrupt or truncated');
+    const sdv=new DataView(data.buffer,data.byteOffset,data.byteLength);
+    for(let r=0;r<rows;r++,y++){
+      const ro=r*rowBytes;
+      if((y&255)===255)await new Promise(res=>setTimeout(res,0));
+      if(bps===8){for(let i=0;i<N;i++)samp[i]=data[ro+i];}
+      else if(bps===16){for(let i=0;i<N;i++)samp[i]=sdv.getUint16(ro+i*2,le);}
+      else{for(let i=0;i<N;i++)samp[i]=sdv.getFloat32(ro+i*4,le);}
+      if(pred===2){for(let i=spp;i<N;i++)samp[i]=(samp[i]+samp[i-spp])%(bps===32?Infinity:(maxV+1));}
+      const scale=bps===32?65535:(bps===8?257:1);
+      for(let x=0;x<w;x++){
+        const k=x*spp;
+        let a=samp[k]*scale,b=a,c=a;
+        if(spp>=3){b=samp[k+1]*scale;c=samp[k+2]*scale;}
+        if(bps===32){a=Math.max(0,Math.min(65535,a));b=Math.max(0,Math.min(65535,b));c=Math.max(0,Math.min(65535,c));}
+        if(photo===0){a=65535-a;b=65535-b;c=65535-c;}
+        if(rowRGB){rowRGB[x*3]=a;rowRGB[x*3+1]=b;rowRGB[x*3+2]=c;rowL[x]=(0.299*a+0.587*b+0.114*c)|0;}
+        else rowL[x]=a|0;
+      }
+      hdRow(S,y,rowL,rowRGB);
+    }
+  }
+  if(y===0)throw new Error('TIFF contained no readable rows');
+  return hdFinish(S,{bits:bps,fmt:'TIFF',label:(bps===32?'32-bit float TIFF':bps+'-bit TIFF')});
+}
+
+async function hdDecodeBuffer(u8,name){
+  const kind=hdSniff(u8,name);
+  if(!kind)return null;
+  if(kind==='png16')return await hdDecodePng(u8);
+  return await hdDecodeTiff(u8);
 }
 
 
+const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
+function bilinearLum(pix,x,y){
+  const W=pix.width,H=pix.height;
+  x=Math.max(0,Math.min(W-1,x));y=Math.max(0,Math.min(H-1,y));
+  const x0=x|0,x1=Math.min(x0+1,W-1),y0=y|0,y1=Math.min(y0+1,H-1);
+  const fx=x-x0,fy=y-y0;
+  if(pix.lum){
+    const L=pix.lum,t=pix.tone;
+    const a=hdTone(L[y0*W+x0],t),b=hdTone(L[y0*W+x1],t),
+          c=hdTone(L[y1*W+x0],t),d=hdTone(L[y1*W+x1],t);
+    return a*(1-fx)*(1-fy)+b*fx*(1-fy)+c*(1-fx)*fy+d*fx*fy;
+  }
+  const p=pix.data;
+  const lum=(px,py)=>{const i=(py*W+px)*4;return 0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];};
+  return lum(x0,y0)*(1-fx)*(1-fy)+lum(x1,y0)*fx*(1-fy)+lum(x0,y1)*(1-fx)*fy+lum(x1,y1)*fx*fy;
+}
 
 function extractAllProfiles(pixels,p1,p2,nLines){
   const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.sqrt(dx*dx+dy*dy);
@@ -867,7 +1247,7 @@ function extractAllProfiles(pixels,p1,p2,nLines){
   const profiles=[];
   for(let k=-half;k<=half;k++){
     const line=[];
-    for(let i=0;i<n;i++){const t=n>1?i/(n-1):0;line.push(bilinearLum(pixels.data,p1.x+t*dx+k*px,p1.y+t*dy+k*py,pixels.width,pixels.height));}
+    for(let i=0;i<n;i++){const t=n>1?i/(n-1):0;line.push(bilinearLum(pixels,p1.x+t*dx+k*px,p1.y+t*dy+k*py));}
     profiles.push(line);
   }
   return profiles;
@@ -901,34 +1281,37 @@ const S={
   results:null,busy:false,
   cropLeft:null,cropRight:null,cropLeftStr:'',cropRightStr:'',
   tilt:0,bow:0,shift:0,showBaseCorr:false,
-  bCoeff:0.357,bExp:0.16,    // Approach B empirical formula constants (overridable)
-  profiles:[],activeProfile:'',   // saved camera profiles + currently selected id
-  scaleProfiles:[],activeScaleProfile:'',   // distance-scale profiles (Pro) + selected id
-  calibDatasets:[],activeCalibDataset:'',    // Approach B formula-calibration datasets (Pro)
-  measLog:[],autoLog:true,                    // session measurement log (both tiers)
-  photoName:'',                               // filename of the loaded crack photo
-  lastLogId:'',                               // id of the log row for the current measurement
-  staleClient:false,                          // set if Worker reports a newer min client version
-  scaleDist:'',                    // distance (m) entered in distance+profile scale mode
-  calibShots:[],                   // (legacy field, retained harmlessly)
-  calibActive:false,               // whether the calibration wizard is capturing
-  screen:'workflow',               // 'workflow' | 'calibrate'
-  calib:{                          // fully independent calibration screen state
+  bCoeff:0.357,bExp:0.16,
+  profiles:[],activeProfile:'',
+  scaleProfiles:[],activeScaleProfile:'',
+  calibDatasets:[],activeCalibDataset:'',
+  measLog:[],autoLog:true,
+  photoName:'',
+  hints:{directPx:'',scaleDist:'',realDist:'',note:'',pxMm:null},   // previous photo's values, shown as placeholders only
+  pendingNext:false,                                                  // Next photo: reset only once a file is actually chosen
+  lastLogId:'',
+  staleClient:false,
+  scaleDist:'',
+  calibShots:[],
+  calibActive:false,
+  screen:'workflow',
+  calib:{
     imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
     zoom:1,panX:0,panY:0,scalePts:[],imageLoaded:false,reused:false,shots:[]
   },
   touchMode:'navigate',
-  live:null,         // live recalculation output
-  chartGeom:null,    // chart coordinate system
-  chartDrag:null,    // 'left' | 'right' | null
+  live:null,
+  chartGeom:null,
+  chartDrag:null,
 };
 
 const $=id=>document.getElementById(id);
+let decodeSeq=0;
 
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 1210;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
+const CLIENT_VERSION = 1303;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -966,15 +1349,13 @@ async function checkPin(){
     const data = await resp.json();
     if (data.ok) {
       try { sessionStorage.setItem('dcg_tier', data.tier); sessionStorage.setItem('dcg_pin', pin); } catch(e){}
-      // Stale-client check (advisory only)
       if (typeof data.minClient === 'number' && CLIENT_VERSION < data.minClient) {
         S.staleClient = true;
       }
       applyInterfaceMode(data.tier);
     } else if (data.error === 'region') {
-      // Geo-blocked: show a clear message and the author's contacts (already on this screen)
       msg.style.color = '#f87171';
-      msg.textContent = 'Access outside Australia and New Zealand requires the author\u2019s permission. Please get in touch.';
+      msg.textContent = 'Access outside Australia and New Zealand requires the author’s permission. Please get in touch.';
       btn.disabled = false;
     } else {
       msg.style.color = '#f87171'; msg.textContent = 'Invalid code.';
@@ -1053,7 +1434,7 @@ function calibAWidth(area){
   const f=calibFields();
   if(calibMode==='calibrate'){
     const w=parseFloat($(f.widthId).value);
-    return (area&&w&&w>0)?w.toFixed(4):null;       // calibrate: A = the known width
+    return (area&&w&&w>0)?w.toFixed(4):null;
   } else {
     const coeff=parseFloat($(f.coeffId).value);
     return (area&&coeff&&coeff>0)?(area/coeff).toFixed(4):null;
@@ -1092,7 +1473,6 @@ function paintCanvas(){
   ctx.translate(src.panX,src.panY);ctx.scale(src.zoom,src.zoom);
   ctx.drawImage(src.imgEl,0,0,src.dispW,src.dispH);
   const iZ=1/src.zoom;
-  // On the calibration screen, only scale points (A/B markers) are drawn.
   if(onCalib){
     const sp=src.scalePts;
     if(sp.length>0){
@@ -1325,19 +1705,16 @@ function buildStepBar(){
 function buildAuxBar(){
   const bar=$('aux-bar');if(!bar)return;
   bar.innerHTML='';
-  // Camera calibration circle (Pro)
   const item=document.createElement('div');item.className='aux-item pro-only';
   item.onclick=()=>showScreen(S.screen==='calibrate'?'workflow':'calibrate');
   const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
   const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';
   item.append(circle,lbl);bar.append(item);
-  // Approach B formula circle (Pro)
   const item2=document.createElement('div');item2.className='aux-item pro-only';
   item2.onclick=()=>showScreen(S.screen==='formula'?'workflow':'formula');
   const circle2=document.createElement('div');circle2.className='aux-circle';circle2.id='aux-formula';circle2.textContent='B';
   const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';
   item2.append(circle2,lbl2);bar.append(item2);
-  // Measurement log circle (both tiers)
   const item3=document.createElement('div');item3.className='aux-item';
   item3.onclick=()=>showScreen(S.screen==='log'?'workflow':'log');
   const circle3=document.createElement('div');circle3.className='aux-circle';circle3.id='aux-log';circle3.textContent='L';
@@ -1378,10 +1755,36 @@ function showStep(n){
     else if(n===2||n===3){S.touchMode='draw';}
     updateTouchModeBtn();
   }
-  if(n===4){renderFcalibSelect();updateFcalibCount();}
+  if(n===2){renderHdPanel();applyHints();}
+  if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();}
   updateResWarn();
   updateStepBar();
 }
+
+/* ── high bit depth source panel ── */
+function isHdSource(){return !!(S.pixels&&S.pixels.lum);}
+function renderHdPanel(){
+  const p=$('hd-panel');if(!p)return;
+  if(!isHdSource()){p.style.display='none';return;}
+  p.style.display='block';
+  const l=$('hd-label');if(l)l.textContent=(S.imgMeta&&S.imgMeta.depth)||'High bit depth source';
+  const sel=$('hd-tone');if(sel)sel.value=S.pixels.tone;
+  updateHdToneNote();
+}
+function updateHdToneNote(){
+  const n=$('hd-tone-note');if(!n||!isHdSource())return;
+  n.textContent=S.pixels.tone==='srgb'
+    ? 'Standard response — matches the tool’s calibration. Change this only if the file was exported in linear light.'
+    : 'Converted to the standard response before measuring, so existing coefficients stay valid. The on-screen preview is unchanged.';
+}
+function onHdToneChange(){
+  if(!isHdSource())return;
+  const sel=$('hd-tone');if(!sel)return;
+  S.pixels.tone=sel.value;
+  updateHdToneNote();
+  if(S.results){S.results=null;S.live=null;}
+}
+
 function updateResWarn(){
   const el=$('res-warn-overlay');if(!el)return;
   if(S.step!==3||!S.pxMm||!(S.pxMm>0)){el.style.display='none';return;}
@@ -1392,7 +1795,7 @@ function updateResWarn(){
     el.style.display='block';
   } else if(working<2){
     el.className='warn';
-    el.textContent='Reliable measurement below 2 px/mm requires a sound understanding of the tool\u2019s limitations and some experience.';
+    el.textContent='Reliable measurement below 2 px/mm requires a sound understanding of the tool’s limitations and some experience.';
     el.style.display='block';
   } else {
     el.style.display='none';
@@ -1404,6 +1807,11 @@ function showErr(msg){
   $('err-bar').className='show';
 }
 function clearErr(){$('err-bar').className='';}
+function hdBusy(msg){
+  const b=$('hd-busy');if(!b)return;
+  if(msg){b.textContent=msg;b.style.display='block';}
+  else b.style.display='none';
+}
 
 function updateZoom(){$('zoom-label').textContent=S.zoom.toFixed(1)+'×';}
 
@@ -1411,7 +1819,9 @@ function updateMetaBar(){
   if(!S.imgMeta)return;
   const m=S.imgMeta;
   const el=$('img-meta');
-  el.innerHTML=`<span>|</span><span>${m.origW}×${m.origH}</span><span>${m.mp} MP</span><span>${m.format}</span><span>8-bit RGBA</span>`+(m.resized?'<span style="color:#d97706">⚠ resized</span>':'');
+  const depth=m.depth||'8-bit RGBA';
+  const cls=m.hd?' class="hd-flag"':'';
+  el.innerHTML=`<span>|</span><span>${m.origW}×${m.origH}</span><span>${m.mp} MP</span><span>${m.format}</span><span${cls}>${depth}</span>`+(m.resized?'<span style="color:#d97706">⚠ resized</span>':'');
   el.className='show';
 }
 
@@ -1436,15 +1846,65 @@ function updateBandWidth(){
 function updateScaleHint(){
   const hint=$('scale-hint');
   if(S.scaleMode==='direct'){
-    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px" placeholder="e.g. 5.2"><span>pixels / mm</span></div>';
-    const inp=$('direct-px-inp');if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;};}
+    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px"><span>pixels / mm</span></div>';
+    const inp=$('direct-px-inp');
+    if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;};inp.onkeydown=scaleFieldKey;}
+    applyHints();
     return;
   }
   const intro='The tool needs a known distance in the image to convert pixels to millimetres. ';
   if(S.scalePts.length===0)hint.innerHTML=intro+'Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size';
   else if(S.scalePts.length===1)hint.innerHTML='Now click <strong>point B</strong> at the other end of that known distance';
-  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px" placeholder="e.g. 100"><span>mm</span><button class="btn-ghost btn-small" onclick="resetScalePts()">↺ Reset</button></div>`;
-  const inp=$('real-dist-inp');if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;};}
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px"><span>mm</span><button class="btn-ghost btn-small" onclick="resetScalePts()">↺ Reset</button></div>`;
+  const inp=$('real-dist-inp');
+  if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;};inp.onkeydown=scaleFieldKey;}
+  applyHints();
+}
+
+/* Context from the previous photo is carried as placeholder hints only, never as
+   values: the scale changes from photo to photo and must be entered each time. */
+const MEAS_NOTE_PLACEHOLDER='e.g. north pier, mid-span — saved to the log and file names';
+function captureHints(){
+  const n=$('meas-note-inp'),h=S.hints||{};
+  S.hints={
+    directPx:S.directPx||h.directPx||'',
+    scaleDist:S.scaleDist||h.scaleDist||'',
+    realDist:S.realDist||h.realDist||'',
+    pxMm:S.pxMm||h.pxMm||null,
+    note:(n&&n.value.trim())||h.note||''
+  };
+}
+function applyHints(){
+  const h=S.hints||{};
+  const set=(id,v,fallback)=>{const el=$(id);if(el)el.placeholder=v?('last: '+v):fallback;};
+  const px=h.pxMm?(+h.pxMm).toFixed(3):(h.directPx||'');   // the real last resolution, however it was set
+  set('direct-px-inp',px?px+' px/mm':'','e.g. 5.2');
+  set('real-dist-inp',h.realDist?h.realDist+' mm':'','e.g. 100');
+  set('dist-inp',h.scaleDist?h.scaleDist+' m':'','e.g. 4.000');
+  set('meas-note-inp',h.note,MEAS_NOTE_PLACEHOLDER);
+}
+function focusScaleField(){
+  if(isTouch)return;                 // don't raise the on-screen keyboard over the image
+  const id=S.scaleMode==='distance'?'dist-inp':(S.scaleMode==='direct'?'direct-px-inp':'real-dist-inp');
+  const el=$(id);
+  if(el&&el.offsetParent!==null){try{el.focus();}catch(e){}}
+}
+function scaleFieldKey(e){
+  if(e.key==='Enter'){e.preventDefault();confirmScale();}
+}
+function cancelLine(){
+  decodeSeq++;S.busy=false;
+  S.drawStart=null;S.drawCur=null;S.measLine=null;
+  const b=$('btn-analyze');if(b)b.textContent='Analyze →';
+  updateDrawHint();paintCanvas();
+}
+function updateLogNowBtn(){
+  const b=$('btn-log-now');if(!b)return;
+  b.style.display=(S.step===4&&S.results&&!S.autoLog&&!S.lastLogId)?'':'none';
+}
+function logNow(){
+  if(!S.results||S.lastLogId)return;
+  addLogEntry(true);updateLogNowBtn();
 }
 
 function switchScaleMode(mode){
@@ -1483,7 +1943,6 @@ function renderScaleProfileSelect(){
     sel.value=cur;
     const del=$('btn-scale-prof-delete');if(del)del.style.display=cur?'':'none';
   }
-  // Mirror into the calibration screen's dropdown
   const selC=$('scale-profile-select-cal');
   if(selC){
     selC.innerHTML='<option value="">— No profile selected —</option>'+
@@ -1580,13 +2039,14 @@ function renderMeasLog(){
     const A=e.widthA!=null?e.widthA.toFixed(3):'—';
     const B=e.widthB!=null?e.widthB.toFixed(3):'—';
     const photo=e.photoName?escapeHtml(e.photoName):'(unnamed)';
+    const bd=e.bitDepth&&/16|32/.test(e.bitDepth)?` · <span style="color:#34d399">${escapeHtml(e.bitDepth)}</span>`:'';
     return `<div class="log-row">
       <div class="log-row-main">
         <span class="log-idx">${i+1}</span>
         <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm &nbsp; <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span></span>
         <button class="wiz-shot-del" onclick="deleteLogEntry('${e.id}')" title="Delete">✕</button>
       </div>
-      <div class="log-row-sub">${ts} · ${photo}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}</div>
+      <div class="log-row-sub">${ts} · ${photo}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}${bd}</div>
       <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
     </div>`;
   }).join('');
@@ -1598,13 +2058,12 @@ function updateLogAux(){
 }
 
 function enterCalibScreen(){
-  // If the measurement flow already has an image, offer it as the starting shot image
   if(!S.calib.imageLoaded&&S.imgEl){
     S.calib.imgEl=S.imgEl;S.calib.pixels=S.pixels;
     S.calib.dispW=S.dispW;S.calib.dispH=S.dispH;S.calib.dispScale=S.dispScale;
     S.calib.resizeFactor=S.resizeFactor;S.calib.imgMeta=S.imgMeta;
     S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
-    S.calib.imageLoaded=true;S.calib.reused=true;   // flag: this is the crack photo, likely not a calibration shot
+    S.calib.imageLoaded=true;S.calib.reused=true;
   }
   renderScaleProfileSelect();
   renderWizShots();updateWizImageState();updateWizSpanHint();
@@ -1619,7 +2078,7 @@ function updateCalibUploadPrompt(){
     if(cap)cap.style.display='block';
     if(cw)cw.className='show';
     const m=$('calib-img-meta');
-    if(m&&S.calib.imgMeta)m.textContent=`${S.calib.imgMeta.origW}×${S.calib.imgMeta.origH} · ${S.calib.imgMeta.mp} MP${S.calib.imgMeta.resized?' · resized':''}`;
+    if(m&&S.calib.imgMeta)m.textContent=`${S.calib.imgMeta.origW}×${S.calib.imgMeta.origH} · ${S.calib.imgMeta.mp} MP${S.calib.imgMeta.depth?' · '+S.calib.imgMeta.depth:''}${S.calib.imgMeta.resized?' · resized':''}`;
   } else {
     if(prompt)prompt.style.display='block';
     if(cap)cap.style.display='block';
@@ -1636,8 +2095,10 @@ function loadCalibImageClick(){$('wiz-image-file').click();}
 function loadCalibImage(ev){
   const file=ev.target.files&&ev.target.files[0];
   if(!file)return;
-  clearErr();
+  clearErr();hdBusy('');
+  const seq=++decodeSeq;
   decodeImage(file,d=>{
+    if(seq!==decodeSeq)return;
     S.calib.imgEl=d.imgEl;S.calib.pixels=d.pixels;
     S.calib.dispW=d.dispW;S.calib.dispH=d.dispH;S.calib.dispScale=d.dispScale;
     S.calib.resizeFactor=d.resizeFactor;S.calib.imgMeta=d.imgMeta;
@@ -1657,7 +2118,7 @@ function resetWizShot(){
 }
 function updateWizSpanHint(){
   const h=$('wiz-span-hint');if(!h)return;
-  if(!S.calib.imageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot\u2019s calibration photo first.</span>';return;}
+  if(!S.calib.imageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot’s calibration photo first.</span>';return;}
   const sp=S.calib.scalePts;
   if(sp.length===0){
     const caution=S.calib.reused?'<span style="color:rgba(251,191,36,0.85);display:block;margin-bottom:5px">⚠ This is your crack photo. Load an actual calibration photo (known object at a known distance) unless this shot really contains one.</span>':'';
@@ -1671,10 +2132,10 @@ function updateWizSpanHint(){
   }
 }
 function addCalibShot(){
-  if(!S.calib.imageLoaded){showErr('Load this shot\u2019s calibration photo first.');return;}
+  if(!S.calib.imageLoaded){showErr('Load this shot’s calibration photo first.');return;}
   const d=parseFloat($('wiz-dist-inp').value);
   const w=parseFloat($('wiz-width-inp').value);
-  if(!(d>0)){showErr('Enter this shot\u2019s distance (m).');return;}
+  if(!(d>0)){showErr('Enter this shot’s distance (m).');return;}
   if(!(w>0)){showErr('Enter the known object width (mm).');return;}
   if(S.calib.scalePts.length<2){showErr('Click the two edges of the object on the image.');return;}
   const sp=S.calib.scalePts;
@@ -1685,7 +2146,7 @@ function addCalibShot(){
   if(S.calib.shots.length>=5){showErr('Maximum 5 shots. Delete one to add another.');return;}
   S.calib.shots.push({d,w,span:+spanOrig.toFixed(2),r});
   clearErr();
-  S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;   // fresh photo for the next shot
+  S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
   $('wiz-dist-inp').value='';$('wiz-width-inp').value='';
   renderWizShots();updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();paintCanvas();
 }
@@ -1722,13 +2183,12 @@ function updateWizFitSummary(){
   } else {
     const e=fit.rmsePct;
     const cls=e<1?'fit-good':e<2?'fit-warn':'fit-bad';
-    const word=e<0.5?'excellent':e<1?'good':e<2?'acceptable':'something isn\u2019t right — check for an outlier or zoom change';
+    const word=e<0.5?'excellent':e<1?'good':e<2?'acceptable':'something isn’t right — check for an outlier or zoom change';
     quality=`Fit quality: <span class="${cls}">±${e.toFixed(2)}% (${word})</span>`;
   }
   box.innerHTML=`Power-law fit from ${n} shot${n>1?'s':''}: <strong>r = ${fit.k.toFixed(3)} · d<sup>${fit.p.toFixed(3)}</sup></strong><br>${quality}`;
 }
 function hasUnsavedCalib(){
-  // Unsaved if there are shots that don't already match the active saved profile
   return S.calib.shots.length>0;
 }
 function calibSaveMsg(text,ok){
@@ -1750,7 +2210,6 @@ function saveCalibProfile(){
   S.activeScaleProfile=p.id;
   persistScaleProfiles();
   calibSaveMsg('',true);
-  // Clear the capture form (profile now saved) but stay on the screen
   S.calib.shots=[];S.calib.scalePts=[];
   ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
   renderWizShots();renderScaleProfileSelect();updateWizSpanHint();
@@ -1770,16 +2229,13 @@ function startMeasuringFromCalib(){
   if(hasUnsavedCalib()){
     if(!confirm('You have unsaved calibration shots. Leave without saving?'))return;
   }
-  // Fully reset the calibration capture state so re-entry starts fresh
   S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
   S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
   calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
   showScreen('workflow');
-  // If a crack image is loaded go to Scale, otherwise Upload
   if(S.imgEl&&S.dispW>0){
     S.iMode='scale';$('img-canvas').style.cursor='crosshair';
     showStep(2);
-    // If the user just saved a profile, pre-select it in the distance tab
     if(S.activeScaleProfile){switchScaleMode('distance');onDistanceInput();}
     else updateScaleHint();
   } else {
@@ -1825,13 +2281,11 @@ function dismissBackupReminder(){
   const b=$('backup-bar');if(b)b.style.display='none';
 }
 function exportScaleProfiles(){
-  // Export all camera (distance-scale) profiles as a dated bundle
   if(!S.scaleProfiles.length){showErr('No camera profiles to export yet.');return;}
   const data=JSON.stringify({tool:'Digital Crack Gauge',type:'scale-profiles',version:1,profiles:S.scaleProfiles},null,2);
   downloadJSON(data,`DCG_camera_profiles_${new Date().toISOString().slice(0,10)}.json`);
 }
 function exportOneScaleProfile(){
-  // Export only the profile selected in the calibration-screen dropdown
   const id=$('scale-profile-select-cal')?$('scale-profile-select-cal').value:'';
   const p=S.scaleProfiles.find(x=>x.id===id);
   if(!p){showErr('Select a camera profile to export.');return;}
@@ -1890,7 +2344,7 @@ function updateResultsDisplay(){
     const{bWidth}=getDisplayValues();
     const bStr=bWidth<0.001?'<0.001':bWidth.toFixed(3);
     if($('r-b'))$('r-b').innerHTML=`${bStr}<span class="r-unit">mm</span>`;
-    recomputeCalib();
+    recomputeCalib();updateLogNowBtn();
     return;
   }
   const{bWidth,aWidth,area,cL,cR}=getDisplayValues();
@@ -1911,11 +2365,12 @@ function updateResultsDisplay(){
   }
   const r=S.results;
   const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+  const src=r.sourceDepth?` · source: ${r.sourceDepth}${r.sourceTone&&r.sourceTone!=='srgb'?' ('+r.sourceTone+')':''}`:'';
   $('stats-row').innerHTML=
     `<div>scale: ${S.pxMm.toFixed(3)} px/mm · area: ${area} lum·mm${isAdj?' (adjusted)':''} · calib 1mm: ${r.calib} lum·mm</div>`+
-    `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}</div>`+
+    `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}${src}</div>`+
     `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?' (auto-bounded)':''}</div>`;
-  updateCropUI();
+  updateCropUI();updateLogNowBtn();
 }
 
 function updateCropUI(){
@@ -2020,14 +2475,12 @@ function updateFormulaActive(){
   const on=formulaModified();
   $('formula-active-badge').style.display=on?'':'none';
   $('btn-formula-reset').style.display=on?'':'none';
-  // Mirror onto the standalone formula screen
   const b2=$('formula-active-badge-scr');if(b2)b2.style.display=on?'':'none';
   const r2=$('btn-formula-reset-scr');if(r2)r2.style.display=on?'':'none';
 }
 
 /* ── Standalone Approach B formula screen (mirrors the Step-4 box) ── */
 function syncFormulaInputs(){
-  // Push current constants into BOTH views' inputs
   if($('bcoeff-inp'))$('bcoeff-inp').value=String(S.bCoeff);
   if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
   if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(S.bCoeff);
@@ -2035,21 +2488,18 @@ function syncFormulaInputs(){
 }
 function enterFormulaScreen(){
   syncFormulaInputs();
-  renderProfileList();          // refreshes both dropdowns
+  renderProfileList();
   updateFormulaActive();
   renderCalibDatasetSelectScr();renderCalibRecords();
   const note=$('profile-note-scr');
   if(note){const p=S.profiles.find(x=>x.id===S.activeProfile);note.textContent=p&&p.desc?p.desc:'';}
 }
 function onFormulaChangeScr(){
-  // Read the screen inputs into state, then run the shared change logic
   const c=parseFloat($('bcoeff-inp-scr').value),e=parseFloat($('bexp-inp-scr').value);
   if(isFinite(c)&&c>0)S.bCoeff=c;
   if(isFinite(e))S.bExp=e;
-  // Mirror into the step-4 inputs so they agree
   if($('bcoeff-inp'))$('bcoeff-inp').value=String(S.bCoeff);
   if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
-  // Deselect a profile if we've diverged from it
   if(S.activeProfile){
     const p=S.profiles.find(x=>x.id===S.activeProfile);
     if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
@@ -2066,12 +2516,10 @@ function onFormulaChangeScr(){
   if(S.results)recompute();
 }
 function onProfileSelectScr(){
-  // Mirror the screen dropdown selection into the shared select and reuse onProfileSelect
   const id=$('profile-select-scr').value;
   if($('profile-select'))$('profile-select').value=id;
-  onProfileSelect();          // updates state + step-4 inputs
-  syncFormulaInputs();        // reflect into screen inputs
-  // Update screen-local UI
+  onProfileSelect();
+  syncFormulaInputs();
   const p=S.profiles.find(x=>x.id===id);
   const note=$('profile-note-scr');if(note)note.textContent=p&&p.desc?p.desc:'';
   const del=$('btn-profile-delete-scr');if(del)del.style.display=id?'':'none';
@@ -2083,7 +2531,7 @@ function deleteProfileScr(){
   if(p&&!confirm(`Delete formula profile “${p.name}”?`))return;
   if($('profile-select'))$('profile-select').value=id;
   S.activeProfile=id;
-  deleteProfile();            // shared delete
+  deleteProfile();
   syncFormulaInputs();
 }
 function saveProfileScr(){
@@ -2115,7 +2563,6 @@ function storageSet(key,val){
 /* ═══════════════════════════════════════════════════════════
    DISTANCE-SCALE PROFILES  (Pro only) — separate from Approach B
    Power law: resolution r (px/mm) = k · d^p   (d in metres)
-   Fitted in log-log space from 3–5 calibration shots.
 ═══════════════════════════════════════════════════════════ */
 function fitScalePowerLaw(points){
   const pts=points.filter(p=>p.d>0&&p.r>0);
@@ -2154,10 +2601,6 @@ function persistScaleProfiles(){
 
 /* ═══════════════════════════════════════════════════════════
    APPROACH B FORMULA-CALIBRATION DATASETS (Pro only)
-   Each record: {pxMm, knownWidth, area, date}.
-   Fit calib_per_mm = area/knownWidth against px/mm as a power law:
-     calib_per_mm = K · (px/mm)^P   →   c = K/256,  α = P
-   Finalise requires ≥8 records AND max/min px/mm ratio ≥16.
 ═══════════════════════════════════════════════════════════ */
 const CALIB_DATASET_KEY='dcg_formula_datasets_v1';
 const MEAS_LOG_KEY='dcg_measurement_log_v1';
@@ -2170,7 +2613,7 @@ function loadMeasLog(){
   if(al!==null&&al!==undefined&&al!=='')S.autoLog=(al==='1'||al===true||al==='true');
 }
 function persistMeasLog(){storageSet(MEAS_LOG_KEY,JSON.stringify(S.measLog));}
-function setAutoLog(on){S.autoLog=!!on;storageSet(AUTO_LOG_KEY,on?'1':'0');}
+function setAutoLog(on){S.autoLog=!!on;storageSet(AUTO_LOG_KEY,on?'1':'0');updateLogNowBtn();}
 
 function addLogEntry(silent){
   if(!S.results){if(!silent)logMsg('Run an analysis first.',false);return;}
@@ -2188,11 +2631,13 @@ function addLogEntry(silent){
     widthB:+(+dv.bWidth).toFixed(4),
     cropLeft:+(+dv.cL).toFixed(3),cropRight:+(+dv.cR).toFixed(3),
     resolutionMP:S.imgMeta?S.imgMeta.mp:'',
+    bitDepth:(S.imgMeta&&S.imgMeta.depth)||'8-bit',
+    toneResponse:isHdSource()?S.pixels.tone:'',
     note:measNoteValue()
   };
   S.measLog.push(entry);
   S.lastLogId=entry.id;
-  persistMeasLog();
+  persistMeasLog();updateLogNowBtn();
   if(S.screen==='log')renderMeasLog();
   updateLogAux();
   if(!silent)logMsg(`Added — ${S.measLog.length} in log.`,true);
@@ -2239,11 +2684,11 @@ function exportMeasLogCSV(){
     ['scaleMode','Scale mode'],['distance','Distance (m)'],['cameraProfile','Camera profile'],
     ['widthA','Width A (mm)'],['widthB','Width B (mm)'],
     ['cropLeft','Window from (mm)'],['cropRight','Window to (mm)'],
-    ['resolutionMP','Image MP'],['note','Note']];
+    ['resolutionMP','Image MP'],['bitDepth','Source depth'],['toneResponse','Tone response'],['note','Note']];
   const header=cols.map(c=>csvEscape(c[1])).join(',');
   const rows=S.measLog.map(e=>cols.map(c=>csvEscape(e[c[0]])).join(','));
   const csv=[header,...rows].join('\r\n');
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const name=`DCG_measurement_log_${new Date().toISOString().slice(0,10)}.csv`;
   if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
@@ -2281,7 +2726,6 @@ function calibResolutionRatio(records){
   return Math.max(...rs)/Math.min(...rs);
 }
 function fitCalibDataset(ds){
-  // Reuse the power-law fitter: map pxMm→d, calib_per_mm→r
   const pts=ds.records.filter(r=>r.pxMm>0&&r.knownWidth>0&&r.area>0)
     .map(r=>({d:r.pxMm,r:r.area/r.knownWidth}));
   const fit=fitScalePowerLaw(pts);
@@ -2434,7 +2878,6 @@ function fitAndFinaliseDataset(){
   if(!fit||!isFinite(fit.c)||!isFinite(fit.a)){calibFitMsg('Fit failed — check the points for bad values.',false);return;}
   ds.c=fit.c;ds.a=fit.a;ds.rmsePct=fit.rmsePct;ds.fittedDate=new Date().toISOString().slice(0,10);
   persistCalibDatasets();
-  // Apply the fitted constants to the live Approach B formula
   S.bCoeff=+fit.c.toFixed(4);S.bExp=+fit.a.toFixed(4);
   S.activeProfile='';
   if($('profile-select'))$('profile-select').value='';
@@ -2586,13 +3029,11 @@ function deleteProfile(){
 }
 
 function exportProfiles(){
-  // Export all Approach B formula profiles as a dated bundle
   if(!S.profiles.length){showErr('No profiles to export yet.');return;}
   const data=JSON.stringify({tool:'Digital Crack Gauge',type:'approachB-profiles',version:1,profiles:S.profiles},null,2);
   downloadJSON(data,`DCG_approachB_profiles_${new Date().toISOString().slice(0,10)}.json`);
 }
 function exportOneProfile(){
-  // Export only the Approach B profile currently selected
   const id=S.activeProfile;
   const p=S.profiles.find(x=>x.id===id);
   if(!p){showErr('Select a formula profile to export.');return;}
@@ -2633,12 +3074,63 @@ function importProfiles(ev){
 
 function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();paintCanvas();}
 
-// Decode an image file into working pixels + geometry, without touching app flow.
-// Calls cb({imgEl, pixels, dispW, dispH, dispScale, resizeFactor, imgMeta}) on success.
+/* Decode an image file into working pixels + geometry.
+   High-bit-depth files (16-bit PNG, TIFF) are decoded here in JS, because the
+   browser's own decoder truncates them to 8 bits per channel. Everything is
+   normalised back onto the 0–255 luminance scale, so calibration constants,
+   coefficients and datasets stay valid. */
 function decodeImage(file, cb){
   if(!file)return;
-  if(!file.type.startsWith('image/')){showErr('Please upload a JPEG, PNG or WebP file.');return;}
-  const fmt=file.type.replace('image/','').toUpperCase().replace('JPG','JPEG');
+  const nm=String(file.name||'').toLowerCase();
+  const knownExt=/\.(jpe?g|png|webp|gif|bmp|avif|heic|heif|tiff?)$/.test(nm);
+  if(!String(file.type||'').startsWith('image/')&&!knownExt){
+    showErr('Please upload a JPEG, PNG, WebP or TIFF file.');return;
+  }
+  hdTryDecode(file).then(res=>{
+    if(res){cb(res);return;}
+    legacyDecodeImage(file,cb);
+  }).catch(err=>{
+    hdBusy('');
+    showErr('Could not read this image — '+((err&&err.message)||'unknown error')+'.');
+  });
+}
+
+async function hdTryDecode(file){
+  const nm=String(file.name||'').toLowerCase();
+  let head;
+  try{head=new Uint8Array(await file.slice(0,64).arrayBuffer());}catch(e){return null;}
+  const kind=hdSniff(head,nm);
+  if(!kind)return null;
+  hdBusy(kind==='png16'?'Reading 16-bit PNG…':'Reading TIFF…');
+  try{
+    const u8=new Uint8Array(await file.arrayBuffer());
+    const r=await hdDecodeBuffer(u8,nm);
+    hdBusy('');
+    return r?hdToDecoded(r):null;
+  }catch(e){
+    if(e&&e.fallback&&kind==='png16'){hdBusy('Opened at 8-bit: '+e.message+'.');return null;}
+    hdBusy('');
+    throw e;
+  }
+}
+
+function hdToDecoded(r){
+  const cv=document.createElement('canvas');
+  cv.width=r.pw;cv.height=r.ph;
+  cv.getContext('2d').putImageData(new ImageData(r.preview,r.pw,r.ph),0,0);
+  const MAX_DISP=640;
+  const dw=Math.min(r.aw,MAX_DISP),dh=Math.round(dw*r.ah/r.aw),ds=dw/r.aw;
+  return{
+    imgEl:cv,
+    pixels:{data:null,lum:r.lum,tone:r.tone,bits:r.bits,width:r.aw,height:r.ah},
+    dispW:dw,dispH:dh,dispScale:ds,resizeFactor:r.aw/r.w,
+    imgMeta:{origW:r.w,origH:r.h,mp:(r.w*r.h/1e6).toFixed(1),format:r.fmt,
+             depth:r.label,resized:r.aw<r.w,hd:true}
+  };
+}
+
+function legacyDecodeImage(file, cb){
+  const fmt=String(file.type||'').replace('image/','').toUpperCase().replace('JPG','JPEG')||'IMAGE';
   const reader=new FileReader();
   reader.onerror=()=>showErr('Could not read this file. Please try again.');
   reader.onload=evt=>{
@@ -2656,7 +3148,7 @@ function decodeImage(file, cb){
       cb({
         imgEl:img,pixels:{data:pd.data,width:pw,height:ph},
         dispW:dw,dispH:dh,dispScale:ds,resizeFactor:rf,
-        imgMeta:{origW,origH,mp:(origW*origH/1e6).toFixed(1),format:fmt,resized:totalPx>MAX_MP}
+        imgMeta:{origW,origH,mp:(origW*origH/1e6).toFixed(1),format:fmt,depth:'8-bit RGBA',resized:totalPx>MAX_MP,hd:false}
       });
     };
     img.src=evt.target.result;
@@ -2666,7 +3158,7 @@ function decodeImage(file, cb){
 
 function loadDemoImage(ev){
   if(ev)ev.preventDefault();
-  if(!DEMO_IMAGE_URL){showErr('The example photo isn\u2019t available yet.');return;}
+  if(!DEMO_IMAGE_URL){showErr('The example photo isn’t available yet.');return;}
   clearErr();
   const link=$('demo-link');const orig=link?link.textContent:'';
   if(link)link.textContent='Loading example…';
@@ -2681,15 +3173,17 @@ function loadDemoImage(ev){
     })
     .catch(()=>{
       if(link)link.textContent=orig;
-      showErr('Couldn\u2019t load the example photo. Please try uploading your own.');
+      showErr('Couldn’t load the example photo. Please try uploading your own.');
     });
 }
 function loadFile(file){
-  clearErr();
-  S.photoName=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
-  S.lastLogId='';
-  if($('meas-note-inp'))$('meas-note-inp').value='';
+  clearErr();hdBusy('');
+  const seq=++decodeSeq;
+  const name=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
   decodeImage(file,d=>{
+    if(seq!==decodeSeq)return;
+    S.photoName=name;S.lastLogId='';
+    if($('meas-note-inp'))$('meas-note-inp').value='';
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
     S.imgMeta=d.imgMeta;
@@ -2699,8 +3193,17 @@ function loadFile(file){
     const canvas=$('img-canvas');
     canvas.style.cursor='crosshair';
     showStep(2);updateMetaBar();updateScaleHint();updateScaleDisplay();
+    applyHints();focusScaleField();
     requestAnimationFrame(paintCanvas);
   });
+}
+
+/* Same clean slate as "Start over", but keeps every setting that is not
+   per-photo and goes straight to the file picker. */
+function nextPhoto(){
+  S.pendingNext=true;              // nothing is reset until a file is actually chosen
+  const inp=$('file-input');
+  if(inp)inp.click();
 }
 
 function confirmScale(){
@@ -2717,12 +3220,10 @@ function confirmScale(){
     if(!prof){showErr('Select a calibrated camera profile.');return;}
     const d=parseFloat(S.scaleDist);
     if(!(d>0)){showErr('Enter the camera-to-crack distance in metres.');return;}
-    const rOrig=resolutionFromProfile(prof,d);   // original-camera px/mm
+    const rOrig=resolutionFromProfile(prof,d);
     if(!rOrig||rOrig<=0){showErr('Could not compute resolution from that profile.');return;}
-    // S.pxMm is stored in ORIGINAL-image px/mm (runAnalysis multiplies by resizeFactor
-    // to reach the working image). The profile already yields original-camera px/mm.
     px=rOrig;
-    S.scalePts=[];                                 // no A/B markers belong on the crack image
+    S.scalePts=[];
   } else {
     px=parseFloat(S.directPx);
     if(!px||px<=0){showErr('Enter a valid pixels/mm value.');return;}
@@ -2730,13 +3231,16 @@ function confirmScale(){
   S.pxMm=px;updateScaleDisplay();updateQualityIndicator();updateBandWidth();
   S.iMode='draw';$('img-canvas').style.cursor='crosshair';
   showStep(3);updateDrawHint();
+  const ae=document.activeElement;if(ae&&ae.blur)ae.blur();   // so the next Enter reaches Analyze, not the hidden field
 }
 
 function runAnalysis(){
   if(!S.measLine||!S.pxMm||!S.pixels||S.busy)return;
   S.busy=true;clearErr();
+  const seq=decodeSeq,stale=()=>seq!==decodeSeq;   // any reset / back / redraw / new photo invalidates this run
   $('btn-analyze').textContent='Analyzing…';$('btn-analyze').disabled=true;
   setTimeout(async ()=>{
+    if(stale())return;
     try{
       const p1={x:S.measLine.p1.x/S.dispScale,y:S.measLine.p1.y/S.dispScale};
       const p2={x:S.measLine.p2.x/S.dispScale,y:S.measLine.p2.y/S.dispScale};
@@ -2748,6 +3252,7 @@ function runAnalysis(){
       if(!allProfiles||!allProfiles.length){showErr('Line too short — draw it longer.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
       const pxMm_pd=S.pxMm*S.resizeFactor;
       const r=await analyzeViaWorker(allProfiles,{doAlign,method:avgMethod,doAdaptive},pxMm_pd);
+      if(stale())return;
       const prof=r.prof,base=r.base,area=r.area,isDep=r.isDep,left=r.left,right=r.right;
       if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
       const{width,calib}=approachB(area,S.pxMm);
@@ -2769,6 +3274,8 @@ function runAnalysis(){
         optsLabel:opts.join(' · '),
         linesTotal:allProfiles.length,
         linesKept:doAdaptive?Math.max(2,Math.round(allProfiles.length*0.7)):allProfiles.length,
+        sourceDepth:(S.imgMeta&&S.imgMeta.depth)||'',
+        sourceTone:isHdSource()?S.pixels.tone:'',
       };
       resetAdjustments();
       S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
@@ -2777,21 +3284,24 @@ function runAnalysis(){
       updateResultsDisplay();
       requestAnimationFrame(drawChart);
       if(S.autoLog)addLogEntry(true);
-    }catch(ex){showErr('Analysis failed: '+ex.message);}
+    }catch(ex){if(!stale())showErr('Analysis failed: '+ex.message);}
+    if(stale())return;
     S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=!S.measLine;
   },100);
 }
 
 function saveImage(){
   if(!S.results||!S.imgEl||!S.pixels)return;
-  const pw=S.pixels.width,ph=S.pixels.height;
-  // Annotation scale is a fixed fraction of image size, so elements occupy the
-  // same visual proportion on every photo regardless of resolution (kept small).
+  // For a high-depth source the on-screen image is a preview canvas, so the
+  // output is that canvas's size and every annotation is scaled to match.
+  const hd=isHdSource();
+  const pw=hd?S.imgEl.width:S.pixels.width,ph=hd?S.imgEl.height:S.pixels.height;
+  const kx=pw/S.pixels.width,ky=ph/S.pixels.height,k=kx;
   const s=Math.hypot(pw,ph)/2600;
   const canvas=document.createElement('canvas');canvas.width=pw;canvas.height=ph;
   const ctx=canvas.getContext('2d');
   ctx.drawImage(S.imgEl,0,0,pw,ph);
-  const toPx=pt=>({x:pt.x/S.dispScale,y:pt.y/S.dispScale});
+  const toPx=pt=>({x:pt.x/S.dispScale*kx,y:pt.y/S.dispScale*ky});
   const fillRR=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);ctx.lineTo(x+w,y+h-r);ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);ctx.lineTo(x+r,y+h);ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);ctx.lineTo(x,y+r);ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);ctx.closePath();ctx.fill();};
   const drawLabel=(text,cx,cy,bg)=>{const fs=15*s;ctx.font=`600 ${fs}px monospace`;const tw=ctx.measureText(text).width,pad=6*s,rad=5*s,lw=tw+pad*2,lh=fs+pad*2;ctx.fillStyle=bg;fillRR(cx-lw/2,cy-lh/2,lw,lh,rad);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,cx,cy);};
   if(S.scalePts&&S.scalePts.length===2){
@@ -2810,7 +3320,7 @@ function saveImage(){
     const p1=toPx(S.measLine.p1),p2=toPx(S.measLine.p2);
     const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
     if(len>1){
-      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2;
+      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2*k;
       ctx.save();ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
       ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
@@ -2828,6 +3338,7 @@ function saveImage(){
   }
   const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
   const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px  ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
+  if(hd&&S.imgMeta&&S.imgMeta.depth)mLines.push(S.imgMeta.depth);
   ctx.font=`${mfs}px monospace`;
   const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
   const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
@@ -2858,12 +3369,12 @@ function saveZoomedImage(){
 
   const expScale=Math.min(1920/rW,Math.max(1,1200/rW));
   const outW=Math.round(rW*expScale),outH=Math.round(rH*expScale);
-  // Same-proportion, resolution-independent annotation scale (matches saveImage)
   const s=Math.hypot(outW,outH)/2600;
   const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
   const ctx=canvas.getContext('2d');
 
-  const natW=S.imgEl.naturalWidth||S.pixels.width,natH=S.imgEl.naturalHeight||S.pixels.height;
+  const natW=S.imgEl.naturalWidth||S.imgEl.width||S.pixels.width;
+  const natH=S.imgEl.naturalHeight||S.imgEl.height||S.pixels.height;
   const pdToNatX=natW/S.pixels.width,pdToNatY=natH/S.pixels.height;
   ctx.drawImage(S.imgEl,px0*pdToNatX,py0*pdToNatY,rW*pdToNatX,rH*pdToNatY,0,0,outW,outH);
 
@@ -2911,6 +3422,7 @@ function saveZoomedImage(){
 
   const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
   const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
+  if(isHdSource()&&S.imgMeta&&S.imgMeta.depth)mLines.push(S.imgMeta.depth);
   ctx.font=`${mfs}px monospace`;
   const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
   const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
@@ -2941,32 +3453,32 @@ function resetAdjustments(){
 
 function resetAll(){
   // Clears the photo, line, results and per-photo entries, but keeps the user's
-  // settings so the next crack can be measured without re-selecting everything:
-  // scale mode + camera profile, profile-averaging (method/scan lines/alignment),
-  // the Approach B formula profile and constants, the self-calibration dataset,
-  // and the Approach A coefficient (which survives via its input value).
+  // settings so the next crack can be measured without re-selecting everything.
+  captureHints();
+  S.pendingNext=false;
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
   S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.realDist='';S.directPx='';S.pxMm=null;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
-  S.scaleDist='';S.photoName='';S.lastLogId='';
-  resetAdjustments();clearErr();
+  S.scaleDist='';S.photoName='';S.lastLogId='';decodeSeq++;
+  const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
+  resetAdjustments();clearErr();hdBusy('');
   if($('dist-inp'))$('dist-inp').value='';
   if($('meas-note-inp'))$('meas-note-inp').value='';
   $('canvas-wrap').className='';
   $('q-badge').innerHTML='';$('band-width').textContent='';
   $('scale-display').textContent='';$('scale-display-3').textContent='';
-  // Re-apply the retained scale mode: clears entered reference points/values for
-  // the new photo while preserving the mode and selected camera profile.
+  const hp=$('hd-panel');if(hp)hp.style.display='none';
   switchScaleMode(S.scaleMode);
   resetCalibPanel();
   showStep(1);
 }
 
 function goBack(){
+  decodeSeq++;S.busy=false;
+  const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   S.measLine=null;S.iMode='scale';
   $('img-canvas').style.cursor='crosshair';
   showStep(2);
-  // Restore the UI for whichever scale mode is active (not just two-point)
   if(S.scaleMode==='distance'){
     const distPanel=$('scale-distance-panel'),hintCard=$('scale-hint');
     if(distPanel)distPanel.style.display='';
@@ -2981,6 +3493,8 @@ function goBack(){
 }
 
 function redrawLine(){
+  decodeSeq++;S.busy=false;
+  const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   S.measLine=null;S.iMode='draw';S.results=null;S.live=null;
   resetCalibPanel();
   $('img-canvas').style.cursor='crosshair';
@@ -3002,7 +3516,6 @@ function getRawImgPos(e){
   return{x:(e.clientX-r.left)*(S.dispW/r.width),y:(e.clientY-r.top)*(S.dispH/r.height)};
 }
 
-// Calibration screen canvas — click to place object-edge points into S.calib.scalePts
 const calibCanvas=$('calib-canvas');
 let calibPanning=false,calibPanAnchor=null,calibPinch=null,calibSingle=null;
 function calibRawPos(clientX,clientY){
@@ -3010,7 +3523,6 @@ function calibRawPos(clientX,clientY){
   return{x:(clientX-r.left)*(S.calib.dispW/r.width),y:(clientY-r.top)*(S.calib.dispH/r.height)};
 }
 if(calibCanvas){
-  // Right-drag pan; left-click places edge points
   calibCanvas.addEventListener('contextmenu',e=>e.preventDefault());
   calibCanvas.addEventListener('mousedown',e=>{
     if(!S.calib.imageLoaded)return;
@@ -3043,7 +3555,6 @@ if(calibCanvas){
     S.calib.zoom=newZoom;
     updateCalibZoom();paintCanvas();
   },{passive:false});
-  // Touch: two-finger pinch-zoom+pan, single-finger pan, tap places point
   calibCanvas.addEventListener('touchstart',e=>{
     if(!S.calib.imageLoaded)return;
     e.preventDefault();
@@ -3105,6 +3616,7 @@ imgCanvas.addEventListener('mousedown',e=>{
         const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
       }
       updateScaleHint();paintCanvas();
+      if(S.scalePts.length===2)focusScaleField();
     }
   } else if(S.iMode==='draw'){
     S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;
@@ -3228,6 +3740,7 @@ imgCanvas.addEventListener('touchend',e=>{
         const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
       }
       updateScaleHint();paintCanvas();
+      if(S.scalePts.length===2)focusScaleField();
     }
   }
   pinchStart=null;singleTouchPan=null;touchDraw=false;
@@ -3289,7 +3802,7 @@ chartCanvas.addEventListener('touchstart',e=>{
   e.preventDefault();
   const r=chartCanvas.getBoundingClientRect();
   const x=e.touches[0].clientX-r.left;
-  S.chartDrag=hitHandle(x,24); // 24px hit area for fingers
+  S.chartDrag=hitHandle(x,24);
 },{passive:false});
 
 chartCanvas.addEventListener('touchmove',e=>{
@@ -3313,10 +3826,14 @@ chartCanvas.addEventListener('touchmove',e=>{
 
 chartCanvas.addEventListener('touchend',()=>{S.chartDrag=null;});
 
-$('file-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
+$('file-input').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];
+  if(f){if(S.pendingNext){resetAll();applyHints();}loadFile(f);}
+  S.pendingNext=false;e.target.value='';
+});
+$('file-input').addEventListener('cancel',()=>{S.pendingNext=false;});
 $('camera-input').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';});
 
-// Paste an image to upload — only on the Step-1 upload screen, and not while typing in a field.
 window.addEventListener('paste',e=>{
   if(S.screen!=='workflow'||S.step!==1)return;
   const t=e.target;
@@ -3350,6 +3867,35 @@ $('crop-r-inp').addEventListener('keydown',e=>{if(e.key==='Enter'){commitCropRig
 
 $('chk-adaptive').addEventListener('change',e=>{$('adaptive-warn').style.display=e.target.checked&&!$('chk-align').checked?'block':'none';});
 $('chk-align').addEventListener('change',()=>{$('adaptive-warn').style.display=$('chk-adaptive').checked&&!$('chk-align').checked?'block':'none';});
+
+const distInp=$('dist-inp');
+if(distInp)distInp.addEventListener('keydown',scaleFieldKey);
+const profSel=$('scale-profile-select');
+if(profSel)profSel.addEventListener('keydown',scaleFieldKey);
+
+// Enter advances the workflow; Escape cancels a line draw.
+// Buttons and text fields keep their own Enter; sliders / checkboxes / radios let it through.
+document.addEventListener('keydown',e=>{
+  if(!INTERFACE_MODE||S.screen!=='workflow')return;
+  const t=e.target,tag=t&&t.tagName,type=(t&&t.type)||'';
+  const control=!!(t&&(tag==='BUTTON'||tag==='A'||(tag==='INPUT'&&/^(button|submit|file|reset)$/.test(type))));
+  const textField=!!(t&&((tag==='INPUT'&&!/^(range|checkbox|radio)$/.test(type)&&!control)||tag==='TEXTAREA'||tag==='SELECT'||t.isContentEditable));
+  if(e.key==='Escape'){
+    if(S.step===3&&(S.drawStart||S.measLine)){cancelLine();e.preventDefault();}
+    return;
+  }
+  if(e.key!=='Enter')return;
+  if(control)return;
+  if(textField){
+    if(t.id==='meas-note-inp'&&S.step===4){
+      e.preventDefault();
+      if(S.results&&!S.lastLogId)addLogEntry(true);
+      nextPhoto();
+    }
+    return;
+  }
+  if(S.step===3&&S.measLine&&!S.busy){e.preventDefault();runAnalysis();}
+});
 
 window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);});
 
