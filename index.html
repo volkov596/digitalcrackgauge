@@ -49,17 +49,30 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 #drop-zone p.big{color:#e8f8f9;font-weight:500;font-size:15px;margin-bottom:6px}
 #drop-zone p.small{color:rgba(232,248,249,0.45);font-size:13px;margin-bottom:20px}
 
-#canvas-wrap{display:none;margin-bottom:0;position:relative}
-#res-warn-overlay{position:absolute;left:0;right:0;bottom:0;padding:8px 14px;font-size:12px;line-height:1.45;text-align:center;border-bottom-left-radius:8px;border-bottom-right-radius:8px;pointer-events:none;z-index:5}
+#canvas-wrap{display:none;margin-bottom:0}
+#img-holder{position:relative;margin-bottom:6px}
+#res-warn-overlay{position:absolute;left:1px;right:1px;bottom:1px;padding:8px 14px;font-size:12px;line-height:1.45;text-align:center;border-bottom-left-radius:9px;border-bottom-right-radius:9px;pointer-events:none;z-index:5}
 #res-warn-overlay.warn{background:rgba(217,119,6,0.82);color:#fff}
 #res-warn-overlay.danger{background:rgba(220,38,38,0.85);color:#fff}
 #canvas-wrap.show{display:block}
-#img-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none}
+#img-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);touch-action:none;user-select:none}
 #zoom-bar{display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:7px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.15);font-size:11px;color:rgba(232,248,249,0.4);flex-wrap:wrap;margin-bottom:12px}
 #zoom-label{font-family:monospace;color:#e8f8f9}
 #img-meta{margin-left:auto;color:rgba(12,187,204,0.2)}#img-meta.show{color:rgba(232,248,249,0.45)}
 #img-meta span{margin-left:6px}
 #img-meta span.hd-flag{color:#34d399;font-weight:600}
+#line-list{margin:-4px 0 12px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.35);font-size:12px;display:none}
+#line-list table{width:100%;border-collapse:collapse}
+#line-list th{font-size:10px;font-weight:600;color:rgba(232,248,249,0.45);text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:3px 6px}
+#line-list td{padding:4px 6px;color:#e8f8f9;border-top:1px solid rgba(255,255,255,0.06)}
+#line-list .num{font-family:monospace;text-align:right}
+#line-list tr.tot td{color:#c4b5fd;font-size:11px}
+#line-list .ln{display:inline-block;min-width:22px;padding:1px 6px;border-radius:9px;background:rgba(124,58,237,0.4);color:#ede9fe;font-size:11px;text-align:center}
+#line-list .nm{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
+.modal-box{max-width:380px;width:100%;background:#0a3540;border:1px solid rgba(12,187,204,0.35);border-radius:10px;padding:16px;font-size:13px;color:#e8f8f9;line-height:1.5}
+.modal-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#loupe{position:fixed;width:150px;height:150px;border-radius:50%;border:2px solid #0cbbcc;box-shadow:0 4px 18px rgba(0,0,0,0.55);pointer-events:none;z-index:9999;display:none;background:#081a1e}
 
 .btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s,background .15s}
 .btn-primary{background:#0cbbcc;color:#081a1e}
@@ -69,11 +82,13 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 .btn-small{padding:4px 12px;font-size:12px;border-radius:6px}
 .btn:disabled{background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.25);cursor:not-allowed}
 .btn-ghost{background:none;border:1px solid rgba(12,187,204,0.3);color:rgba(232,248,249,0.65);cursor:pointer;padding:6px 12px;border-radius:6px;font-size:12px}
+.btn-ghost:disabled{opacity:.35;cursor:not-allowed}
+.use-last{white-space:nowrap}
+.pt-tip{font-size:11px;color:rgba(232,248,249,0.4);margin-top:6px}
 
 .tab-row{display:flex;gap:8px;margin-bottom:12px}
 .tab{padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:400;background:transparent;color:rgba(232,248,249,0.55);border:1px solid rgba(255,255,255,0.18);transition:all .15s}
 .tab.active{background:#0cbbcc;color:#081a1e;border-color:#0cbbcc;font-weight:500}
-.tab.amber{background:#d97706;color:#fff;border-color:#d97706}
 
 input[type=text],input[type=number]{padding:5px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px}
 input[type=text].mono,input[type=number].mono{font-family:monospace}
@@ -123,7 +138,8 @@ input[type=range]{accent-color:#0cbbcc}
 #result-nav-row{margin-bottom:16px}
 #meas-note-row{margin-bottom:12px}
 #meas-note-row label{display:block;font-size:12px;color:rgba(232,248,249,0.7);margin-bottom:5px}
-#meas-note-row input{width:100%;box-sizing:border-box;padding:8px 12px;font-size:13px;font-family:inherit;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.25);border-radius:7px;color:#e8f8f9}
+.note-wrap{display:flex;gap:8px;align-items:center}
+#meas-note-row input{flex:1;min-width:0;box-sizing:border-box;padding:8px 12px;font-size:13px;font-family:inherit;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.25);border-radius:7px;color:#e8f8f9}
 #meas-note-row input::placeholder{color:rgba(232,248,249,0.35)}
 
 @media(max-width:520px){
@@ -146,6 +162,7 @@ input[type=range]{accent-color:#0cbbcc}
   #calib-panel .input-row{flex-wrap:wrap;gap:6px}
   #acc-note{font-size:11px}
   #drop-zone .btn{width:100%;box-sizing:border-box}
+  #line-list .nm{max-width:90px}
 }
 
 #crop-panel{padding:12px 16px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
@@ -173,9 +190,9 @@ input[type=range]{accent-color:#0cbbcc}
 
 .profile-divider{border-top:1px solid rgba(12,187,204,0.15);margin:14px 0 12px}
 .profile-label{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.profile-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-#profile-select{flex:1;min-width:140px;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
-#profile-select option{background:#0a3540;color:#e8f8f9}
+.profile-row{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-bottom:8px}
+.profile-row select{width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
+.profile-row select option{background:#0a3540;color:#e8f8f9}
 .profile-btns{display:flex;gap:6px;flex-wrap:wrap}
 .profile-note{font-size:11px;color:rgba(232,248,249,0.4);font-style:italic;margin-top:2px;min-height:14px}
 #profile-save-form{display:none;margin-top:8px;padding:10px;border-radius:7px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2)}
@@ -186,6 +203,8 @@ input[type=range]{accent-color:#0cbbcc}
 
 /* ── source precision panel ── */
 #hd-panel{display:none}
+.hd-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.hd-more{background:none;border:none;color:#7fdbe4;cursor:pointer;font-size:12px;padding:0;font-family:inherit;margin-left:auto;white-space:nowrap}
 #hd-tone{padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
 #hd-tone option{background:#0a3540;color:#e8f8f9}
 #hd-label{color:#34d399}
@@ -202,14 +221,15 @@ input[type=range]{accent-color:#0cbbcc}
 #dist-zoom-caution{font-size:11px;color:rgba(251,191,36,0.8);font-style:italic;margin-top:6px;line-height:1.45}
 
 /* ── Calibration wizard ── */
-#calib-wizard{display:none;margin-top:12px;padding:14px 16px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.3)}
-#calib-wizard.show{display:block}
-.wiz-title{font-size:13px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .wiz-tip{font-size:11px;color:rgba(232,248,249,0.55);line-height:1.5;margin-bottom:6px;padding-left:18px;position:relative}
 .wiz-tip::before{content:'💡';position:absolute;left:0;top:0}
 .wiz-tips-box{background:rgba(12,187,204,0.07);border:1px solid rgba(12,187,204,0.15);border-radius:7px;padding:10px 12px;margin-bottom:14px}
+.tips-toggle{background:none;border:none;cursor:pointer;padding:0;font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;font-family:inherit}
+#wiz-tips-body{margin-top:8px}
 .wiz-shot-form{border:1px solid rgba(12,187,204,0.2);border-radius:8px;padding:12px;margin-bottom:12px;background:rgba(255,255,255,0.03)}
-.wiz-shot-form .dist-input-row label{min-width:140px}
+.wiz-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.wiz-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:rgba(232,248,249,0.7)}
+.wiz-field input{width:100%}
 .wiz-step-num{display:inline-block;background:#0cbbcc;color:#081a1e;font-weight:600;font-size:11px;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;margin-right:6px}
 #wiz-span-hint{font-size:12px;color:rgba(232,248,249,0.6);margin:8px 0;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,0.25);min-height:16px}
 #wiz-span-hint strong{color:#0cbbcc}
@@ -245,7 +265,7 @@ body.simple #aux-bar .pro-only{display:none}
 #calib-canvas-wrap{margin-bottom:14px}
 #calib-canvas-wrap:not(.show){display:none}
 #calib-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none;cursor:crosshair}
-#calib-zoom-bar{display:flex;align-items:center;gap:10px;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,0.04);font-size:11px}
+#calib-zoom-bar{display:flex;align-items:center;gap:8px 10px;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,0.04);font-size:11px;flex-wrap:wrap}
 .calib-screen-nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(12,187,204,0.15)}
 .log-controls-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .log-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#e8f8f9;cursor:pointer}
@@ -320,7 +340,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 </div>
 <div id="app">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.3.3-beta</div>
+  <div id="version-tag">v1.4.0-beta</div>
 
   <div id="backup-bar" style="display:none">
     <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
@@ -343,9 +363,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="workflow-container">
   <div id="panel-1" class="panel show">
     <div id="info-grid">
-      <div><div class="info-head">Formats</div>JPEG · PNG · WebP<br>TIFF · 16-bit PNG</div>
-      <div><div class="info-head">Resolution</div>Up to 50 MP<br>24 MP for high bit depth<br>Larger images auto-resized</div>
-      <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting · 16-bit TIFF or PNG where available</div>
+      <div><div class="info-head">Formats</div>JPEG · PNG · WebP · TIFF</div>
+      <div><div class="info-head">Size</div>Up to 50 MP<br>TIFF &amp; 16-bit PNG up to 24 MP<br>Larger images reduced automatically</div>
+      <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting · 16-bit where available</div>
     </div>
     <div id="drop-zone">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -367,21 +387,25 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button id="btn-touch-mode" class="btn btn-nav" onclick="toggleTouchMode()">✋ Navigate</button>
       <span id="touch-mode-hint" style="font-size:12px;color:#94a3b8">Single finger: pan · Two fingers: pinch zoom</span>
     </div>
-    <canvas id="img-canvas"></canvas>
-    <div id="res-warn-overlay" style="display:none"></div>
+    <div id="img-holder">
+      <canvas id="img-canvas"></canvas>
+      <div id="res-warn-overlay" style="display:none"></div>
+    </div>
     <div id="zoom-bar">
       <span id="zoom-label">1.0×</span>
       <button class="btn-ghost" id="btn-reset-view">Reset view</button>
+      <button class="btn-ghost" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none">▭ Bands</button>
       <span id="nav-hint" style="color:#cbd5e1">Scroll to zoom · Right-drag to pan</span>
       <span id="img-meta"></span>
     </div>
+    <div id="line-list"></div>
   </div>
 
 
   <div id="panel-2" class="panel">
     <div class="card blue-bg" id="hd-panel">
-      <div><strong id="hd-label"></strong> — read at full precision, without JPEG compression.</div>
-      <div class="input-row" style="margin-top:9px">
+      <div class="hd-head"><span><strong id="hd-label"></strong> — read at full precision, without JPEG compression.</span><button class="hd-more" id="btn-hd-more" onclick="toggleHdMore()">▸ Tone response</button></div>
+      <div class="input-row" id="hd-tone-row" style="margin-top:9px;display:none">
         <label for="hd-tone">Tone response:</label>
         <select id="hd-tone" onchange="onHdToneChange()">
           <option value="srgb">sRGB / standard (default)</option>
@@ -404,6 +428,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="dist-input-row">
         <label>Distance to crack (m):</label>
         <input type="number" id="dist-inp" step="0.001" min="0" placeholder="e.g. 4.000" oninput="onDistanceInput()">
+        <button class="btn-ghost btn-small use-last" id="ul-dist" onclick="useLast('dist')" style="display:none">Use last</button>
       </div>
       <div class="dist-input-row">
         <label>Camera profile:</label>
@@ -415,17 +440,18 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div id="dist-zoom-caution">A profile is only valid at the same zoom/focal length it was calibrated at. Use the lens/zoom the profile name refers to.</div>
       <div class="profile-btns" style="margin-top:12px">
         <button class="btn-ghost btn-small" onclick="calibrateFromStep2()">+ Calibrate new camera…</button>
-        <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" style="display:none">Delete profile</button>
+        <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" disabled>Delete profile</button>
         <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
         <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
         <input type="file" id="scale-import-file" accept=".json,application/json" style="display:none" onchange="importScaleProfiles(event)">
       </div>
+      <div class="profile-note" id="scale-prof-note-step2"></div>
     </div>
 
     <div class="nav-row">
-      <button class="btn btn-primary" id="btn-confirm-scale" onclick="confirmScale()">Confirm scale →</button>
+      <button class="btn btn-primary" id="btn-confirm-scale" onclick="confirmScale()" disabled>Confirm scale →</button>
       <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
-      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+      <button class="btn btn-nav" onclick="startOver()">Start over</button>
       <span id="scale-display" style="font-family:monospace;font-size:13px;color:#94a3b8"></span>
     </div>
   </div>
@@ -470,6 +496,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
       <button class="btn btn-nav" onclick="goBack()">← Back</button>
       <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
+      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
       <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
     </div>
   </div>
@@ -491,17 +519,21 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
 
     <div id="meas-note-row">
-      <label for="meas-note-inp">Measurement name <span style="font-weight:400;color:rgba(232,248,249,0.4)">· Enter saves it and loads the next photo</span></label>
-      <input type="text" id="meas-note-inp" maxlength="80" placeholder="e.g. north pier, mid-span — saved to the log and file names" oninput="onMeasNoteInput()">
+      <label for="meas-note-inp">Measurement name <span id="meas-note-hint" style="font-weight:400;color:rgba(232,248,249,0.4)"></span></label>
+      <div class="note-wrap">
+        <input type="text" id="meas-note-inp" maxlength="80" placeholder="e.g. north pier, mid-span — saved to the log and file names" oninput="onMeasNoteInput()">
+        <button class="btn-ghost btn-small use-last" id="ul-note" onclick="useLast('note')" style="display:none">Use last</button>
+      </div>
     </div>
 
     <div class="nav-row" id="result-nav-row">
-      <button class="btn btn-primary" id="btn-save" onclick="saveImage()">Save image ↓</button>
+      <button class="btn btn-success" id="btn-confirm-line" onclick="confirmLine('next')">✓ Confirm &amp; draw next line</button>
+      <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')">✓ Confirm &amp; next photo</button>
+      <button class="btn btn-nav" id="btn-save" onclick="saveImage()">Save image ↓</button>
       <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
       <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
-      <button class="btn btn-nav" onclick="resetAll()">Start over</button>
+      <button class="btn btn-nav" onclick="startOver()">Start over</button>
       <button class="btn btn-nav" id="btn-log-now" style="display:none" onclick="logNow()">＋ Log this measurement</button>
-      <button class="btn btn-success" id="btn-next-photo" onclick="nextPhoto()">Next photo →</button>
     </div>
 
     <div id="stats-row" class="pro-only"></div>
@@ -614,7 +646,11 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           </select>
           <div class="profile-btns">
             <button class="btn-ghost btn-small" id="btn-profile-save" onclick="showProfileSaveForm()">Save current…</button>
-            <button class="btn-ghost btn-small" id="btn-profile-delete" onclick="deleteProfile()" style="display:none">Delete</button>
+            <button class="btn-ghost btn-small" id="btn-profile-delete" onclick="deleteProfile()" disabled>Delete</button>
+            <button class="btn-ghost btn-small" id="btn-prof-export-one" onclick="exportOneProfile()" disabled>↓ Export this one</button>
+            <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
+            <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
+            <input type="file" id="profile-import-file" accept=".json,application/json" style="display:none" onchange="importProfiles(event)">
           </div>
         </div>
         <div class="profile-note" id="profile-note"></div>
@@ -628,12 +664,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
             <button class="btn btn-primary btn-small" onclick="saveProfile()">Save profile</button>
             <button class="btn-ghost btn-small" onclick="hideProfileSaveForm()">Cancel</button>
           </div>
-        </div>
-        <div class="profile-btns" style="margin-top:10px">
-          <button class="btn-ghost btn-small" id="btn-prof-export-one" onclick="exportOneProfile()" style="display:none">↓ Export this one</button>
-          <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
-          <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
-          <input type="file" id="profile-import-file" accept=".json,application/json" style="display:none" onchange="importProfiles(event)">
         </div>
       </div>
     </div>
@@ -681,8 +711,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <option value="">— No profile selected —</option>
         </select>
         <div class="profile-btns">
-          <button class="btn-ghost btn-small" id="btn-scale-prof-delete-cal" onclick="deleteScaleProfileCal()" style="display:none">Delete</button>
-          <button class="btn-ghost btn-small" id="btn-scale-prof-export-one" onclick="exportOneScaleProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" id="btn-scale-prof-delete-cal" onclick="deleteScaleProfileCal()" disabled>Delete</button>
+          <button class="btn-ghost btn-small" id="btn-scale-prof-export-one" onclick="exportOneScaleProfile()" disabled>↓ Export this one</button>
           <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
           <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
         </div>
@@ -690,26 +720,32 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="profile-note" id="scale-prof-note-cal"></div>
     </div>
 
-    <div class="wiz-tips-box">
-      <div class="wiz-tip">Calibrate across the distance range you expect to actually use the camera at.</div>
-      <div class="wiz-tip">Photograph from far away first, then halve the distance each shot — e.g. 8 m, then 4 m, then 2 m. This spreads the points evenly for a robust fit.</div>
-      <div class="wiz-tip">Use the same zoom/focal length for every shot and for real measurements later.</div>
-      <div class="wiz-tip">Measure each distance with a laser meter for best accuracy — the smaller the distance error, the more accurate every measurement you make with this profile.</div>
+    <div class="wiz-tips-box" id="wiz-tips-box">
+      <button class="tips-toggle" id="btn-tips-toggle" onclick="toggleTips()"><span id="tips-toggle-txt">▾ Tips</span></button>
+      <div id="wiz-tips-body">
+        <div class="wiz-tip">Calibrate across the distance range you expect to actually use the camera at.</div>
+        <div class="wiz-tip">Photograph from far away first, then halve the distance each shot — e.g. 8 m, then 4 m, then 2 m. This spreads the points evenly for a robust fit.</div>
+        <div class="wiz-tip">Use the same zoom/focal length for every shot and for real measurements later.</div>
+        <div class="wiz-tip">Measure each distance with a laser meter for best accuracy — the smaller the distance error, the more accurate every measurement you make with this profile.</div>
+      </div>
     </div>
 
     <div id="calib-upload-prompt">
       <div id="calib-drop-zone">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0cbbcc" stroke-width="1.5" style="margin:0 auto 10px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p class="big">Load your first calibration photo</p>
+        <p class="big">Load calibration photo</p>
         <p class="small">a photo of a known-width object at a known distance</p>
         <button class="btn btn-primary" onclick="loadCalibImageClick()">Browse files…</button>
       </div>
     </div>
+    <input type="file" id="wiz-image-file" accept="image/*,image/tiff,.tif,.tiff" style="display:none" onchange="loadCalibImage(event)">
 
     <div id="calib-canvas-wrap">
       <canvas id="calib-canvas"></canvas>
       <div id="calib-zoom-bar">
         <button class="btn-ghost btn-small" onclick="resetCalibView()">Reset view</button>
+        <button class="btn-ghost btn-small" id="btn-wiz-reset-pts" onclick="resetWizShot()">Reset points</button>
+        <button class="btn-ghost btn-small" id="btn-wiz-change-img" onclick="loadCalibImageClick()">↻ Change photo</button>
         <span id="calib-zoom-label" style="font-family:monospace;color:#e8f8f9">1.0×</span>
         <span id="calib-nav-hint" style="color:rgba(232,248,249,0.4)">Scroll to zoom · right-drag to pan</span>
         <span id="calib-img-meta" style="color:rgba(232,248,249,0.45);font-size:11px;margin-left:auto"></span>
@@ -719,23 +755,14 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div id="calib-capture">
       <div class="wiz-shot-form">
         <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin-bottom:10px"><span class="wiz-step-num">1</span>Enter this shot's distance and the known object's width</div>
-        <div class="dist-input-row">
-          <label>Distance (m):</label>
-          <input type="number" id="wiz-dist-inp" step="0.001" min="0" placeholder="e.g. 8.000">
+        <div class="wiz-pair">
+          <label class="wiz-field"><span>Distance (m)</span><input type="number" id="wiz-dist-inp" step="0.001" min="0" placeholder="e.g. 8.000"></label>
+          <label class="wiz-field"><span>Object width (mm)</span><input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000"></label>
         </div>
-        <div class="dist-input-row">
-          <label>Known object width (mm):</label>
-          <input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000">
-        </div>
-        <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Load this shot's photo, then click the two edges of the object</div>
-        <div class="wiz-btns" style="margin-bottom:8px">
-          <button class="btn-ghost btn-small" id="btn-wiz-load-img" onclick="loadCalibImageClick()">📷 Load calibration photo</button>
-          <input type="file" id="wiz-image-file" accept="image/*,image/tiff,.tif,.tiff" style="display:none" onchange="loadCalibImage(event)">
-        </div>
+        <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Click the two edges of the object on the photo</div>
         <div id="wiz-span-hint">Load this shot's calibration photo first.</div>
         <div class="wiz-btns">
           <button class="btn btn-primary btn-small" id="btn-wiz-add" onclick="addCalibShot()">Add this shot</button>
-          <button class="btn-ghost btn-small" onclick="resetWizShot()">Clear points</button>
         </div>
       </div>
 
@@ -788,8 +815,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <option value="">— Default (0.357, 0.16) —</option>
         </select>
         <div class="profile-btns">
-          <button class="btn-ghost btn-small" id="btn-profile-delete-scr" onclick="deleteProfileScr()" style="display:none">Delete</button>
-          <button class="btn-ghost btn-small" id="btn-prof-export-one-scr" onclick="exportOneProfile()" style="display:none">↓ Export this one</button>
+          <button class="btn-ghost btn-small" id="btn-profile-delete-scr" onclick="deleteProfileScr()" disabled>Delete</button>
+          <button class="btn-ghost btn-small" id="btn-prof-export-one-scr" onclick="exportOneProfile()" disabled>↓ Export this one</button>
           <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
           <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
         </div>
@@ -813,8 +840,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <option value="">— Select a dataset —</option>
         </select>
         <div class="profile-btns">
-          <button class="btn-ghost btn-small" id="btn-calib-ds-delete" onclick="deleteCalibDatasetScr()" style="display:none">Delete dataset</button>
-          <button class="btn-ghost btn-small" id="btn-calib-ds-export" onclick="exportOneCalibDataset()" style="display:none">↓ Export</button>
+          <button class="btn-ghost btn-small" id="btn-calib-ds-delete" onclick="deleteCalibDatasetScr()" disabled>Delete dataset</button>
+          <button class="btn-ghost btn-small" id="btn-calib-ds-export" onclick="exportOneCalibDataset()" disabled>↓ Export</button>
           <button class="btn-ghost btn-small" onclick="exportCalibDatasets()">↓ Export all</button>
           <button class="btn-ghost btn-small" onclick="importCalibDatasetsClick()">↑ Import</button>
           <input type="file" id="calib-ds-import-file" accept=".json,application/json" style="display:none" onchange="importCalibDatasets(event)">
@@ -872,6 +899,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="footer-note">Patent pending. All rights reserved — please get in touch for licensing.</div>
   </footer>
 </div>
+<div class="modal-bg" id="modal"><div class="modal-box"><div id="modal-msg"></div><div class="modal-btns"><button class="btn btn-success" id="modal-ok">Confirm line</button><button class="btn btn-nav" id="modal-discard">Discard</button><button class="btn btn-nav" id="modal-cancel">Cancel</button></div></div></div>
+<canvas id="loupe"></canvas>
 
 <script>
 
@@ -1276,6 +1305,8 @@ const S={
   imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
   zoom:1,panX:0,panY:0,isPanning:false,panAnchor:null,
   iMode:null,scaleMode:'twopoint',scalePts:[],realDist:'',directPx:'',pxMm:null,
+  ptDrag:null,
+  lines:[],lineView:'band',
   drawStart:null,drawCur:null,measLine:null,nLines:40,
   doAlign:false,avgMethod:'mean',doAdaptive:false,
   results:null,busy:false,
@@ -1287,11 +1318,12 @@ const S={
   calibDatasets:[],activeCalibDataset:'',
   measLog:[],autoLog:true,
   photoName:'',
-  hints:{directPx:'',scaleDist:'',realDist:'',note:'',pxMm:null},   // previous photo's values, shown as placeholders only
+  hints:{directPx:'',scaleDist:'',realDist:'',note:'',pxMm:null},   // previous photo's values for the session
   pendingNext:false,                                                  // Next photo: reset only once a file is actually chosen
   lastLogId:'',
   staleClient:false,
   scaleDist:'',
+  hdMore:null,
   calibShots:[],
   calibActive:false,
   screen:'workflow',
@@ -1306,12 +1338,13 @@ const S={
 };
 
 const $=id=>document.getElementById(id);
+const setEnabled=(id,on)=>{const b=$(id);if(b)b.disabled=!on;};
 let decodeSeq=0;
 
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 1303;   // bump when deploying; Worker's MIN_CLIENT_VERSION gates staleness
+const CLIENT_VERSION = 10400;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1428,6 +1461,7 @@ function recomputeCalib(){
   }
   const aw=calibAWidth(area);
   updateAResult(aw!==null?parseFloat(aw):null);
+  refreshLastLog();
 }
 
 function calibAWidth(area){
@@ -1462,6 +1496,14 @@ function resetCalibPanel(){
   setCalibMode('measure');
 }
 
+function drawRefPts(ctx,sp,iZ){
+  if(!sp.length)return;
+  ctx.save();
+  if(sp.length===2){ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*iZ;ctx.setLineDash([4*iZ,3*iZ]);ctx.beginPath();ctx.moveTo(sp[0].x,sp[0].y);ctx.lineTo(sp[1].x,sp[1].y);ctx.stroke();ctx.setLineDash([]);}
+  sp.forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,8*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*iZ}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
+  ctx.restore();
+}
+
 function paintCanvas(){
   const onCalib=S.screen==='calibrate';
   const src=onCalib?S.calib:S;
@@ -1474,13 +1516,7 @@ function paintCanvas(){
   ctx.drawImage(src.imgEl,0,0,src.dispW,src.dispH);
   const iZ=1/src.zoom;
   if(onCalib){
-    const sp=src.scalePts;
-    if(sp.length>0){
-      ctx.save();
-      if(sp.length===2){ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*iZ;ctx.setLineDash([4*iZ,3*iZ]);ctx.beginPath();ctx.moveTo(sp[0].x,sp[0].y);ctx.lineTo(sp[1].x,sp[1].y);ctx.stroke();ctx.setLineDash([]);}
-      sp.forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,8*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*iZ}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
-      ctx.restore();
-    }
+    drawRefPts(ctx,src.scalePts,iZ);
     ctx.restore();
     return;
   }
@@ -1500,15 +1536,11 @@ function paintCanvas(){
     ctx.restore();
   };
 
+  {const rc=canvas.getBoundingClientRect();drawConfirmedOnScreen(ctx,(rc.width>0?src.dispW/rc.width:1)/src.zoom);}
   if(S.measLine)drawBand(S.measLine.p1,S.measLine.p2);
   else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
 
-  if(S.scalePts.length>0){
-    ctx.save();
-    if(S.scalePts.length===2){ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*iZ;ctx.setLineDash([4*iZ,3*iZ]);ctx.beginPath();ctx.moveTo(S.scalePts[0].x,S.scalePts[0].y);ctx.lineTo(S.scalePts[1].x,S.scalePts[1].y);ctx.stroke();ctx.setLineDash([]);}
-    S.scalePts.forEach((pt,i)=>{ctx.fillStyle='#d97706';ctx.strokeStyle='#fff';ctx.lineWidth=2*iZ;ctx.beginPath();ctx.arc(pt.x,pt.y,8*iZ,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${11*iZ}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i===0?'A':'B',pt.x,pt.y);});
-    ctx.restore();
-  }
+  drawRefPts(ctx,S.scalePts,iZ);
   ctx.restore();
 
   if(S.photoName){
@@ -1523,6 +1555,49 @@ function paintCanvas(){
     ctx.restore();
   }
 }
+
+/* ── reference point hit test and touch magnifier ── */
+function hitPt(pts,pos,src,cv,radCss){
+  const r=cv.getBoundingClientRect();
+  if(!r.width||!src.dispW)return -1;
+  const k=r.width/src.dispW*src.zoom;
+  let best=-1,bd=radCss;
+  pts.forEach((p,i)=>{const d=Math.hypot(p.x-pos.x,p.y-pos.y)*k;if(d<=bd){bd=d;best=i;}});
+  return best;
+}
+function showLoupe(cv,src,pt,clientX,clientY){
+  const lp=$('loupe');if(!lp||!src.imgEl||!src.dispW)return;
+  const L=150,MAG=4,dpr=Math.min(window.devicePixelRatio||1,2),D=Math.round(L*dpr);
+  if(lp.width!==D){lp.width=D;lp.height=D;}
+  const r=cv.getBoundingClientRect();if(!r.width)return;
+  const k=r.width/src.dispW*src.zoom;
+  const span=L/(MAG*k);
+  const img=src.imgEl,nw=img.naturalWidth||img.width,nh=img.naturalHeight||img.height;
+  const kx=nw/src.dispW,ky=nh/src.dispH;
+  const ctx=lp.getContext('2d');
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#081a1e';ctx.fillRect(0,0,D,D);
+  ctx.imageSmoothingEnabled=false;
+  let sx=(pt.x-span/2)*kx,sy=(pt.y-span/2)*ky,sw=span*kx,sh=span*ky;
+  const fx=D/sw,fy=D/sh;
+  let dx=0,dy=0,dw=D,dh=D;
+  if(sx<0){dx=-sx*fx;dw-=dx;sw+=sx;sx=0;}
+  if(sy<0){dy=-sy*fy;dh-=dy;sh+=sy;sy=0;}
+  if(sx+sw>nw){const o=sx+sw-nw;sw-=o;dw-=o*fx;}
+  if(sy+sh>nh){const o=sy+sh-nh;sh-=o;dh-=o*fy;}
+  if(sw>0&&sh>0&&dw>0&&dh>0)ctx.drawImage(img,sx,sy,sw,sh,dx,dy,dw,dh);
+  const c=D/2,a=4*dpr,b=16*dpr;
+  ctx.strokeStyle='#d97706';ctx.lineWidth=1.5*dpr;
+  ctx.beginPath();
+  ctx.moveTo(c-b,c);ctx.lineTo(c-a,c);ctx.moveTo(c+a,c);ctx.lineTo(c+b,c);
+  ctx.moveTo(c,c-b);ctx.lineTo(c,c-a);ctx.moveTo(c,c+a);ctx.lineTo(c,c+b);
+  ctx.stroke();
+  let left=clientX-L/2,top=clientY-L-50;
+  if(top<8)top=clientY+50;
+  left=Math.max(8,Math.min(window.innerWidth-L-8,left));
+  lp.style.left=left+'px';lp.style.top=top+'px';lp.style.display='block';
+}
+function hideLoupe(){const lp=$('loupe');if(lp)lp.style.display='none';}
 
 function drawChart(){
   if(INTERFACE_MODE==='simple')return;   // chart hidden in simple mode
@@ -1706,7 +1781,7 @@ function buildAuxBar(){
   const bar=$('aux-bar');if(!bar)return;
   bar.innerHTML='';
   const item=document.createElement('div');item.className='aux-item pro-only';
-  item.onclick=()=>showScreen(S.screen==='calibrate'?'workflow':'calibrate');
+  item.onclick=()=>{if(S.screen==='calibrate')startMeasuringFromCalib();else showScreen('calibrate');};
   const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
   const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';
   item.append(circle,lbl);bar.append(item);
@@ -1755,8 +1830,9 @@ function showStep(n){
     else if(n===2||n===3){S.touchMode='draw';}
     updateTouchModeBtn();
   }
-  if(n===2){renderHdPanel();applyHints();}
-  if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();}
+  if(n===2){renderHdPanel();applyHints();updateConfirmBtn();}
+  if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();updateNoteHint();}
+  renderLineList();
   updateResWarn();
   updateStepBar();
 }
@@ -1769,8 +1845,16 @@ function renderHdPanel(){
   p.style.display='block';
   const l=$('hd-label');if(l)l.textContent=(S.imgMeta&&S.imgMeta.depth)||'High bit depth source';
   const sel=$('hd-tone');if(sel)sel.value=S.pixels.tone;
+  if(S.hdMore===null)S.hdMore=S.pixels.tone!=='srgb';
+  renderHdMore();
   updateHdToneNote();
 }
+function renderHdMore(){
+  const row=$('hd-tone-row'),b=$('btn-hd-more');
+  if(row)row.style.display=S.hdMore?'':'none';
+  if(b)b.textContent=(S.hdMore?'▾':'▸')+' Tone response';
+}
+function toggleHdMore(){S.hdMore=!S.hdMore;renderHdMore();}
 function updateHdToneNote(){
   const n=$('hd-tone-note');if(!n||!isHdSource())return;
   n.textContent=S.pixels.tone==='srgb'
@@ -1846,23 +1930,24 @@ function updateBandWidth(){
 function updateScaleHint(){
   const hint=$('scale-hint');
   if(S.scaleMode==='direct'){
-    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px"><span>pixels / mm</span></div>';
+    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px"><span>pixels / mm</span><button class="btn-ghost btn-small use-last" id="ul-direct" onclick="useLast(\'direct\')" style="display:none">Use last</button></div>';
     const inp=$('direct-px-inp');
-    if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;};inp.onkeydown=scaleFieldKey;}
-    applyHints();
+    if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
+    applyHints();updateConfirmBtn();
     return;
   }
   const intro='The tool needs a known distance in the image to convert pixels to millimetres. ';
-  if(S.scalePts.length===0)hint.innerHTML=intro+'Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size';
-  else if(S.scalePts.length===1)hint.innerHTML='Now click <strong>point B</strong> at the other end of that known distance';
-  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px"><span>mm</span><button class="btn-ghost btn-small" onclick="resetScalePts()">↺ Reset</button></div>`;
+  const tap=isTouch?'Tap':'Click';
+  if(S.scalePts.length===0)hint.innerHTML=intro+`${tap} <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size`;
+  else if(S.scalePts.length===1)hint.innerHTML=`Now ${tap.toLowerCase()} <strong>point B</strong> at the other end of that known distance`;
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px"><span>mm</span><button class="btn-ghost btn-small use-last" id="ul-real" onclick="useLast('real')" style="display:none">Use last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div>`;
   const inp=$('real-dist-inp');
-  if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;};inp.onkeydown=scaleFieldKey;}
-  applyHints();
+  if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
+  applyHints();updateConfirmBtn();
 }
 
-/* Context from the previous photo is carried as placeholder hints only, never as
-   values: the scale changes from photo to photo and must be entered each time. */
+/* Previous photo's entries, kept for this session only: shown as placeholders
+   and offered through the "Use last" buttons, never filled in automatically. */
 const MEAS_NOTE_PLACEHOLDER='e.g. north pier, mid-span — saved to the log and file names';
 function captureHints(){
   const n=$('meas-note-inp'),h=S.hints||{};
@@ -1871,26 +1956,62 @@ function captureHints(){
     scaleDist:S.scaleDist||h.scaleDist||'',
     realDist:S.realDist||h.realDist||'',
     pxMm:S.pxMm||h.pxMm||null,
-    note:(n&&n.value.trim())||h.note||''
+    note:(S.lines.length&&S.lines[0].name)||(n&&n.value.trim())||h.note||''
   };
 }
+function lastPxMm(){const h=S.hints||{};return h.pxMm?(+h.pxMm).toFixed(3):(h.directPx||'');}
 function applyHints(){
   const h=S.hints||{};
   const set=(id,v,fallback)=>{const el=$(id);if(el)el.placeholder=v?('last: '+v):fallback;};
-  const px=h.pxMm?(+h.pxMm).toFixed(3):(h.directPx||'');   // the real last resolution, however it was set
+  const px=lastPxMm();
   set('direct-px-inp',px?px+' px/mm':'','e.g. 5.2');
   set('real-dist-inp',h.realDist?h.realDist+' mm':'','e.g. 100');
   set('dist-inp',h.scaleDist?h.scaleDist+' m':'','e.g. 4.000');
   set('meas-note-inp',h.note,MEAS_NOTE_PLACEHOLDER);
+  const show=(id,on)=>{const b=$(id);if(b)b.style.display=on?'':'none';};
+  show('ul-direct',!!px);show('ul-real',!!h.realDist);show('ul-dist',!!h.scaleDist);show('ul-note',!!h.note&&!S.lines.length);
 }
+function nextNoteName(n){
+  if(!n)return '';
+  const m=/^(.*)_(\d+)$/.exec(n);
+  return m?`${m[1]}_${+m[2]+1}`:`${n}_2`;
+}
+function useLast(kind){
+  const h=S.hints||{};
+  if(kind==='real'){
+    if(!h.realDist)return;
+    S.realDist=String(h.realDist);
+    const i=$('real-dist-inp');if(i)i.value=S.realDist;
+  } else if(kind==='direct'){
+    const v=lastPxMm();if(!v)return;
+    S.directPx=String(v);
+    const i=$('direct-px-inp');if(i)i.value=S.directPx;
+  } else if(kind==='dist'){
+    if(!h.scaleDist)return;
+    const i=$('dist-inp');if(i){i.value=h.scaleDist;onDistanceInput();}
+  } else if(kind==='note'){
+    const v=nextNoteName(h.note);if(!v)return;
+    const i=$('meas-note-inp');if(i){i.value=v;onMeasNoteInput();}
+  }
+  updateConfirmBtn();
+}
+function scaleReady(){
+  if(S.scaleMode==='twopoint')return S.scalePts.length===2&&parseFloat(S.realDist)>0;
+  if(S.scaleMode==='distance'){
+    const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+    return !!prof&&parseFloat(S.scaleDist)>0;
+  }
+  return parseFloat(S.directPx)>0;
+}
+function updateConfirmBtn(){const b=$('btn-confirm-scale');if(b)b.disabled=!scaleReady();}
 function focusScaleField(){
   if(isTouch)return;                 // don't raise the on-screen keyboard over the image
   const id=S.scaleMode==='distance'?'dist-inp':(S.scaleMode==='direct'?'direct-px-inp':'real-dist-inp');
   const el=$(id);
-  if(el&&el.offsetParent!==null){try{el.focus();}catch(e){}}
+  if(el&&el.offsetParent!==null){try{el.focus({preventScroll:true});}catch(e){}}
 }
 function scaleFieldKey(e){
-  if(e.key==='Enter'){e.preventDefault();confirmScale();}
+  if(e.key==='Enter'){e.preventDefault();if(scaleReady())confirmScale();}
 }
 function cancelLine(){
   decodeSeq++;S.busy=false;
@@ -1911,7 +2032,6 @@ function switchScaleMode(mode){
   S.scaleMode=mode;S.scalePts=[];S.realDist='';S.directPx='';
   const tw=$('tab-twopoint');
   tw.className='tab'+(mode==='twopoint'?' active':'');
-  tw.textContent='Click two reference points';
   $('tab-direct').className='tab'+(mode==='direct'?' active':'');
   const td=$('tab-distance');if(td)td.className='tab pro-only'+(mode==='distance'?' active':'');
   const distPanel=$('scale-distance-panel');
@@ -1926,6 +2046,7 @@ function switchScaleMode(mode){
     if(hintCard)hintCard.style.display='';
     updateScaleHint();
   }
+  updateConfirmBtn();
   paintCanvas();
 }
 
@@ -1941,21 +2062,22 @@ function renderScaleProfileSelect(){
     sel.innerHTML='<option value="">— Select a calibrated camera —</option>'+
       S.scaleProfiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
     sel.value=cur;
-    const del=$('btn-scale-prof-delete');if(del)del.style.display=cur?'':'none';
+    setEnabled('btn-scale-prof-delete',!!cur);
   }
   const selC=$('scale-profile-select-cal');
   if(selC){
     selC.innerHTML='<option value="">— No profile selected —</option>'+
       S.scaleProfiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
     selC.value='';
-    const delC=$('btn-scale-prof-delete-cal');if(delC)delC.style.display='none';
+    setEnabled('btn-scale-prof-delete-cal',false);
+    setEnabled('btn-scale-prof-export-one',false);
     const noteC=$('scale-prof-note-cal');if(noteC)noteC.textContent='';
   }
 }
 function onScaleProfileSelectCal(){
   const id=$('scale-profile-select-cal').value;
-  const delC=$('btn-scale-prof-delete-cal');if(delC)delC.style.display=id?'':'none';
-  const expC=$('btn-scale-prof-export-one');if(expC)expC.style.display=id?'':'none';
+  setEnabled('btn-scale-prof-delete-cal',!!id);
+  setEnabled('btn-scale-prof-export-one',!!id);
   const noteC=$('scale-prof-note-cal');
   if(noteC){
     const p=S.scaleProfiles.find(x=>x.id===id);
@@ -1973,11 +2095,12 @@ function deleteScaleProfileCal(){
 }
 function onScaleProfileSelect(){
   S.activeScaleProfile=$('scale-profile-select').value;
-  $('btn-scale-prof-delete').style.display=S.activeScaleProfile?'':'none';
+  setEnabled('btn-scale-prof-delete',!!S.activeScaleProfile);
   onDistanceInput();
 }
 function onDistanceInput(){
   S.scaleDist=$('dist-inp')?$('dist-inp').value:'';
+  updateConfirmBtn();
   const out=$('dist-result');if(!out)return;
   const d=parseFloat(S.scaleDist);
   const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
@@ -1992,6 +2115,8 @@ function onDistanceInput(){
 }
 function deleteScaleProfile(){
   const id=S.activeScaleProfile;if(!id)return;
+  const p=S.scaleProfiles.find(x=>x.id===id);
+  if(p&&!confirm(`Delete camera profile “${p.name}”? This cannot be undone.`))return;
   S.scaleProfiles=S.scaleProfiles.filter(p=>p.id!==id);
   S.activeScaleProfile='';
   persistScaleProfiles();
@@ -2004,6 +2129,7 @@ function deleteScaleProfile(){
 ═══════════════════════════════════════════════════════════ */
 function showScreen(name){
   S.screen=name;
+  hideLoupe();
   const wf=$('workflow-container'),cs=$('calibrate-screen'),fs=$('formula-screen'),ls=$('log-screen');
   if(wf)wf.style.display='none';
   if(cs)cs.style.display='none';
@@ -2046,7 +2172,7 @@ function renderMeasLog(){
         <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm &nbsp; <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span></span>
         <button class="wiz-shot-del" onclick="deleteLogEntry('${e.id}')" title="Delete">✕</button>
       </div>
-      <div class="log-row-sub">${ts} · ${photo}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}${bd}</div>
+      <div class="log-row-sub">${ts} · ${photo}${e.lineNo?' · line #'+e.lineNo:''}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}${bd}</div>
       <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
     </div>`;
   }).join('');
@@ -2057,6 +2183,19 @@ function updateLogAux(){
   c.className='aux-circle'+(S.screen==='log'?' active':(S.measLog.length?' has-data':''));
 }
 
+const TIPS_KEY='dcg_calib_tips_collapsed_v1';
+function applyTipsState(collapsed){
+  const b=$('wiz-tips-body'),t=$('tips-toggle-txt');
+  if(b)b.style.display=collapsed?'none':'';
+  if(t)t.textContent=(collapsed?'▸':'▾')+' Tips';
+}
+function toggleTips(){
+  const b=$('wiz-tips-body');if(!b)return;
+  const collapsed=b.style.display!=='none';
+  applyTipsState(collapsed);
+  storageSet(TIPS_KEY,collapsed?'1':'0');
+}
+
 function enterCalibScreen(){
   if(!S.calib.imageLoaded&&S.imgEl){
     S.calib.imgEl=S.imgEl;S.calib.pixels=S.pixels;
@@ -2065,8 +2204,9 @@ function enterCalibScreen(){
     S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
     S.calib.imageLoaded=true;S.calib.reused=true;
   }
+  applyTipsState(storageGet(TIPS_KEY)==='1');
   renderScaleProfileSelect();
-  renderWizShots();updateWizImageState();updateWizSpanHint();
+  renderWizShots();updateWizSpanHint();
   updateCalibUploadPrompt();
   requestAnimationFrame(paintCanvas);
 }
@@ -2104,31 +2244,42 @@ function loadCalibImage(ev){
     S.calib.resizeFactor=d.resizeFactor;S.calib.imgMeta=d.imgMeta;
     S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
     S.calib.imageLoaded=true;S.calib.reused=false;
-    updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();updateCalibZoom();
+    updateCalibUploadPrompt();updateWizSpanHint();updateCalibZoom();
     requestAnimationFrame(paintCanvas);
   });
   ev.target.value='';
 }
-function updateWizImageState(){
-  const loadBtn=$('btn-wiz-load-img');
-  if(loadBtn)loadBtn.textContent=S.calib.imageLoaded?'↻ Load a different photo':'📷 Load calibration photo';
-}
 function resetWizShot(){
   S.calib.scalePts=[];updateWizSpanHint();paintCanvas();
+}
+function focusCalibField(){
+  if(isTouch)return;
+  const d=$('wiz-dist-inp'),w=$('wiz-width-inp');
+  const el=(w&&!(parseFloat(w.value)>0))?w:((d&&!(parseFloat(d.value)>0))?d:w);
+  if(el&&el.offsetParent!==null){try{el.focus({preventScroll:true});if(el.select)el.select();}catch(e){}}
+}
+function wizFieldKey(e){
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  const d=parseFloat($('wiz-dist-inp').value),w=parseFloat($('wiz-width-inp').value);
+  if(d>0&&w>0&&S.calib.scalePts.length===2)addCalibShot();
+  else if(e.target.id==='wiz-dist-inp'&&!(w>0))$('wiz-width-inp').focus();
+  else if(e.target.id==='wiz-width-inp'&&!(d>0))$('wiz-dist-inp').focus();
 }
 function updateWizSpanHint(){
   const h=$('wiz-span-hint');if(!h)return;
   if(!S.calib.imageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot’s calibration photo first.</span>';return;}
   const sp=S.calib.scalePts;
+  const tap=isTouch?'tap':'click';
   if(sp.length===0){
     const caution=S.calib.reused?'<span style="color:rgba(251,191,36,0.85);display:block;margin-bottom:5px">⚠ This is your crack photo. Load an actual calibration photo (known object at a known distance) unless this shot really contains one.</span>':'';
-    h.innerHTML=caution+'Click <strong>point A</strong> on one edge of the known object.';
+    h.innerHTML=caution+`${isTouch?'Tap':'Click'} <strong>point A</strong> on one edge of the known object.`;
   }
-  else if(sp.length===1)h.innerHTML='Now click <strong>point B</strong> on the opposite edge.';
+  else if(sp.length===1)h.innerHTML=`Now ${tap} <strong>point B</strong> on the opposite edge.`;
   else{
     const dx=sp[1].x-sp[0].x,dy=sp[1].y-sp[0].y;
     const spanOrig=Math.hypot(dx,dy)/S.calib.dispScale/S.calib.resizeFactor;
-    h.innerHTML=`Object spans <strong>${spanOrig.toFixed(1)} px</strong>. Enter distance &amp; width above, then “Add this shot”.`;
+    h.innerHTML=`Object spans <strong>${spanOrig.toFixed(1)} px</strong>. Drag A or B to adjust, or ${tap} elsewhere to start again. Then “Add this shot”.`;
   }
 }
 function addCalibShot(){
@@ -2148,7 +2299,8 @@ function addCalibShot(){
   clearErr();
   S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
   $('wiz-dist-inp').value='';$('wiz-width-inp').value='';
-  renderWizShots();updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();paintCanvas();
+  const ae=document.activeElement;if(ae&&ae.blur)ae.blur();
+  renderWizShots();updateCalibUploadPrompt();updateWizSpanHint();paintCanvas();
 }
 function deleteCalibShot(i){
   S.calib.shots.splice(i,1);
@@ -2223,7 +2375,7 @@ function calibrateAnother(){
   ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
   S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
   calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
-  renderWizShots();updateCalibUploadPrompt();updateWizImageState();updateWizSpanHint();paintCanvas();
+  renderWizShots();updateCalibUploadPrompt();updateWizSpanHint();paintCanvas();
 }
 function startMeasuringFromCalib(){
   if(hasUnsavedCalib()){
@@ -2233,14 +2385,32 @@ function startMeasuringFromCalib(){
   S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
   calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
   showScreen('workflow');
-  if(S.imgEl&&S.dispW>0){
-    S.iMode='scale';$('img-canvas').style.cursor='crosshair';
+  restoreWorkflowStep();
+}
+
+/* Returns to the step the user left, so opening the calibration screen from
+   Step 4 doesn't discard the results or force a second analysis. */
+function restoreWorkflowStep(){
+  if(!S.imgEl||!(S.dispW>0)){showStep(1);return;}
+  let target=(S.pxMm>0)?S.step:2;
+  if(target<2||target>4)target=2;
+  if(target===4&&!S.results)target=S.measLine?3:2;
+  $('img-canvas').style.cursor='crosshair';
+  if(target===2){
+    S.iMode='scale';
     showStep(2);
-    if(S.activeScaleProfile){switchScaleMode('distance');onDistanceInput();}
+    if(S.activeScaleProfile&&S.scalePts.length<2&&!(S.pxMm>0)){switchScaleMode('distance');onDistanceInput();}
+    else if(S.scaleMode==='distance'){renderScaleProfileSelect();onDistanceInput();}
     else updateScaleHint();
+  } else if(target===3){
+    S.iMode='draw';
+    showStep(3);updateDrawHint();
   } else {
-    showStep(1);
+    showStep(4);
+    updateResultsDisplay();
+    requestAnimationFrame(drawChart);
   }
+  paintCanvas();
 }
 
 /* ── Scale-profile export / import ── */
@@ -2293,6 +2463,11 @@ function exportOneScaleProfile(){
   downloadJSON(data,`DCG_camera_${sanitizeFilename(p.name)}.json`);
 }
 function importScaleProfilesClick(){$('scale-import-file').click();}
+function scaleImportMsg(text,ok){
+  if(S.screen==='calibrate'){calibSaveMsg(text,ok);return;}
+  const n=$('scale-prof-note-step2');
+  if(n){n.textContent=text;n.style.color=ok?'#34d399':'#fbbf24';}
+}
 function importScaleProfiles(ev){
   const file=ev.target.files&&ev.target.files[0];if(!file)return;
   const reader=new FileReader();
@@ -2301,7 +2476,8 @@ function importScaleProfiles(ev){
       const obj=JSON.parse(e.target.result);
       const incoming=Array.isArray(obj)?obj:(obj.profiles||[]);
       const valid=incoming.filter(p=>p&&p.name&&isFinite(p.k)&&isFinite(p.p));
-      if(!valid.length){showErr('No valid camera profiles in that file.');ev.target.value='';return;}
+      const skipped=incoming.length-valid.length;
+      if(!valid.length){const m='No valid camera profiles in that file.';showErr(m);scaleImportMsg(m,false);ev.target.value='';return;}
       let added=0;
       valid.forEach(p=>{
         const exists=S.scaleProfiles.find(x=>x.name.toLowerCase()===String(p.name).toLowerCase());
@@ -2317,7 +2493,8 @@ function importScaleProfiles(ev){
       persistScaleProfiles();
       renderScaleProfileSelect();
       clearErr();
-    }catch(err){showErr('Could not read that file — is it a valid camera-profiles export?');}
+      scaleImportMsg(`Imported ${valid.length} camera profile${valid.length===1?'':'s'} — ${added} new, ${valid.length-added} updated`+(skipped?`, ${skipped} skipped`:'')+'.',true);
+    }catch(err){const m='Could not read that file — is it a valid camera-profiles export?';showErr(m);scaleImportMsg(m,false);}
     ev.target.value='';
   };
   reader.readAsText(file);
@@ -2325,9 +2502,10 @@ function importScaleProfiles(ev){
 
 function updateDrawHint(){
   const verb=isTouch?'Tap and drag':'Click and drag';
+  const pre=S.lines.length?`<strong>Line #${nextLineNo()}</strong> — `:'';
   $('draw-hint').innerHTML=S.measLine?
-    '<span style="color:#059669">✓ Line set. Adjust options below, then click Analyze.</span>':
-    `<strong>${verb} across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.`;
+    pre+'<span style="color:#059669">✓ Line set. Adjust options below, then click Analyze.</span>':
+    pre+`<strong>${verb} across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.`;
   $('btn-analyze').disabled=!S.measLine||S.busy;
 }
 
@@ -2347,6 +2525,7 @@ function updateResultsDisplay(){
     recomputeCalib();updateLogNowBtn();
     return;
   }
+  recomputeCalib();
   const{bWidth,aWidth,area,cL,cR}=getDisplayValues();
   const bStr=bWidth<0.001?'<0.001':bWidth.toFixed(3);
   $('r-b').innerHTML=`${bStr}<span class="r-unit">mm</span>`;
@@ -2415,7 +2594,7 @@ function updateTouchModeBtn(){
     if(hint)hint.textContent='Single finger: pan  ·  Two fingers: pinch zoom';
   } else {
     btn.textContent='✏️ Measure';btn.style.background='#2563eb';btn.style.color='#fff';
-    if(hint)hint.textContent=S.step===2?'Tap to place A / B points  ·  Two fingers: pinch zoom':'Single finger: draw line  ·  Two fingers: pinch zoom';
+    if(hint)hint.textContent=S.step===2?'Tap to place A / B  ·  drag a point to adjust  ·  Two fingers: pinch zoom':'Single finger: draw line  ·  Two fingers: pinch zoom';
   }
 }
 function toggleBaseCorr(){
@@ -2437,6 +2616,15 @@ function toggleFormula(){
   $('formula-controls').style.display=open?'block':'none';
   $('formula-toggle-txt').textContent=(open?'▾':'▸')+' Approach B formula';
 }
+function clearActiveFormulaProfile(){
+  S.activeProfile='';
+  if($('profile-select'))$('profile-select').value='';
+  if($('profile-select-scr'))$('profile-select-scr').value='';
+  setEnabled('btn-profile-delete',false);setEnabled('btn-prof-export-one',false);
+  setEnabled('btn-profile-delete-scr',false);setEnabled('btn-prof-export-one-scr',false);
+  if($('profile-note'))$('profile-note').textContent='';
+  if($('profile-note-scr'))$('profile-note-scr').textContent='';
+}
 function onFormulaChange(){
   const c=parseFloat($('bcoeff-inp').value),e=parseFloat($('bexp-inp').value);
   if(isFinite(c)&&c>0)S.bCoeff=c;
@@ -2444,12 +2632,7 @@ function onFormulaChange(){
 
   if(S.activeProfile){
     const p=S.profiles.find(x=>x.id===S.activeProfile);
-    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
-      S.activeProfile='';
-      if($('profile-select'))$('profile-select').value='';
-      $('btn-profile-delete').style.display='none';
-      $('profile-note').textContent='';
-    }
+    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9)clearActiveFormulaProfile();
   }
   updateFormulaActive();
   if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(S.bCoeff);
@@ -2461,13 +2644,7 @@ function resetFormula(){
   $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
   if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value='0.357';
   if($('bexp-inp-scr'))$('bexp-inp-scr').value='0.16';
-  S.activeProfile='';
-  if($('profile-select'))$('profile-select').value='';
-  if($('profile-select-scr'))$('profile-select-scr').value='';
-  if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
-  if($('btn-profile-delete-scr'))$('btn-profile-delete-scr').style.display='none';
-  if($('profile-note'))$('profile-note').textContent='';
-  if($('profile-note-scr'))$('profile-note-scr').textContent='';
+  clearActiveFormulaProfile();
   updateFormulaActive();
   if(S.results)recompute();
 }
@@ -2502,15 +2679,7 @@ function onFormulaChangeScr(){
   if($('bexp-inp'))$('bexp-inp').value=String(S.bExp);
   if(S.activeProfile){
     const p=S.profiles.find(x=>x.id===S.activeProfile);
-    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9){
-      S.activeProfile='';
-      if($('profile-select'))$('profile-select').value='';
-      if($('profile-select-scr'))$('profile-select-scr').value='';
-      if($('btn-profile-delete'))$('btn-profile-delete').style.display='none';
-      if($('btn-profile-delete-scr'))$('btn-profile-delete-scr').style.display='none';
-      if($('profile-note'))$('profile-note').textContent='';
-      if($('profile-note-scr'))$('profile-note-scr').textContent='';
-    }
+    if(!p||Math.abs(p.c-S.bCoeff)>1e-9||Math.abs(p.a-S.bExp)>1e-9)clearActiveFormulaProfile();
   }
   updateFormulaActive();
   if(S.results)recompute();
@@ -2522,8 +2691,8 @@ function onProfileSelectScr(){
   syncFormulaInputs();
   const p=S.profiles.find(x=>x.id===id);
   const note=$('profile-note-scr');if(note)note.textContent=p&&p.desc?p.desc:'';
-  const del=$('btn-profile-delete-scr');if(del)del.style.display=id?'':'none';
-  const exp=$('btn-prof-export-one-scr');if(exp)exp.style.display=id?'':'none';
+  setEnabled('btn-profile-delete-scr',!!id);
+  setEnabled('btn-prof-export-one-scr',!!id);
 }
 function deleteProfileScr(){
   const id=$('profile-select-scr').value;if(!id)return;
@@ -2531,7 +2700,7 @@ function deleteProfileScr(){
   if(p&&!confirm(`Delete formula profile “${p.name}”?`))return;
   if($('profile-select'))$('profile-select').value=id;
   S.activeProfile=id;
-  deleteProfile();
+  deleteProfile(true);
   syncFormulaInputs();
 }
 function saveProfileScr(){
@@ -2633,8 +2802,12 @@ function addLogEntry(silent){
     resolutionMP:S.imgMeta?S.imgMeta.mp:'',
     bitDepth:(S.imgMeta&&S.imgMeta.depth)||'8-bit',
     toneResponse:isHdSource()?S.pixels.tone:'',
+    lineNo:nextLineNo(),
+    baselineAdjusted:baselineAdjusted(),
+    windowEdited:windowEdited(),
     note:measNoteValue()
   };
+  if(S.measLine){const o=origPt(S.measLine.p1),q=origPt(S.measLine.p2);entry.x1=o.x;entry.y1=o.y;entry.x2=q.x;entry.y2=q.y;}
   S.measLog.push(entry);
   S.lastLogId=entry.id;
   persistMeasLog();updateLogNowBtn();
@@ -2642,14 +2815,29 @@ function addLogEntry(silent){
   updateLogAux();
   if(!silent)logMsg(`Added — ${S.measLog.length} in log.`,true);
 }
+function refreshLastLog(){
+  if(!S.lastLogId||!S.results)return;
+  const e=S.measLog.find(x=>x.id===S.lastLogId);
+  if(!e)return;
+  const dv=getDisplayValues();
+  const a=(dv.aWidth!=null&&dv.aWidth!=='')?+(+dv.aWidth).toFixed(4):null;
+  const b=+(+dv.bWidth).toFixed(4);
+  const cl=+(+dv.cL).toFixed(3),cr=+(+dv.cR).toFixed(3);
+  const ba=baselineAdjusted(),we=windowEdited();
+  if(e.widthA===a&&e.widthB===b&&e.cropLeft===cl&&e.cropRight===cr&&e.baselineAdjusted===ba&&e.windowEdited===we)return;
+  e.widthA=a;e.widthB=b;e.cropLeft=cl;e.cropRight=cr;e.baselineAdjusted=ba;e.windowEdited=we;
+  persistMeasLog();
+  if(S.screen==='log')renderMeasLog();
+}
 function deleteLogEntry(id){
   S.measLog=S.measLog.filter(e=>e.id!==id);
-  persistMeasLog();renderMeasLog();updateLogAux();
+  if(S.lastLogId===id)S.lastLogId='';
+  persistMeasLog();renderMeasLog();updateLogAux();updateLogNowBtn();
 }
 function clearMeasLog(){
   if(!S.measLog.length)return;
   if(!confirm(`Clear all ${S.measLog.length} logged measurements? This cannot be undone.`))return;
-  S.measLog=[];persistMeasLog();renderMeasLog();updateLogAux();
+  S.measLog=[];S.lastLogId='';persistMeasLog();renderMeasLog();updateLogAux();updateLogNowBtn();
 }
 function updateLogNote(id,val){
   const e=S.measLog.find(x=>x.id===id);if(e){e.note=val;persistMeasLog();}
@@ -2662,6 +2850,10 @@ function onMeasNoteInput(){
 }
 function photoStem(){const n=S.photoName||'';const i=n.lastIndexOf('.');return(i>0?n.slice(0,i):n)||'image';}
 function outFileName(zoom){
+  if(S.lines.length){
+    const b=(S.lines[0].name||'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60)||'measured_crack';
+    return `${photoStem()}_${b}_lines${zoom?'_zoom':''}.png`;
+  }
   const raw=measNoteValue();
   const suffix=raw?raw.replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60):'';
   const tail=suffix||'measured_crack';
@@ -2680,10 +2872,12 @@ function csvEscape(v){
 }
 function exportMeasLogCSV(){
   if(!S.measLog.length){logMsg('No measurements to export yet.',false);return;}
-  const cols=[['timestamp','Timestamp'],['photoName','Photo'],['resolution','px/mm'],
+  const cols=[['timestamp','Timestamp'],['photoName','Photo'],['lineNo','Line #'],['resolution','px/mm'],
     ['scaleMode','Scale mode'],['distance','Distance (m)'],['cameraProfile','Camera profile'],
     ['widthA','Width A (mm)'],['widthB','Width B (mm)'],
     ['cropLeft','Window from (mm)'],['cropRight','Window to (mm)'],
+    ['windowEdited','Window edited'],['baselineAdjusted','Baseline adjusted'],
+    ['x1','Line x1 (px)'],['y1','Line y1 (px)'],['x2','Line x2 (px)'],['y2','Line y2 (px)'],
     ['resolutionMP','Image MP'],['bitDepth','Source depth'],['toneResponse','Tone response'],['note','Note']];
   const header=cols.map(c=>csvEscape(c[1])).join(',');
   const rows=S.measLog.map(e=>cols.map(c=>csvEscape(e[c[0]])).join(','));
@@ -2700,12 +2894,29 @@ function exportMeasLogCSV(){
 const CALIB_MIN_RECORDS=8;
 const CALIB_MIN_RATIO=16;
 
+function numOrNull(v){
+  if(v===null||v===undefined||v==='')return null;
+  return isFinite(+v)?+v:null;
+}
+function cleanCalibRecords(arr){
+  if(!Array.isArray(arr))return [];
+  return arr.filter(r=>r&&numOrNull(r.pxMm)>0&&numOrNull(r.knownWidth)>0&&numOrNull(r.area)>0)
+    .map(r=>({pxMm:+r.pxMm,knownWidth:+r.knownWidth,area:+r.area,date:typeof r.date==='string'?r.date.slice(0,10):''}));
+}
 function loadCalibDatasets(){
   const raw=storageGet(CALIB_DATASET_KEY);
   if(raw){
     try{
       const arr=JSON.parse(raw);
-      if(Array.isArray(arr))S.calibDatasets=arr.filter(d=>d&&d.id&&d.name&&Array.isArray(d.records));
+      if(Array.isArray(arr)){
+        let dropped=0;
+        S.calibDatasets=arr.filter(d=>d&&d.id&&d.name&&Array.isArray(d.records)).map(d=>{
+          const recs=cleanCalibRecords(d.records);
+          dropped+=d.records.length-recs.length;
+          return Object.assign({},d,{records:recs});
+        });
+        if(dropped>0)persistCalibDatasets();
+      }
     }catch(e){S.calibDatasets=[];}
   }
 }
@@ -2803,8 +3014,8 @@ function renderCalibDatasetSelectScr(){
     S.calibDatasets.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.records.length})</option>`).join('');
   sel.value=S.activeCalibDataset||'';
   const has=!!activeDataset();
-  const del=$('btn-calib-ds-delete');if(del)del.style.display=has?'':'none';
-  const exp=$('btn-calib-ds-export');if(exp)exp.style.display=has?'':'none';
+  setEnabled('btn-calib-ds-delete',has);
+  setEnabled('btn-calib-ds-export',has);
 }
 function onCalibDatasetSelectScr(){
   S.activeCalibDataset=$('calib-dataset-select-scr').value;
@@ -2829,10 +3040,11 @@ function renderCalibRecords(){
   const ds=activeDataset();
   if(!ds){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">Select a dataset to see its points.</div>';
     updateCalibGateStatus();updateCalibFitSummary();return;}
-  if(!ds.records.length){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">No points yet. Collect them at Step 4.</div>';}
+  const valid=ds.records.map((r,i)=>({r,i})).filter(o=>o.r&&numOrNull(o.r.pxMm)>0&&numOrNull(o.r.knownWidth)>0&&numOrNull(o.r.area)>0);
+  if(!valid.length){list.innerHTML='<div style="font-size:11px;color:rgba(232,248,249,0.4)">No points yet. Collect them at Step 4.</div>';}
   else{
     const fit=fitCalibDataset(ds);
-    list.innerHTML=ds.records.map((r,i)=>{
+    list.innerHTML=valid.map(({r,i})=>{
       const cpm=r.area/r.knownWidth;
       let resid='';
       if(fit){const pred=(fit.c*256)*Math.pow(r.pxMm,fit.a);const rp=Math.abs(pred-cpm)/cpm*100;
@@ -2879,9 +3091,7 @@ function fitAndFinaliseDataset(){
   ds.c=fit.c;ds.a=fit.a;ds.rmsePct=fit.rmsePct;ds.fittedDate=new Date().toISOString().slice(0,10);
   persistCalibDatasets();
   S.bCoeff=+fit.c.toFixed(4);S.bExp=+fit.a.toFixed(4);
-  S.activeProfile='';
-  if($('profile-select'))$('profile-select').value='';
-  if($('profile-select-scr'))$('profile-select-scr').value='';
+  clearActiveFormulaProfile();
   syncFormulaInputs();updateFormulaActive();
   if(S.results)recompute();
   calibFitMsg(`Fitted c = ${fit.c.toFixed(3)}, α = ${fit.a.toFixed(3)} and applied to the formula. Save it as a named profile above to keep it.`,true);
@@ -2911,15 +3121,27 @@ function importCalibDatasets(ev){
       const obj=JSON.parse(e.target.result);
       const arr=obj.datasets||obj;
       if(!Array.isArray(arr))throw 0;
-      let added=0;
+      let added=0,kept=0,skipped=0,rejected=0;
       arr.forEach(d=>{
-        if(d&&d.name&&Array.isArray(d.records)){
-          d.id='cd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+added;
-          S.calibDatasets.push(d);added++;
-        }
+        if(!d||!d.name||!Array.isArray(d.records)){rejected++;return;}
+        const recs=cleanCalibRecords(d.records);
+        skipped+=d.records.length-recs.length;
+        if(!recs.length){rejected++;return;}
+        S.calibDatasets.push({
+          id:'cd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+added,
+          name:String(d.name).slice(0,60),
+          note:d.note?String(d.note).slice(0,120):'',
+          records:recs,
+          c:numOrNull(d.c),a:numOrNull(d.a),rmsePct:numOrNull(d.rmsePct),
+          fittedDate:typeof d.fittedDate==='string'?d.fittedDate.slice(0,10):null,
+          date:typeof d.date==='string'?d.date.slice(0,10):new Date().toISOString().slice(0,10)
+        });
+        added++;kept+=recs.length;
       });
       persistCalibDatasets();renderCalibDatasetSelectScr();renderCalibRecords();renderFcalibSelect();
-      calibFitMsg(`Imported ${added} dataset${added===1?'':'s'}.`,true);
+      if(!added){calibFitMsg(`No valid datasets in that file${skipped?` — ${skipped} point${skipped===1?'':'s'} unreadable`:''}.`,false);}
+      else calibFitMsg(`Imported ${added} dataset${added===1?'':'s'}, ${kept} point${kept===1?'':'s'}`+
+        (skipped?`, ${skipped} skipped`:'')+(rejected?`, ${rejected} dataset${rejected===1?'':'s'} rejected`:'')+'.',true);
     }catch(err){calibFitMsg('Could not read that file.',false);}
   };
   reader.readAsText(file);
@@ -2944,13 +3166,11 @@ function renderProfileList(){
   const opts='<option value="">— Default (0.357, 0.16) —</option>'+
     S.profiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   const sel=$('profile-select');
-  if(sel){sel.innerHTML=opts;sel.value=cur;
-    $('btn-profile-delete').style.display=cur?'':'none';
-    const e1=$('btn-prof-export-one');if(e1)e1.style.display=cur?'':'none';}
+  if(sel){sel.innerHTML=opts;sel.value=cur;}
   const selS=$('profile-select-scr');
-  if(selS){selS.innerHTML=opts;selS.value=cur;
-    const d2=$('btn-profile-delete-scr');if(d2)d2.style.display=cur?'':'none';
-    const e2=$('btn-prof-export-one-scr');if(e2)e2.style.display=cur?'':'none';}
+  if(selS){selS.innerHTML=opts;selS.value=cur;}
+  setEnabled('btn-profile-delete',!!cur);setEnabled('btn-prof-export-one',!!cur);
+  setEnabled('btn-profile-delete-scr',!!cur);setEnabled('btn-prof-export-one-scr',!!cur);
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -2976,8 +3196,8 @@ function onProfileSelect(){
       $('profile-note').textContent=p.desc?p.desc:'';
     }
   }
-  $('btn-profile-delete').style.display=id?'':'none';
-  const expOne=$('btn-prof-export-one');if(expOne)expOne.style.display=id?'':'none';
+  setEnabled('btn-profile-delete',!!id);
+  setEnabled('btn-prof-export-one',!!id);
   updateFormulaActive();
   if(S.results)recompute();
 }
@@ -3013,14 +3233,17 @@ function saveProfile(){
   $('profile-note').textContent=desc||'';
 }
 
-function deleteProfile(){
+function deleteProfile(confirmed){
   const id=S.activeProfile;
   if(!id)return;
+  const pf=S.profiles.find(x=>x.id===id);
+  if(!confirmed&&pf&&!confirm(`Delete formula profile “${pf.name}”? This cannot be undone.`))return;
   S.profiles=S.profiles.filter(p=>p.id!==id);
   S.activeProfile='';
   persistProfiles();
   renderProfileList();
   $('profile-note').textContent='';
+  const ns=$('profile-note-scr');if(ns)ns.textContent='';
 
   S.bCoeff=0.357;S.bExp=0.16;
   $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
@@ -3040,6 +3263,14 @@ function exportOneProfile(){
   const data=JSON.stringify({tool:'Digital Crack Gauge',type:'approachB-profiles',version:1,profiles:[p]},null,2);
   downloadJSON(data,`DCG_approachB_${sanitizeFilename(p.name)}.json`);
 }
+function profileImportMsg(text,ok){
+  const scr=$('formula-save-msg-scr');
+  if(S.screen==='formula'&&scr){
+    scr.textContent=text;scr.style.color=ok?'#34d399':'#fbbf24';scr.style.display='block';
+    setTimeout(()=>{if(scr)scr.style.display='none';},5000);
+  }
+  const n=$('profile-note');if(n)n.textContent=ok?text:'';
+}
 function importProfilesClick(){$('profile-import-file').click();}
 function importProfiles(ev){
   const file=ev.target.files&&ev.target.files[0];
@@ -3050,7 +3281,8 @@ function importProfiles(ev){
       const obj=JSON.parse(e.target.result);
       const incoming=Array.isArray(obj)?obj:(obj.profiles||[]);
       const valid=incoming.filter(p=>p&&p.name&&isFinite(p.c)&&isFinite(p.a));
-      if(!valid.length){showErr('No valid profiles found in that file.');ev.target.value='';return;}
+      const skipped=incoming.length-valid.length;
+      if(!valid.length){const m='No valid profiles found in that file.';showErr(m);profileImportMsg(m,false);ev.target.value='';return;}
       let added=0;
       valid.forEach(p=>{
         const exists=S.profiles.find(x=>x.name.toLowerCase()===String(p.name).toLowerCase());
@@ -3065,8 +3297,8 @@ function importProfiles(ev){
       persistProfiles();
       renderProfileList();
       clearErr();
-      $('profile-note').textContent=`Imported ${valid.length} profile${valid.length>1?'s':''} (${added} new).`;
-    }catch(err){showErr('Could not read that file — is it a valid profiles export?');}
+      profileImportMsg(`Imported ${valid.length} formula profile${valid.length===1?'':'s'} — ${added} new, ${valid.length-added} updated`+(skipped?`, ${skipped} skipped`:'')+'.',true);
+    }catch(err){const m='Could not read that file — is it a valid profiles export?';showErr(m);profileImportMsg(m,false);}
     ev.target.value='';
   };
   reader.readAsText(file);
@@ -3182,13 +3414,13 @@ function loadFile(file){
   const name=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
   decodeImage(file,d=>{
     if(seq!==decodeSeq)return;
-    S.photoName=name;S.lastLogId='';
+    S.photoName=name;S.lastLogId='';S.hdMore=null;
     if($('meas-note-inp'))$('meas-note-inp').value='';
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
     S.imgMeta=d.imgMeta;
     S.zoom=1;S.panX=0;S.panY=0;
-    S.iMode='scale';S.scalePts=[];S.measLine=null;S.results=null;
+    S.iMode='scale';S.scalePts=[];S.ptDrag=null;S.measLine=null;S.results=null;S.lines=[];
     resetAdjustments();
     const canvas=$('img-canvas');
     canvas.style.cursor='crosshair';
@@ -3201,9 +3433,11 @@ function loadFile(file){
 /* Same clean slate as "Start over", but keeps every setting that is not
    per-photo and goes straight to the file picker. */
 function nextPhoto(){
-  S.pendingNext=true;              // nothing is reset until a file is actually chosen
-  const inp=$('file-input');
-  if(inp)inp.click();
+  guardActive(()=>{
+    S.pendingNext=true;            // nothing is reset until a file is actually chosen
+    const inp=$('file-input');
+    if(inp)inp.click();
+  });
 }
 
 function confirmScale(){
@@ -3229,7 +3463,7 @@ function confirmScale(){
     if(!px||px<=0){showErr('Enter a valid pixels/mm value.');return;}
   }
   S.pxMm=px;updateScaleDisplay();updateQualityIndicator();updateBandWidth();
-  S.iMode='draw';$('img-canvas').style.cursor='crosshair';
+  S.iMode='draw';S.ptDrag=null;hideLoupe();$('img-canvas').style.cursor='crosshair';
   showStep(3);updateDrawHint();
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur();   // so the next Enter reaches Analyze, not the hidden field
 }
@@ -3278,20 +3512,165 @@ function runAnalysis(){
         sourceTone:isHdSource()?S.pixels.tone:'',
       };
       resetAdjustments();
+      S.lastLogId='';
       S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
       $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
+      if(S.lines.length&&!measNoteValue())$('meas-note-inp').value=lineName(nextLineNo());
       showStep(4);
       updateResultsDisplay();
       requestAnimationFrame(drawChart);
-      if(S.autoLog)addLogEntry(true);
     }catch(ex){if(!stale())showErr('Analysis failed: '+ex.message);}
     if(stale())return;
     S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=!S.measLine;
   },100);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MULTIPLE LINES PER PHOTO
+═══════════════════════════════════════════════════════════ */
+const MAX_LINES=20;
+const LINE_VIEW_KEY='dcg_line_view_v1';
+function nextLineNo(){return S.lines.length?Math.max(...S.lines.map(l=>l.n))+1:1;}
+function lineName(n){const b=S.lines.length?(S.lines[0].name||''):'';return b?`${b}_#${n}`:`#${n}`;}
+function origPt(p){return{x:+(p.x/S.dispScale/S.resizeFactor).toFixed(1),y:+(p.y/S.dispScale/S.resizeFactor).toFixed(1)};}
+function baselineAdjusted(){return (S.tilt!==0||S.bow!==0||S.shift!==0)?'yes':'';}
+function windowEdited(){return (S.cropLeft!==null||S.cropRight!==null)?'yes':'';}
+function fmtW(v){return v==null?'—':(v<0.001?'<0.001':v.toFixed(3));}
+function activeLineObj(){
+  if(!S.measLine||!S.results)return null;
+  const dv=getDisplayValues();
+  return{n:nextLineNo(),p1:S.measLine.p1,p2:S.measLine.p2,nLines:S.nLines,
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,active:true};
+}
+function allLineItems(){const a=activeLineObj();return a?S.lines.concat([a]):S.lines.slice();}
+function lineStats(list){
+  const A=list.map(l=>l.widthA).filter(v=>v!=null&&isFinite(v)),B=list.map(l=>l.widthB).filter(v=>v!=null&&isFinite(v));
+  const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  return{n:list.length,maxA:A.length?Math.max(...A):null,maxB:B.length?Math.max(...B):null,meanA:mean(A),meanB:mean(B)};
+}
+function lineLabel(L){return `#${L.n}  A ${L.widthA!=null?L.widthA.toFixed(3):'-.-'} · B ${fmtW(L.widthB)} mm`;}
+function pushLineStats(mLines){
+  const st=lineStats(allLineItems());
+  if(st.n<2)return;
+  mLines.push(`${st.n} lines · max A ${fmtW(st.maxA)} · max B ${fmtW(st.maxB)} mm`);
+  mLines.push(`mean A ${fmtW(st.meanA)} · mean B ${fmtW(st.meanB)} mm`);
+}
+function updateNoteHint(){
+  const h=$('meas-note-hint');if(!h)return;
+  const ln=`· line #${nextLineNo()}`;
+  h.textContent=isTouch?ln:`${ln} · Enter: confirm & next line · Shift+Enter: confirm & next photo`;
+  const b=$('btn-confirm-line');if(b)b.disabled=S.lines.length+1>=MAX_LINES;
+}
+function applyLineViewBtn(){const b=$('btn-line-view');if(b)b.textContent=S.lineView==='band'?'▭ Bands':'─ Lines';}
+function toggleLineView(){
+  S.lineView=S.lineView==='band'?'thin':'band';
+  storageSet(LINE_VIEW_KEY,S.lineView);
+  applyLineViewBtn();paintCanvas();
+}
+function renderLineList(){
+  const el=$('line-list');if(!el)return;
+  const show=S.lines.length>0&&(S.step===3||S.step===4);
+  el.style.display=show?'block':'none';
+  const vb=$('btn-line-view');if(vb)vb.style.display=show?'':'none';
+  ['btn-save-3','btn-save-zoom-3'].forEach(id=>{const b=$(id);if(b)b.style.display=(S.step===3&&S.lines.length)?'':'none';});
+  if(!show){el.innerHTML='';return;}
+  const st=lineStats(S.lines);
+  const tot=S.lines.length>1?
+    `<tr class="tot"><td></td><td>Max</td><td class="num">${fmtW(st.maxA)}</td><td class="num">${fmtW(st.maxB)}</td><td></td></tr>`+
+    `<tr class="tot"><td></td><td>Mean</td><td class="num">${fmtW(st.meanA)}</td><td class="num">${fmtW(st.meanB)}</td><td></td></tr>`:'';
+  el.innerHTML='<table><tr><th>#</th><th>Name</th><th class="num">A mm</th><th class="num">B mm</th><th></th></tr>'+
+    S.lines.map(L=>`<tr><td><span class="ln">${L.n}</span></td><td class="nm" title="${escapeHtml(L.name||'')}">${escapeHtml(L.name||'')}</td><td class="num">${fmtW(L.widthA)}</td><td class="num">${fmtW(L.widthB)}</td><td style="text-align:right"><button class="wiz-shot-del" onclick="deleteLine(${L.n})" title="Delete line">✕</button></td></tr>`).join('')+
+    tot+'</table>';
+}
+function deleteLine(n){
+  const L=S.lines.find(x=>x.n===n);if(!L)return;
+  if(!confirm(`Delete line #${n}? Its log entry is removed too.`))return;
+  S.lines=S.lines.filter(x=>x.n!==n);
+  if(L.logId){S.measLog=S.measLog.filter(e=>e.id!==L.logId);persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();}
+  renderLineList();updateDrawHint();if(S.step===4)updateNoteHint();paintCanvas();
+}
+function confirmLine(mode){
+  if(!S.results||!S.measLine||S.busy)return;
+  if(S.lines.length>=MAX_LINES){showErr(`Maximum ${MAX_LINES} lines per photo.`);return;}
+  const dv=getDisplayValues();
+  if(S.lastLogId)refreshLastLog();
+  else if(S.autoLog)addLogEntry(true);
+  S.lines.push({n:nextLineNo(),p1:{...S.measLine.p1},p2:{...S.measLine.p2},nLines:S.nLines,name:measNoteValue(),
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,logId:S.lastLogId||''});
+  S.lastLogId='';
+  decodeSeq++;
+  S.measLine=null;S.results=null;S.live=null;S.drawStart=null;S.drawCur=null;
+  resetAdjustments();
+  setCalibMode('measure');            // a Calibrate-mode line leaves its coefficient for the following lines
+  const ni=$('meas-note-inp');if(ni)ni.value='';
+  clearErr();
+  S.iMode='draw';$('img-canvas').style.cursor='crosshair';
+  showStep(3);updateDrawHint();paintCanvas();
+  const ae=document.activeElement;if(ae&&ae.blur)ae.blur();
+  if(mode==='photo')nextPhoto();
+}
+function guardActive(fn){
+  if(!(S.step===4&&S.results)){fn();return;}
+  const m=$('modal');
+  $('modal-msg').textContent=`Line #${nextLineNo()} is not confirmed yet.`;
+  m.style.display='flex';
+  const close=()=>{m.style.display='none';};
+  $('modal-ok').onclick=()=>{close();confirmLine('none');fn();};
+  $('modal-discard').onclick=()=>{close();fn();};
+  $('modal-cancel').onclick=close;
+}
+function startOver(){guardActive(resetAll);}
+function drawConfirmedOnScreen(ctx,u){
+  if(!S.lines.length||S.step<3)return;
+  const band=S.lineView==='band';
+  S.lines.forEach(L=>{
+    const p1=L.p1,p2=L.p2,ddx=p2.x-p1.x,ddy=p2.y-p1.y,l=Math.hypot(ddx,ddy);
+    if(l<2)return;
+    const nx=-ddy/l,ny=ddx/l,bh=L.nLines/2*S.dispScale;
+    ctx.save();
+    if(band){
+      ctx.fillStyle='rgba(167,139,250,0.16)';ctx.strokeStyle='rgba(167,139,250,0.55)';ctx.lineWidth=u;
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+    }
+    ctx.strokeStyle='#a78bfa';ctx.lineWidth=(band?1.5:2)*u;ctx.setLineDash(band?[5*u,3*u]:[]);
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#a78bfa';[p1,p2].forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,3*u,0,Math.PI*2);ctx.fill();});
+    const up=ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny};
+    const off=(band?bh:0)+12*u,cx=(p1.x+p2.x)/2+up.x*off,cy=(p1.y+p2.y)/2+up.y*off;
+    const txt=lineLabel(L);
+    ctx.font=`600 ${11*u}px monospace`;
+    const tw=ctx.measureText(txt).width,pad=4*u,h=15*u;
+    ctx.fillStyle='rgba(76,29,149,0.88)';ctx.fillRect(cx-tw/2-pad,cy-h/2,tw+pad*2,h);
+    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,cx,cy);
+    ctx.restore();
+  });
+}
+function drawLinesOut(ctx,toP,kw,s,drawLabel){
+  const band=S.lineView==='band';
+  allLineItems().forEach(L=>{
+    const p1=toP(L.p1),p2=toP(L.p2);
+    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.hypot(ddx,ddy);
+    if(len<=1)return;
+    const nx=-ddy/len,ny=ddx/len,bh=L.nLines/2*kw;
+    const c=L.active?'37,99,235':'124,58,237';
+    ctx.save();
+    if(band){
+      ctx.fillStyle=`rgba(${c},0.12)`;ctx.strokeStyle=`rgba(${c},0.35)`;ctx.lineWidth=s;
+      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle=`rgba(${c},0.5)`;ctx.setLineDash([3*s,3*s]);ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
+    }
+    ctx.setLineDash(band?[8*s,4*s]:[]);ctx.strokeStyle=`rgb(${c})`;ctx.lineWidth=2*s;
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
+    [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle=`rgb(${c})`;ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
+    const up=ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny};
+    const off=(band?bh:0)+30*s;
+    drawLabel(lineLabel(L),(p1.x+p2.x)/2+up.x*off,(p1.y+p2.y)/2+up.y*off,`rgba(${c},.90)`);
+    ctx.restore();
+  });
+}
+
 function saveImage(){
-  if(!S.results||!S.imgEl||!S.pixels)return;
+  if((!S.results&&!S.lines.length)||!S.imgEl||!S.pixels||!S.pxMm)return;
   // For a high-depth source the on-screen image is a preview canvas, so the
   // output is that canvas's size and every annotation is scaled to match.
   const hd=isHdSource();
@@ -3316,29 +3695,11 @@ function saveImage(){
     }
     ctx.restore();
   }
-  if(S.measLine){
-    const p1=toPx(S.measLine.p1),p2=toPx(S.measLine.p2);
-    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
-    if(len>1){
-      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2*k;
-      ctx.save();ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
-      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
-      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
-      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
-      const{bWidth,aWidth}=getDisplayValues();
-      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
-      const lOff=bh+50*s;
-      const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
-      const upPerp={x:-downPerp.x,y:-downPerp.y};
-      drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
-      drawLabel(`B: ${bWidth<0.001?'<0.001':bWidth.toFixed(3)} mm`,mid.x+downPerp.x*lOff,mid.y+downPerp.y*lOff,'rgba(5,100,85,.90)');
-      ctx.restore();
-    }
-  }
+  drawLinesOut(ctx,toPx,k,s,drawLabel);
   const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
   const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px  ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
   if(hd&&S.imgMeta&&S.imgMeta.depth)mLines.push(S.imgMeta.depth);
+  pushLineStats(mLines);
   ctx.font=`${mfs}px monospace`;
   const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
   const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
@@ -3358,7 +3719,7 @@ function saveImage(){
 }
 
 function saveZoomedImage(){
-  if(!S.results||!S.imgEl||!S.pixels)return;
+  if((!S.results&&!S.lines.length)||!S.imgEl||!S.pixels||!S.pxMm)return;
 
   const bx0=Math.max(0,-S.panX/S.zoom),bx1=Math.min(S.dispW,(S.dispW-S.panX)/S.zoom);
   const by0=Math.max(0,-S.panY/S.zoom),by1=Math.min(S.dispH,(S.dispH-S.panY)/S.zoom);
@@ -3396,33 +3757,12 @@ function saveZoomedImage(){
     ctx.restore();
   }
 
-  if(S.measLine){
-    const p1=toEx(S.measLine.p1),p2=toEx(S.measLine.p2);
-    const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.sqrt(ddx*ddx+ddy*ddy);
-    if(len>1){
-      const nx=-ddy/len,ny=ddx/len,bh=S.nLines/2*expScale;
-      ctx.save();
-      ctx.fillStyle='rgba(37,99,235,0.12)';ctx.strokeStyle='rgba(37,99,235,0.35)';ctx.lineWidth=s;
-      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.setLineDash([3*s,3*s]);
-      ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.moveTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.stroke();
-      ctx.setLineDash([8*s,4*s]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;
-      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
-      [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle='#2563eb';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
-      const{bWidth,aWidth}=getDisplayValues();
-      const mid={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
-      const lOff=bh+50*s;
-      const downPerp=ny>=0?{x:nx,y:ny}:{x:-nx,y:-ny};
-      const upPerp={x:-downPerp.x,y:-downPerp.y};
-      drawLabel(aWidth?`A: ${(+aWidth).toFixed(3)} mm`:'A: -.- mm',mid.x+upPerp.x*lOff,mid.y+upPerp.y*lOff,aWidth?'rgba(30,64,175,.90)':'rgba(55,55,55,.80)');
-      drawLabel(`B: ${bWidth<0.001?'<0.001':bWidth.toFixed(3)} mm`,mid.x+downPerp.x*lOff,mid.y+downPerp.y*lOff,'rgba(5,100,85,.90)');
-      ctx.restore();
-    }
-  }
+  drawLinesOut(ctx,toEx,expScale,s,drawLabel);
 
   const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
   const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
   if(isHdSource()&&S.imgMeta&&S.imgMeta.depth)mLines.push(S.imgMeta.depth);
+  pushLineStats(mLines);
   ctx.font=`${mfs}px monospace`;
   const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
   const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
@@ -3457,9 +3797,10 @@ function resetAll(){
   captureHints();
   S.pendingNext=false;
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
-  S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.realDist='';S.directPx='';S.pxMm=null;
+  S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
-  S.scaleDist='';S.photoName='';S.lastLogId='';decodeSeq++;
+  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];decodeSeq++;
+  hideLoupe();
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   resetAdjustments();clearErr();hdBusy('');
   if($('dist-inp'))$('dist-inp').value='';
@@ -3474,6 +3815,11 @@ function resetAll(){
 }
 
 function goBack(){
+  if(S.lines.length){
+    const n=S.lines.length;
+    if(!confirm(`Changing the scale discards the ${n} confirmed line${n===1?'':'s'} on this photo (they stay in the log). Continue?`))return;
+    S.lines=[];
+  }
   decodeSeq++;S.busy=false;
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   S.measLine=null;S.iMode='scale';
@@ -3489,6 +3835,7 @@ function goBack(){
   } else {
     updateScaleHint();
   }
+  updateConfirmBtn();
   paintCanvas();
 }
 
@@ -3515,12 +3862,29 @@ function getRawImgPos(e){
   const r=imgCanvas.getBoundingClientRect();
   return{x:(e.clientX-r.left)*(S.dispW/r.width),y:(e.clientY-r.top)*(S.dispH/r.height)};
 }
+function twoPointActive(){return S.step===2&&S.iMode==='scale'&&S.scaleMode==='twopoint';}
+function placeScalePt(pos){
+  if(S.scalePts.length<2)S.scalePts.push(pos);
+  else S.scalePts=[pos];
+  updateScaleHint();paintCanvas();
+  if(S.scalePts.length===2)focusScaleField();
+}
 
 const calibCanvas=$('calib-canvas');
-let calibPanning=false,calibPanAnchor=null,calibPinch=null,calibSingle=null;
+let calibPanning=false,calibPanAnchor=null,calibPinch=null,calibSingle=null,calibDrag=null;
 function calibRawPos(clientX,clientY){
   const r=calibCanvas.getBoundingClientRect();
   return{x:(clientX-r.left)*(S.calib.dispW/r.width),y:(clientY-r.top)*(S.calib.dispH/r.height)};
+}
+function calibImgPos(clientX,clientY){
+  const raw=calibRawPos(clientX,clientY);
+  return{x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom};
+}
+function placeCalibPt(pos){
+  if(S.calib.scalePts.length<2)S.calib.scalePts.push(pos);
+  else S.calib.scalePts=[pos];
+  updateWizSpanHint();paintCanvas();
+  if(S.calib.scalePts.length===2)focusCalibField();
 }
 if(calibCanvas){
   calibCanvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -3531,18 +3895,35 @@ if(calibCanvas){
       calibPanning=true;calibPanAnchor={rx:raw.x,ry:raw.y,px:S.calib.panX,py:S.calib.panY};
       e.preventDefault();return;
     }
-    const raw=calibRawPos(e.clientX,e.clientY);
-    const pos={x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom};
-    if(S.calib.scalePts.length<2){S.calib.scalePts.push(pos);updateWizSpanHint();paintCanvas();}
+    if(e.button!==0)return;
+    e.preventDefault();
+    const pos=calibImgPos(e.clientX,e.clientY);
+    const hit=hitPt(S.calib.scalePts,pos,S.calib,calibCanvas,12);
+    if(hit>=0){calibDrag={i:hit,touch:false};calibCanvas.style.cursor='grabbing';return;}
+    placeCalibPt(pos);
   });
   calibCanvas.addEventListener('mousemove',e=>{
-    if(!calibPanning)return;
-    const raw=calibRawPos(e.clientX,e.clientY);
-    S.calib.panX=calibPanAnchor.px+(raw.x-calibPanAnchor.rx);
-    S.calib.panY=calibPanAnchor.py+(raw.y-calibPanAnchor.ry);
-    paintCanvas();
+    if(calibPanning){
+      const raw=calibRawPos(e.clientX,e.clientY);
+      S.calib.panX=calibPanAnchor.px+(raw.x-calibPanAnchor.rx);
+      S.calib.panY=calibPanAnchor.py+(raw.y-calibPanAnchor.ry);
+      paintCanvas();return;
+    }
+    if(!S.calib.imageLoaded)return;
+    const pos=calibImgPos(e.clientX,e.clientY);
+    if(calibDrag&&!calibDrag.touch){
+      S.calib.scalePts[calibDrag.i]=pos;
+      updateWizSpanHint();paintCanvas();return;
+    }
+    calibCanvas.style.cursor=hitPt(S.calib.scalePts,pos,S.calib,calibCanvas,12)>=0?'grab':'crosshair';
   });
-  window.addEventListener('mouseup',()=>{calibPanning=false;});
+  window.addEventListener('mouseup',()=>{
+    calibPanning=false;
+    if(calibDrag&&!calibDrag.touch){
+      calibDrag=null;calibCanvas.style.cursor='crosshair';
+      if(S.calib.scalePts.length===2)focusCalibField();
+    }
+  });
   calibCanvas.addEventListener('wheel',e=>{
     if(!S.calib.imageLoaded)return;
     e.preventDefault();
@@ -3559,18 +3940,35 @@ if(calibCanvas){
     if(!S.calib.imageLoaded)return;
     e.preventDefault();
     if(e.touches.length>=2){
+      calibDrag=null;hideLoupe();
       const a=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
       const b=calibRawPos(e.touches[1].clientX,e.touches[1].clientY);
       calibPinch={dist:Math.hypot(a.x-b.x,a.y-b.y),midRawX:(a.x+b.x)/2,midRawY:(a.y+b.y)/2,zoom:S.calib.zoom,panX:S.calib.panX,panY:S.calib.panY};
       calibSingle=null;
     } else if(e.touches.length===1){
-      const raw=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
+      const t=e.touches[0];
+      const pos=calibImgPos(t.clientX,t.clientY);
+      const hit=hitPt(S.calib.scalePts,pos,S.calib,calibCanvas,24);
+      if(hit>=0){
+        calibDrag={i:hit,touch:true};calibSingle=null;
+        showLoupe(calibCanvas,S.calib,S.calib.scalePts[hit],t.clientX,t.clientY);
+        return;
+      }
+      const raw=calibRawPos(t.clientX,t.clientY);
       calibSingle={rx:raw.x,ry:raw.y,px:S.calib.panX,py:S.calib.panY,moved:false};
     }
   },{passive:false});
   calibCanvas.addEventListener('touchmove',e=>{
     if(!S.calib.imageLoaded)return;
     e.preventDefault();
+    if(calibDrag&&calibDrag.touch&&e.touches.length===1){
+      const t=e.touches[0];
+      const pos=calibImgPos(t.clientX,t.clientY);
+      S.calib.scalePts[calibDrag.i]=pos;
+      updateWizSpanHint();paintCanvas();
+      showLoupe(calibCanvas,S.calib,pos,t.clientX,t.clientY);
+      return;
+    }
     if(e.touches.length>=2&&calibPinch){
       const a=calibRawPos(e.touches[0].clientX,e.touches[0].clientY);
       const b=calibRawPos(e.touches[1].clientX,e.touches[1].clientY);
@@ -3593,39 +3991,43 @@ if(calibCanvas){
   },{passive:false});
   calibCanvas.addEventListener('touchend',e=>{
     if(!S.calib.imageLoaded)return;
-    if(calibSingle&&!calibSingle.moved&&e.changedTouches.length===1&&S.calib.scalePts.length<2){
-      const raw=calibRawPos(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
-      S.calib.scalePts.push({x:(raw.x-S.calib.panX)/S.calib.zoom,y:(raw.y-S.calib.panY)/S.calib.zoom});
-      updateWizSpanHint();paintCanvas();
+    if(calibDrag&&calibDrag.touch){
+      calibDrag=null;hideLoupe();paintCanvas();
+      calibPinch=null;calibSingle=null;return;
+    }
+    if(calibSingle&&!calibSingle.moved&&e.changedTouches.length===1){
+      const t=e.changedTouches[0];
+      placeCalibPt(calibImgPos(t.clientX,t.clientY));
     }
     calibPinch=null;calibSingle=null;
   },{passive:false});
+  calibCanvas.addEventListener('touchcancel',()=>{calibDrag=null;calibPinch=null;calibSingle=null;hideLoupe();});
 }
 function updateCalibZoom(){const l=$('calib-zoom-label');if(l)l.textContent=S.calib.zoom.toFixed(1)+'×';}
 function resetCalibView(){S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;updateCalibZoom();paintCanvas();}
+['wiz-dist-inp','wiz-width-inp'].forEach(id=>{const el=$(id);if(el)el.addEventListener('keydown',wizFieldKey);});
 
 
 imgCanvas.addEventListener('mousedown',e=>{
   if(e.button===2){const raw=getRawImgPos(e);S.isPanning=true;S.panAnchor={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY};e.preventDefault();return;}
-  if(S.step===4)return;
+  if(e.button!==0||S.step===4)return;
+  e.preventDefault();
   const pos=getImgCanvasPos(e);
-  if(S.iMode==='scale'&&S.scaleMode==='twopoint'){
-    if(S.scalePts.length<2){
-      S.scalePts.push(pos);
-      if(S.scalePts.length===2){
-        const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
-      }
-      updateScaleHint();paintCanvas();
-      if(S.scalePts.length===2)focusScaleField();
-    }
+  if(twoPointActive()){
+    const hit=hitPt(S.scalePts,pos,S,imgCanvas,12);
+    if(hit>=0){S.ptDrag={i:hit,touch:false};imgCanvas.style.cursor='grabbing';return;}
+    placeScalePt(pos);
   } else if(S.iMode==='draw'){
+    if(S.lines.length>=MAX_LINES){showErr(`Maximum ${MAX_LINES} lines per photo.`);return;}
     S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;
   }
 });
 
 imgCanvas.addEventListener('mousemove',e=>{
   if(S.isPanning&&S.panAnchor){const raw=getRawImgPos(e);S.panX=S.panAnchor.px+(raw.x-S.panAnchor.rx);S.panY=S.panAnchor.py+(raw.y-S.panAnchor.ry);panXRef.current=S.panX;panYRef.current=S.panY;paintCanvas();return;}
-  if(S.iMode==='draw'&&S.drawStart){S.drawCur=getImgCanvasPos(e);paintCanvas();}
+  if(S.ptDrag&&!S.ptDrag.touch){S.scalePts[S.ptDrag.i]=getImgCanvasPos(e);paintCanvas();return;}
+  if(S.iMode==='draw'&&S.drawStart){S.drawCur=getImgCanvasPos(e);paintCanvas();return;}
+  if(twoPointActive())imgCanvas.style.cursor=hitPt(S.scalePts,getImgCanvasPos(e),S,imgCanvas,12)>=0?'grab':'crosshair';
 });
 
 imgCanvas.addEventListener('mouseup',e=>{
@@ -3635,6 +4037,12 @@ imgCanvas.addEventListener('mouseup',e=>{
     const dx=pos.x-S.drawStart.x,dy=pos.y-S.drawStart.y;
     if(Math.sqrt(dx*dx+dy*dy)>5){S.measLine={p1:{...S.drawStart},p2:{...pos}};updateDrawHint();}
     S.drawStart=null;S.drawCur=null;paintCanvas();
+  }
+});
+window.addEventListener('mouseup',()=>{
+  if(S.ptDrag&&!S.ptDrag.touch){
+    S.ptDrag=null;imgCanvas.style.cursor='crosshair';
+    if(S.scalePts.length===2)focusScaleField();
   }
 });
 
@@ -3670,7 +4078,7 @@ function getImgTouchPos(t){
 imgCanvas.addEventListener('touchstart',e=>{
   e.preventDefault();
   if(e.touches.length>=2){
-
+    S.ptDrag=null;hideLoupe();
     const t1=e.touches[0],t2=e.touches[1];
     const r=imgCanvas.getBoundingClientRect();
     const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
@@ -3683,9 +4091,18 @@ imgCanvas.addEventListener('touchstart',e=>{
   const touch=e.touches[0];
   const raw=getRawTouchPos(touch);
 
+  if(twoPointActive()){
+    const hit=hitPt(S.scalePts,getImgTouchPos(touch),S,imgCanvas,24);
+    if(hit>=0){
+      S.ptDrag={i:hit,touch:true};singleTouchPan=null;touchDraw=false;
+      showLoupe(imgCanvas,S,S.scalePts[hit],touch.clientX,touch.clientY);
+      return;
+    }
+  }
+
   singleTouchPan={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY,moved:false};
 
-  if(S.step===3&&S.iMode==='draw'&&S.touchMode==='draw'){
+  if(S.step===3&&S.iMode==='draw'&&S.touchMode==='draw'&&S.lines.length<MAX_LINES){
     const pos=getImgTouchPos(touch);
     S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;touchDraw=true;
     singleTouchPan=null;
@@ -3696,6 +4113,13 @@ imgCanvas.addEventListener('touchstart',e=>{
 
 imgCanvas.addEventListener('touchmove',e=>{
   e.preventDefault();
+  if(S.ptDrag&&S.ptDrag.touch&&e.touches.length===1){
+    const t=e.touches[0];
+    const pos=getImgTouchPos(t);
+    S.scalePts[S.ptDrag.i]=pos;paintCanvas();
+    showLoupe(imgCanvas,S,pos,t.clientX,t.clientY);
+    return;
+  }
   if(e.touches.length>=2&&pinchStart){
     const t1=e.touches[0],t2=e.touches[1];
     const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
@@ -3726,25 +4150,22 @@ imgCanvas.addEventListener('touchmove',e=>{
 
 imgCanvas.addEventListener('touchend',e=>{
   e.preventDefault();
+  if(S.ptDrag&&S.ptDrag.touch){
+    S.ptDrag=null;hideLoupe();paintCanvas();
+    pinchStart=null;singleTouchPan=null;touchDraw=false;
+    return;
+  }
   if(touchDraw&&S.drawStart&&S.drawCur){
 
     const dx=S.drawCur.x-S.drawStart.x,dy=S.drawCur.y-S.drawStart.y;
     if(Math.sqrt(dx*dx+dy*dy)>5){S.measLine={p1:{...S.drawStart},p2:{...S.drawCur}};updateDrawHint();}
     S.drawStart=null;S.drawCur=null;touchDraw=false;paintCanvas();
   } else if(singleTouchPan&&!singleTouchPan.moved){
-
-    if(S.step===2&&S.iMode==='scale'&&S.scaleMode==='twopoint'&&S.scalePts.length<2){
-      const pos=getImgTouchPos(e.changedTouches[0]);
-      S.scalePts.push(pos);
-      if(S.scalePts.length===2){
-        const btn=$('tab-twopoint');btn.className='tab amber';btn.textContent='Re-set two reference points';
-      }
-      updateScaleHint();paintCanvas();
-      if(S.scalePts.length===2)focusScaleField();
-    }
+    if(twoPointActive())placeScalePt(getImgTouchPos(e.changedTouches[0]));
   }
   pinchStart=null;singleTouchPan=null;touchDraw=false;
 },{passive:false});
+imgCanvas.addEventListener('touchcancel',()=>{S.ptDrag=null;hideLoupe();pinchStart=null;singleTouchPan=null;touchDraw=false;});
 
 const chartCanvas=$('chart-canvas');
 
@@ -3887,18 +4308,20 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
   if(control)return;
   if(textField){
-    if(t.id==='meas-note-inp'&&S.step===4){
+    if(t.id==='meas-note-inp'&&S.step===4&&S.results){
       e.preventDefault();
-      if(S.results&&!S.lastLogId)addLogEntry(true);
-      nextPhoto();
+      confirmLine(e.shiftKey?'photo':'next');
     }
     return;
   }
+  if(S.step===4&&S.results&&!S.busy){e.preventDefault();confirmLine(e.shiftKey?'photo':'next');return;}
   if(S.step===3&&S.measLine&&!S.busy){e.preventDefault();runAnalysis();}
 });
 
 window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);});
 
+S.lineView=storageGet(LINE_VIEW_KEY)==='thin'?'thin':'band';
+applyLineViewBtn();
 buildStepBar();
 buildAuxBar();
 updateStepBar();
