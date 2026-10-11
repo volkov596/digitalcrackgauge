@@ -135,7 +135,17 @@ input[type=range]{accent-color:#0cbbcc}
 #btn-touch-mode{min-width:130px}
 
 .nav-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-#result-nav-row{margin-bottom:16px}
+#result-nav-row{margin-bottom:8px}
+#result-nav-row2{margin-bottom:16px;gap:6px;flex-wrap:nowrap}
+#result-nav-row2 .btn{flex:1 1 auto;min-width:0;white-space:normal;line-height:1.25}
+#result-nav-row2 .btn,#panel-3 .btn-small{padding:5px 8px;font-size:12px}
+.help{display:flex;align-items:baseline;gap:6px;margin-bottom:10px;cursor:pointer}
+.help-txt{flex:1;min-width:0;font-size:12px;line-height:1.5;color:rgba(232,248,249,0.45);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.help.open .help-txt{display:block}
+.help-more{background:none;border:none;color:#7fdbe4;font-size:12px;font-family:inherit;cursor:pointer;padding:0;white-space:nowrap;flex-shrink:0}
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:10px;font-style:normal;font-weight:600;line-height:1;margin-left:5px;vertical-align:1px;cursor:pointer;background:none;color:inherit;padding:0;font-family:inherit}
+.info-link{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+#info-modal .modal-box{border-color:rgba(251,191,36,0.4)}
 #meas-note-row{margin-bottom:12px}
 #meas-note-row label{display:block;font-size:12px;color:rgba(232,248,249,0.7);margin-bottom:5px}
 .note-wrap{display:flex;gap:8px;align-items:center}
@@ -146,9 +156,15 @@ input[type=range]{accent-color:#0cbbcc}
   body{padding:.9rem .65rem}
   h1{font-size:.95rem;margin-bottom:.9rem}
   #info-grid{grid-template-columns:1fr;gap:6px}
-  #result-cards{grid-template-columns:1fr}
-  .r-val{font-size:32px}
-  .nav-row .btn{flex:1 1 40%;min-width:0;text-align:center;padding:10px 8px;font-size:12px}
+  #result-cards{gap:8px}
+  .result-card{padding:12px}
+  .r-method{font-size:10px;margin-bottom:8px}
+  .r-val{font-size:24px}
+  .r-unit{font-size:14px;margin-left:3px}
+  .nav-row .btn{flex:1 1 auto;min-width:0;text-align:center;padding:10px 10px;font-size:12px}
+  .nav-row{gap:6px}
+  #result-nav-row2 .btn,#panel-3 .btn-small{padding:7px 6px;font-size:11px}
+  #scale-display,#scale-display-3{flex-basis:100%}
   .tab{padding:8px 10px;font-size:11px;min-height:44px}
   .tab-row{gap:6px}
   .chk-row{padding:5px 0;min-height:44px}
@@ -160,7 +176,6 @@ input[type=range]{accent-color:#0cbbcc}
   #stats-row{font-size:10px;line-height:1.7}
   #chart-canvas{height:200px}
   #calib-panel .input-row{flex-wrap:wrap;gap:6px}
-  #acc-note{font-size:11px}
   #drop-zone .btn{width:100%;box-sizing:border-box}
   #line-list .nm{max-width:90px}
 }
@@ -283,7 +298,6 @@ body.simple #aux-bar .pro-only{display:none}
 .calib-title{font-size:12px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
 .calib-sub{font-size:12px;color:rgba(232,248,249,0.45);margin-bottom:10px;line-height:1.5}
 
-#acc-note{padding:10px 14px;border-radius:8px;background:rgba(251,191,36,0.07);color:rgba(251,191,36,0.85);font-size:12px;line-height:1.55;margin-bottom:14px;border:1px solid rgba(251,191,36,0.2)}
 
 .simple-only{display:none}
 body.simple .pro-only{display:none}
@@ -331,7 +345,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   #side{grid-column:2;grid-row:1;min-width:0}
   #img-holder{width:min(100%,calc((100vh - var(--chrome,150px)) * var(--ar,1.333)));margin:0 auto 6px}
   #side #line-list{margin:0 0 12px}
-  #side .tab-row{flex-wrap:wrap}
+  #side .tab-row{flex-wrap:nowrap;gap:6px}
+  #side .tab{flex:1 1 0;min-width:0;padding:6px 8px;line-height:1.3}
   #side .r-val{font-size:32px}
   #formula-screen,#log-screen{max-width:760px;margin:0 auto}
   #calibrate-screen{display:grid;grid-template-columns:minmax(0,1fr) var(--side);grid-template-rows:auto auto auto auto auto auto 1fr;column-gap:20px;align-items:start}
@@ -373,7 +388,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.5.0-beta</div>
+  <div id="version-tag">v1.5.1-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -532,8 +547,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
       <button class="btn btn-nav" onclick="goBack()">← Back</button>
       <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
-      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
-      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
+      <button class="btn btn-nav btn-small" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
+      <button class="btn btn-nav btn-small" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
       <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
     </div>
   </div>
@@ -543,13 +558,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div id="result-cards">
       <div class="result-card" id="card-a">
         <div class="r-tag" id="a-tag">Approach A</div>
-        <div class="r-method" id="a-method">Physical Reference · high accuracy</div>
+        <div class="r-method" id="a-method">Physical Reference · high accuracy<button class="info-i" id="a-hint" onclick="showInfo('a')" title="What to do">i</button></div>
         <div class="r-val" id="r-a">—.— <span class="r-unit">mm</span></div>
-        <div class="r-hint" id="a-hint">↓ Enter calibration data below</div>
       </div>
       <div class="result-card b">
         <div class="r-tag">Approach B</div>
-        <div class="r-method">Empirical Formula · estimate only</div>
+        <div class="r-method"><span class="info-link" onclick="showInfo('b')" title="Accuracy note">Empirical Formula · estimate only</span><button class="info-i" onclick="showInfo('b')" title="Accuracy note">i</button></div>
         <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
       </div>
     </div>
@@ -565,6 +579,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="nav-row" id="result-nav-row">
       <button class="btn btn-success" id="btn-confirm-line" onclick="confirmLine('next')">✓ Confirm &amp; draw next line</button>
       <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')">✓ Confirm &amp; next photo</button>
+    </div>
+    <div class="nav-row" id="result-nav-row2">
       <button class="btn btn-nav" id="btn-save" onclick="saveImage()">Save image ↓</button>
       <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
       <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
@@ -599,7 +615,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <button class="btn-ghost" id="btn-base-reset" style="display:none" onclick="resetBaseCorr()">Reset</button>
       </div>
       <div id="base-controls" style="display:none;margin-top:12px">
-        <div class="base-sub">Tilt rotates the baseline around the crack centre. Bow adds curvature anchored at the crack centre, preventing it from curving into the depression.</div>
+        <div class="help"><div class="help-txt">Tilt rotates the baseline around the crack centre. Bow adds curvature anchored at the crack centre, preventing it from curving into the depression.</div><button class="help-more">more</button></div>
         <div class="slider-row">
           <span class="slider-lbl">Shift:</span>
           <input type="range" id="shift-slider" min="-50" max="50" step="0.5" value="0" oninput="onShiftChange()">
@@ -623,8 +639,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
       <div id="calib-panel">
       <div class="calib-title">Approach A — Physical Reference Calibration</div>
-      <div class="calib-sub pro-only">Two steps. <strong>Calibrate:</strong> analyse a photo of a reference crack of known width (same camera, distance and conditions), then enter that width — the tool computes a calibration coefficient. <strong>Measure:</strong> analyse your crack photo with that coefficient entered and the width is read directly. The coefficient survives “Start over”, so calibrate first, then load the crack photo. An inaccurate reference width feeds directly into every result, so measure it as precisely as you can.</div>
-      <div class="calib-sub simple-only">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div>
+      <div class="pro-only"><div class="help"><div class="help-txt">Two steps. <strong>Calibrate:</strong> analyse a photo of a reference crack of known width (same camera, distance and conditions), then enter that width — the tool computes a calibration coefficient. <strong>Measure:</strong> analyse your crack photo with that coefficient entered and the width is read directly. The coefficient survives “Start over”, so calibrate first, then load the crack photo. An inaccurate reference width feeds directly into every result, so measure it as precisely as you can.</div><button class="help-more">more</button></div></div>
+      <div class="simple-only"><div class="help"><div class="help-txt">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div><button class="help-more">more</button></div></div>
 
       <div class="pro-only">
         <div id="calib-mode-toggle-pro">
@@ -662,7 +678,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <button class="btn-ghost" id="btn-formula-reset" style="display:none" onclick="resetFormula()">Reset</button>
       </div>
       <div id="formula-controls" style="display:none;margin-top:12px">
-        <div class="base-sub">Approach B estimates width from a calibrated function. The default constants suit general use, but a specific camera and site condition will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference). Changes affect the Approach B result only.</div>
+        <div class="help"><div class="help-txt">Approach B estimates width from a calibrated function. The default constants suit general use, but a specific camera and site condition will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference). Changes affect the Approach B result only.</div><button class="help-more">more</button></div>
         <div class="formula-input-row">
           <label>Coefficient (c):</label>
           <input type="number" id="bcoeff-inp" step="0.001" value="0.357" oninput="onFormulaChange()">
@@ -683,7 +699,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <div class="profile-btns">
             <button class="btn-ghost btn-small" id="btn-profile-save" onclick="showProfileSaveForm()">Save current…</button>
             <button class="btn-ghost btn-small" id="btn-profile-delete" onclick="deleteProfile()" disabled>Delete</button>
-            <button class="btn-ghost btn-small" id="btn-prof-export-one" onclick="exportOneProfile()" disabled>↓ Export this one</button>
+            <button class="btn-ghost btn-small" id="btn-prof-export-one" onclick="exportOneProfile()" disabled>↓ Export this</button>
             <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
             <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
             <input type="file" id="profile-import-file" accept=".json,application/json" style="display:none" onchange="importProfiles(event)">
@@ -704,14 +720,13 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
-    <div id="acc-note"><strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.</div>
 
     <div id="fcalib-panel" class="pro-only">
       <div class="panel-hdr" style="margin-bottom:0">
         <button id="btn-fcalib-toggle" onclick="toggleFcalib()"><span id="fcalib-toggle-txt">▸ Calibrate the Approach B formula (advanced)</span></button>
       </div>
       <div id="fcalib-controls" style="display:none;margin-top:12px">
-        <div class="calib-sub">Measure cracks whose width you already know, and save each as a calibration point. Once you have enough points across a wide resolution range, fit them on the Approach B screen to get constants tuned to your camera and site.</div>
+        <div class="help"><div class="help-txt">Measure cracks whose width you already know, and save each as a calibration point. Once you have enough points across a wide resolution range, fit them on the Approach B screen to get constants tuned to your camera and site.</div><button class="help-more">more</button></div>
         <div class="profile-row" style="margin-bottom:10px">
           <select id="fcalib-dataset-select" onchange="onFcalibDatasetSelect()">
             <option value="">— Select or create a dataset —</option>
@@ -739,7 +754,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
   <div id="calibrate-screen" style="display:none">
     <div class="calib-screen-title">Camera calibration — distance to resolution</div>
-    <div class="calib-screen-sub">Teach the tool your camera's resolution at different distances. Once saved, you can scale any crack photo from just the distance — no reference object needed in the shot.</div>
+    <div class="calib-screen-sub">Teach the tool your camera's resolution at different distances, then scale any crack photo from distance alone — no reference object needed.</div>
 
     <div class="avg-section" id="calib-profiles" style="margin-bottom:14px">
       <div class="avg-title">Saved camera profiles</div>
@@ -749,7 +764,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         </select>
         <div class="profile-btns">
           <button class="btn-ghost btn-small" id="btn-scale-prof-delete-cal" onclick="deleteScaleProfileCal()" disabled>Delete</button>
-          <button class="btn-ghost btn-small" id="btn-scale-prof-export-one" onclick="exportOneScaleProfile()" disabled>↓ Export this one</button>
+          <button class="btn-ghost btn-small" id="btn-scale-prof-export-one" onclick="exportOneScaleProfile()" disabled>↓ Export this</button>
           <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
           <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
         </div>
@@ -853,7 +868,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         </select>
         <div class="profile-btns">
           <button class="btn-ghost btn-small" id="btn-profile-delete-scr" onclick="deleteProfileScr()" disabled>Delete</button>
-          <button class="btn-ghost btn-small" id="btn-prof-export-one-scr" onclick="exportOneProfile()" disabled>↓ Export this one</button>
+          <button class="btn-ghost btn-small" id="btn-prof-export-one-scr" onclick="exportOneProfile()" disabled>↓ Export this</button>
           <button class="btn-ghost btn-small" onclick="exportProfiles()">↓ Export all</button>
           <button class="btn-ghost btn-small" onclick="importProfilesClick()">↑ Import</button>
         </div>
@@ -937,6 +952,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   </footer>
 </div>
 <div class="modal-bg" id="modal"><div class="modal-box"><div id="modal-msg"></div><div class="modal-btns"><button class="btn btn-success" id="modal-ok">Confirm line</button><button class="btn btn-nav" id="modal-discard">Discard</button><button class="btn btn-nav" id="modal-cancel">Cancel</button></div></div></div>
+<div class="modal-bg" id="info-modal" onclick="if(event.target===this)hideInfo()"><div class="modal-box"><div id="info-msg"></div><div class="modal-btns"><button class="btn btn-primary" id="info-ok" onclick="hideInfo()">OK</button></div></div></div>
 <canvas id="loupe"></canvas>
 
 <script>
@@ -1383,7 +1399,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10500;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10501;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -3617,7 +3633,7 @@ function pushLineStats(mLines){
 function updateNoteHint(){
   const h=$('meas-note-hint');if(!h)return;
   const ln=`· line #${nextLineNo()}`;
-  h.textContent=isTouch?ln:`${ln} · Enter: confirm & next line · Shift+Enter: confirm & next photo`;
+  h.textContent=isTouch?ln:`${ln} · ⏎ next line · ⇧⏎ next photo`;
   const b=$('btn-confirm-line');if(b)b.disabled=S.lines.length+1>=MAX_LINES;
 }
 function applyLineViewBtn(){const b=$('btn-line-view');if(b)b.textContent=S.lineView==='band'?'▭ Bands':'─ Lines';}
@@ -3679,6 +3695,28 @@ function guardActive(fn){
   $('modal-cancel').onclick=close;
 }
 function startOver(){guardActive(resetAll);}
+function showInfo(kind){
+  const simple=INTERFACE_MODE==='simple';
+  const msg=kind==='b'
+    ?'<strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.'
+    :(simple
+      ?'<strong>Approach A needs an adjustment coefficient.</strong> In the Approach A panel below: <strong>Measure</strong> — enter a coefficient you obtained earlier; <strong>Calibrate</strong> — if this crack’s width is known, enter it to obtain the coefficient.'
+      :'<strong>Approach A needs a calibration coefficient.</strong> In the Approach A panel below: <strong>Measure</strong> — enter a coefficient you obtained earlier; <strong>Calibrate</strong> — if this crack’s width is known (reference crack or gauge), enter it to obtain the coefficient.');
+  $('info-msg').innerHTML=msg;
+  $('info-modal').style.display='flex';
+  try{$('info-ok').focus({preventScroll:true});}catch(e){}
+}
+function hideInfo(){const m=$('info-modal');if(m)m.style.display='none';}
+document.addEventListener('click',e=>{
+  const h=e.target.closest&&e.target.closest('.help');
+  if(!h)return;
+  const open=h.classList.toggle('open');
+  const b=h.querySelector('.help-more');if(b)b.textContent=open?'less':'more';
+});
+document.addEventListener('keydown',e=>{
+  const m=$('info-modal');
+  if(m&&m.style.display==='flex'&&(e.key==='Escape'||e.key==='Enter')){e.preventDefault();e.stopImmediatePropagation();hideInfo();}
+},true);
 function drawConfirmedOnScreen(ctx,u){
   if(!S.lines.length||S.step<3)return;
   const band=S.lineView==='band';
