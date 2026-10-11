@@ -113,7 +113,7 @@ input[type=range]{accent-color:#0cbbcc}
 .method-label{font-size:12px;font-weight:500;color:rgba(232,248,249,0.55);margin-bottom:8px}
 
 #result-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.result-card{padding:16px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.2)}
+.result-card{position:relative;padding:16px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.2)}
 .result-card.b{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)}
 .result-card.a-active{background:rgba(12,187,204,0.1);border-color:rgba(12,187,204,0.35)}
 .r-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;color:rgba(232,248,249,0.45)}
@@ -138,12 +138,15 @@ input[type=range]{accent-color:#0cbbcc}
 #result-nav-row{margin-bottom:8px}
 #result-nav-row2{margin-bottom:16px;gap:6px;flex-wrap:nowrap}
 #result-nav-row2 .btn{flex:1 1 auto;min-width:0;white-space:normal;line-height:1.25}
-#result-nav-row2 .btn,#panel-3 .btn-small{padding:5px 8px;font-size:12px}
+#result-nav-row2 .btn{padding:5px 8px;font-size:12px}
+#panel-3 .nav-row .btn{padding:8px 14px}
 .help{display:flex;align-items:baseline;gap:6px;margin-bottom:10px;cursor:pointer}
 .help-txt{flex:1;min-width:0;font-size:12px;line-height:1.5;color:rgba(232,248,249,0.45);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .help.open .help-txt{display:block}
 .help-more{background:none;border:none;color:#7fdbe4;font-size:12px;font-family:inherit;cursor:pointer;padding:0;white-space:nowrap;flex-shrink:0}
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:10px;font-style:normal;font-weight:600;line-height:1;margin-left:5px;vertical-align:1px;cursor:pointer;background:none;color:inherit;padding:0;font-family:inherit}
+.card-i{position:absolute;top:12px;right:12px;margin:0;width:18px;height:18px;font-size:11px}
+.result-card .r-tag{padding-right:24px}
 .info-link{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 #info-modal .modal-box{border-color:rgba(251,191,36,0.4)}
 #meas-note-row{margin-bottom:12px}
@@ -163,7 +166,7 @@ input[type=range]{accent-color:#0cbbcc}
   .r-unit{font-size:14px;margin-left:3px}
   .nav-row .btn{flex:1 1 auto;min-width:0;text-align:center;padding:10px 10px;font-size:12px}
   .nav-row{gap:6px}
-  #result-nav-row2 .btn,#panel-3 .btn-small{padding:7px 6px;font-size:11px}
+  #result-nav-row2 .btn{padding:7px 6px;font-size:11px}
   #scale-display,#scale-display-3{flex-basis:100%}
   .tab{padding:8px 10px;font-size:11px;min-height:44px}
   .tab-row{gap:6px}
@@ -202,6 +205,9 @@ input[type=range]{accent-color:#0cbbcc}
 .formula-input-row label{font-size:13px;color:rgba(232,248,249,0.7);min-width:130px}
 .formula-input-row input[type=number]{width:90px}
 .formula-default{font-size:11px;color:rgba(232,248,249,0.35);font-family:monospace}
+.const-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.const-field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:rgba(232,248,249,0.7)}
+.const-field input{width:100%}
 
 .profile-divider{border-top:1px solid rgba(12,187,204,0.15);margin:14px 0 12px}
 .profile-label{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
@@ -209,7 +215,8 @@ input[type=range]{accent-color:#0cbbcc}
 .profile-row select{width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(12,187,204,0.25);background:rgba(0,0,0,0.3);color:#e8f8f9;font-size:13px;font-family:inherit}
 .profile-row select option{background:#0a3540;color:#e8f8f9}
 .profile-btns{display:flex;gap:6px;flex-wrap:wrap}
-.profile-note{font-size:11px;color:rgba(232,248,249,0.4);font-style:italic;margin-top:2px;min-height:14px}
+.profile-note{font-size:11px;color:rgba(232,248,249,0.4);font-style:italic;margin-top:2px}
+.profile-note:empty{display:none}
 #profile-save-form{display:none;margin-top:8px;padding:10px;border-radius:7px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2)}
 #profile-save-form.show{display:block}
 #profile-save-form input[type=text]{width:100%;margin-bottom:6px}
@@ -282,17 +289,22 @@ body.simple #aux-bar .pro-only{display:none}
 #calib-canvas{display:block;width:100%;border-radius:10px;border:1px solid rgba(12,187,204,0.25);margin-bottom:6px;touch-action:none;user-select:none;cursor:crosshair}
 #calib-zoom-bar{display:flex;align-items:center;gap:8px 10px;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,0.04);font-size:11px;flex-wrap:wrap}
 .calib-screen-nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(12,187,204,0.15)}
-.log-controls-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.log-controls-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.log-controls-row .log-btns{margin-left:auto}
 .log-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:#e8f8f9;cursor:pointer}
 .log-toggle input{width:16px;height:16px;accent-color:#0cbbcc;cursor:pointer}
 .log-btns{display:flex;gap:8px;flex-wrap:wrap}
-.log-row{padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.12);margin-bottom:8px}
-.log-row-main{display:flex;align-items:center;gap:10px}
-.log-idx{min-width:22px;height:22px;border-radius:50%;background:rgba(12,187,204,0.18);color:#0cbbcc;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.log-vals{flex:1;font-size:13px;color:#e8f8f9}
-.log-dim{color:rgba(232,248,249,0.55);font-size:12px}
-.log-row-sub{font-size:11px;color:rgba(232,248,249,0.5);margin:5px 0 0 32px}
-.log-note-inp{width:calc(100% - 32px);margin:6px 0 0 32px;padding:4px 8px;font-size:12px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2);border-radius:5px;color:#e8f8f9;box-sizing:border-box}
+.log-group{border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.12);margin-bottom:8px;padding:4px 10px 6px}
+.log-head{font-size:11px;color:rgba(232,248,249,0.5);padding:4px 0 3px;border-bottom:1px solid rgba(12,187,204,0.1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-head strong{color:rgba(232,248,249,0.8);font-weight:600}
+.log-line{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);flex-wrap:wrap}
+.log-line:last-child{border-bottom:none}
+.log-idx{min-width:26px;height:20px;padding:0 6px;border-radius:10px;background:rgba(12,187,204,0.18);color:#0cbbcc;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.log-vals{font-size:13px;color:#e8f8f9;white-space:nowrap}
+.log-dim{color:rgba(232,248,249,0.55);font-size:12px;white-space:nowrap}
+.log-note-inp{flex:1;min-width:120px;padding:4px 8px;font-size:12px;background:rgba(0,0,0,0.25);border:1px solid rgba(12,187,204,0.2);border-radius:5px;color:#e8f8f9;box-sizing:border-box}
+.log-line .wiz-shot-del{margin-left:auto}
+@media(max-width:520px){.log-line .log-note-inp{order:5;flex-basis:100%}}
 
 #calib-panel{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
 .calib-title{font-size:12px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
@@ -353,13 +365,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   #calibrate-screen>.calib-screen-title{grid-column:2;grid-row:1}
   #calibrate-screen>.calib-screen-sub{grid-column:2;grid-row:2;font-size:12px;margin-bottom:12px}
   #calib-capture{grid-column:2;grid-row:3}
-  #calibrate-screen>.calib-screen-nav{grid-column:2;grid-row:4;margin:0 0 16px;padding-top:12px}
+  #calibrate-screen>.calib-screen-nav{grid-column:2;grid-row:4;margin:16px 0 16px;padding-top:14px}
   #wiz-tips-box{grid-column:2;grid-row:5}
   #calib-profiles{grid-column:2;grid-row:6}
-  #calibrate-screen>#app-footer{grid-column:2;grid-row:7}
   #calib-upload-prompt,#calib-canvas-wrap{grid-column:1;grid-row:1/8;position:sticky;top:10px}
   #calib-canvas{width:min(100%,calc((100vh - 130px) * var(--ar,1.333)));margin:0 auto 6px}
-  #side>#app-footer{margin-top:32px}
+
 }
 </style>
 </head>
@@ -388,7 +399,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.5.1-beta</div>
+  <div id="version-tag">v1.5.4-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -547,8 +558,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
       <button class="btn btn-nav" onclick="goBack()">← Back</button>
       <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
-      <button class="btn btn-nav btn-small" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
-      <button class="btn btn-nav btn-small" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
+      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
       <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
     </div>
   </div>
@@ -558,12 +569,14 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div id="result-cards">
       <div class="result-card" id="card-a">
         <div class="r-tag" id="a-tag">Approach A</div>
-        <div class="r-method" id="a-method">Physical Reference · high accuracy<button class="info-i" id="a-hint" onclick="showInfo('a')" title="What to do">i</button></div>
+        <button class="info-i card-i" id="a-hint" onclick="showInfo('a')" title="What to do">i</button>
+        <div class="r-method" id="a-method">Physical Reference · high accuracy</div>
         <div class="r-val" id="r-a">—.— <span class="r-unit">mm</span></div>
       </div>
       <div class="result-card b">
         <div class="r-tag">Approach B</div>
-        <div class="r-method"><span class="info-link" onclick="showInfo('b')" title="Accuracy note">Empirical Formula · estimate only</span><button class="info-i" onclick="showInfo('b')" title="Accuracy note">i</button></div>
+        <button class="info-i card-i" onclick="showInfo('b')" title="Accuracy note">i</button>
+        <div class="r-method"><span class="info-link" onclick="showInfo('b')" title="Accuracy note">Empirical Formula · estimate only</span></div>
         <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
       </div>
     </div>
@@ -812,9 +825,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <label class="wiz-field"><span>Object width (mm)</span><input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000"></label>
         </div>
         <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Click the two edges of the object on the photo</div>
-        <div id="wiz-span-hint">Load this shot's calibration photo first.</div>
+        <div id="wiz-span-hint">Load calibration photo first.</div>
         <div class="wiz-btns">
-          <button class="btn btn-primary btn-small" id="btn-wiz-add" onclick="addCalibShot()">Add this shot</button>
+          <button class="btn btn-primary" id="btn-wiz-add" onclick="addCalibShot()">Add this shot</button>
         </div>
       </div>
 
@@ -840,19 +853,13 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
   <div id="formula-screen" style="display:none">
     <div class="calib-screen-title">Approach B — empirical formula</div>
-    <div class="calib-screen-sub">Approach B estimates crack width directly from image resolution, using a calibrated function. The default constants suit general use; a specific camera and site will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference).</div>
+    <div class="calib-screen-sub">Approach B estimates crack width from image resolution using a calibrated function. Defaults suit general use; constants tuned to your camera and site do better. For best accuracy use Approach A.</div>
 
     <div class="avg-section" style="margin-bottom:14px">
       <div class="avg-title">Formula constants</div>
-      <div class="formula-input-row">
-        <label>Coefficient (c):</label>
-        <input type="number" id="bcoeff-inp-scr" step="0.001" value="0.357" oninput="onFormulaChangeScr()">
-        <span class="formula-default">default 0.357</span>
-      </div>
-      <div class="formula-input-row">
-        <label>Exponent (α):</label>
-        <input type="number" id="bexp-inp-scr" step="0.01" value="0.16" oninput="onFormulaChangeScr()">
-        <span class="formula-default">default 0.16</span>
+      <div class="const-pair">
+        <label class="const-field"><span>Coefficient (c)</span><input type="number" id="bcoeff-inp-scr" step="0.001" value="0.357" oninput="onFormulaChangeScr()"><span class="formula-default">default 0.357</span></label>
+        <label class="const-field"><span>Exponent (α)</span><input type="number" id="bexp-inp-scr" step="0.01" value="0.16" oninput="onFormulaChangeScr()"><span class="formula-default">default 0.16</span></label>
       </div>
       <div class="wiz-btns" style="margin-top:10px">
         <button class="btn-ghost btn-small" id="btn-formula-reset-scr" style="display:none" onclick="resetFormula()">Reset to default</button>
@@ -915,16 +922,16 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
   <div id="log-screen" style="display:none">
     <div class="calib-screen-title">Measurement log</div>
-    <div class="calib-screen-sub">Every completed analysis is recorded here for the session, so you can measure a whole site and export the results to a spreadsheet. Stored on this device only.</div>
+    <div class="calib-screen-sub">Every analysis is logged here so you can measure a whole site and export it to a spreadsheet. Stored on this device only.</div>
 
-    <div class="avg-section" style="margin-bottom:14px">
+    <div class="avg-section" style="margin-bottom:14px;padding:10px 14px">
       <div class="log-controls-row">
-        <label class="log-toggle"><input type="checkbox" id="autolog-toggle" onchange="setAutoLog(this.checked)"> Automatically log every measurement</label>
+        <label class="log-toggle"><input type="checkbox" id="autolog-toggle" onchange="setAutoLog(this.checked)"> Auto-log</label>
         <span id="log-count" style="font-size:12px;color:rgba(232,248,249,0.6)"></span>
-      </div>
-      <div class="log-btns">
-        <button class="btn btn-primary" onclick="exportMeasLogCSV()">↓ Export CSV</button>
-        <button class="btn btn-nav" onclick="clearMeasLog()">Clear log</button>
+        <div class="log-btns">
+          <button class="btn btn-primary" onclick="exportMeasLogCSV()">↓ Export CSV</button>
+          <button class="btn btn-nav" onclick="clearMeasLog()">Clear log</button>
+        </div>
       </div>
       <div id="log-msg" style="display:none;font-size:12px;margin-top:8px"></div>
     </div>
@@ -1399,7 +1406,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10501;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10504;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1627,7 +1634,7 @@ function hitPt(pts,pos,src,cv,radCss){
 function showLoupe(cv,src,pt,clientX,clientY){
   const lp=$('loupe');if(!lp||!src.imgEl||!src.dispW)return;
   const L=150,MAG=4,dpr=Math.min(window.devicePixelRatio||1,2),D=Math.round(L*dpr);
-  if(lp.width!==D){lp.width=D;lp.height=D;}
+  if(lp.width!==D||lp.height!==D){lp.width=D;lp.height=D;}
   const r=cv.getBoundingClientRect();if(!r.width)return;
   const k=r.width/src.dispW*src.zoom;
   const span=L/(MAG*k);
@@ -1842,17 +1849,17 @@ function buildAuxBar(){
   const item=document.createElement('div');item.className='aux-item pro-only';
   item.onclick=()=>{if(S.screen==='calibrate')startMeasuringFromCalib();else showScreen('calibrate');};
   const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
-  const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';
+  const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';item.title='Calibrate (C)';
   item.append(circle,lbl);bar.append(item);
   const item2=document.createElement('div');item2.className='aux-item pro-only';
   item2.onclick=()=>showScreen(S.screen==='formula'?'workflow':'formula');
   const circle2=document.createElement('div');circle2.className='aux-circle';circle2.id='aux-formula';circle2.textContent='B';
-  const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';
+  const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';item2.title='Formula (B)';
   item2.append(circle2,lbl2);bar.append(item2);
   const item3=document.createElement('div');item3.className='aux-item';
   item3.onclick=()=>showScreen(S.screen==='log'?'workflow':'log');
   const circle3=document.createElement('div');circle3.className='aux-circle';circle3.id='aux-log';circle3.textContent='L';
-  const lbl3=document.createElement('span');lbl3.className='aux-lbl';lbl3.textContent='Log';
+  const lbl3=document.createElement('span');lbl3.className='aux-lbl';lbl3.textContent='Log';item3.title='Log (L)';
   item3.append(circle3,lbl3);bar.append(item3);
 }
 function updateAuxBar(){
@@ -1878,16 +1885,6 @@ function updateStepBar(){
   }
 }
 
-/* On wide screens the footer moves into the right-hand column, so it never pushes the pinned photo up. */
-function placeFooter(){
-  const f=$('app-footer');if(!f)return;
-  let t=$('app');
-  if(isWide()){
-    if(S.screen==='workflow'&&S.step>=2&&S.dispW>0)t=$('side');
-    else if(S.screen==='calibrate')t=$('calibrate-screen');
-  }
-  if(t&&f.parentNode!==t)t.appendChild(f);
-}
 function showStep(n){
   S.step=n;
   [1,2,3,4].forEach(i=>{const p=$(`panel-${i}`);if(p)p.className='panel'+(i===n?' show':'');});
@@ -1904,7 +1901,6 @@ function showStep(n){
   renderLineList();
   updateResWarn();
   updateStepBar();
-  placeFooter();
   if(n>=2&&isWide()&&S.screen==='workflow'){
     const sd=$('side');
     if(sd){const y=sd.getBoundingClientRect().top+window.scrollY-10;if(window.scrollY>y)window.scrollTo(0,Math.max(0,y));}
@@ -2004,7 +2000,7 @@ function updateBandWidth(){
 function updateScaleHint(){
   const hint=$('scale-hint');
   if(S.scaleMode==='direct'){
-    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:84px"><span>pixels / mm</span><button class="btn-ghost btn-small use-last" id="ul-direct" onclick="useLast(\'direct\')" style="display:none">Use last</button></div>';
+    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:150px"><span>pixels / mm</span><button class="btn-ghost btn-small use-last" id="ul-direct" onclick="useLast(\'direct\')" style="display:none">Use last</button></div>';
     const inp=$('direct-px-inp');
     if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
     applyHints();updateConfirmBtn();
@@ -2014,7 +2010,7 @@ function updateScaleHint(){
   const tap=isTouch?'Tap':'Click';
   if(S.scalePts.length===0)hint.innerHTML=intro+`${tap} <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size`;
   else if(S.scalePts.length===1)hint.innerHTML=`Now ${tap.toLowerCase()} <strong>point B</strong> at the other end of that known distance`;
-  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:84px"><span>mm</span><button class="btn-ghost btn-small use-last" id="ul-real" onclick="useLast('real')" style="display:none">Use last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div>`;
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:130px"><span>mm</span><button class="btn-ghost btn-small use-last" id="ul-real" onclick="useLast('real')" style="display:none">Use last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div>`;
   const inp=$('real-dist-inp');
   if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
   applyHints();updateConfirmBtn();
@@ -2223,7 +2219,6 @@ function showScreen(name){
     calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
     requestAnimationFrame(paintCanvas);
   }
-  placeFooter();
   updateAuxBar();
 }
 function enterLogScreen(){
@@ -2234,24 +2229,31 @@ function renderMeasLog(){
   const list=$('log-list');if(!list)return;
   const cnt=$('log-count');if(cnt)cnt.textContent=S.measLog.length?`${S.measLog.length} measurement${S.measLog.length===1?'':'s'}`:'';
   if(!S.measLog.length){list.innerHTML='<div style="font-size:12px;color:rgba(232,248,249,0.4);padding:8px 0">No measurements logged yet. Completed analyses appear here'+(S.autoLog?' automatically.':' when you add them.')+'</div>';return;}
-  const rows=S.measLog.map((e,i)=>{
-    const t=new Date(e.timestamp);
-    const ts=isNaN(t)?'':`${t.toLocaleDateString()} ${t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
-    const A=e.widthA!=null?e.widthA.toFixed(3):'—';
-    const B=e.widthB!=null?e.widthB.toFixed(3):'—';
-    const photo=e.photoName?escapeHtml(e.photoName):'(unnamed)';
-    const bd=e.bitDepth&&/16|32/.test(e.bitDepth)?` · <span style="color:#34d399">${escapeHtml(e.bitDepth)}</span>`:'';
-    return `<div class="log-row">
-      <div class="log-row-main">
-        <span class="log-idx">${i+1}</span>
-        <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm &nbsp; <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span></span>
+  const groups=[];
+  S.measLog.forEach(e=>{
+    const g=groups[groups.length-1];
+    if(g&&g.photo===(e.photoName||'')&&e.lineNo&&e.lineNo>1)g.items.push(e);
+    else groups.push({photo:e.photoName||'',items:[e]});
+  });
+  const fmtTs=v=>{const t=new Date(v);return isNaN(t)?'':`${t.toLocaleDateString()} ${t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;};
+  list.innerHTML=groups.map(g=>{
+    const e0=g.items[0];
+    const photo=g.photo?escapeHtml(g.photo):'(unnamed)';
+    const bd=e0.bitDepth&&/16|32/.test(e0.bitDepth)?` · <span style="color:#34d399">${escapeHtml(e0.bitDepth)}</span>`:'';
+    const head=`${fmtTs(e0.timestamp)} · <strong>${photo}</strong>${e0.cameraProfile?' · '+escapeHtml(e0.cameraProfile):''}${bd}`;
+    const lines=g.items.map((e,k)=>{
+      const A=e.widthA!=null?e.widthA.toFixed(3):'—';
+      const B=e.widthB!=null?e.widthB.toFixed(3):'—';
+      return `<div class="log-line">
+        <span class="log-idx">#${e.lineNo||k+1}</span>
+        <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm</span>
+        <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span>
+        <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
         <button class="wiz-shot-del" onclick="deleteLogEntry('${e.id}')" title="Delete">✕</button>
-      </div>
-      <div class="log-row-sub">${ts} · ${photo}${e.lineNo?' · line #'+e.lineNo:''}${e.cameraProfile?' · '+escapeHtml(e.cameraProfile):''}${bd}</div>
-      <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
-    </div>`;
+      </div>`;
+    }).join('');
+    return `<div class="log-group"><div class="log-head">${head}</div>${lines}</div>`;
   }).join('');
-  list.innerHTML=rows;
 }
 function updateLogAux(){
   const c=$('aux-log');if(!c)return;
@@ -2343,7 +2345,7 @@ function wizFieldKey(e){
 }
 function updateWizSpanHint(){
   const h=$('wiz-span-hint');if(!h)return;
-  if(!S.calib.imageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load this shot’s calibration photo first.</span>';return;}
+  if(!S.calib.imageLoaded){h.innerHTML='<span style="color:rgba(232,248,249,0.5)">Load calibration photo first.</span>';return;}
   const sp=S.calib.scalePts;
   const tap=isTouch?'tap':'click';
   if(sp.length===0){
@@ -2358,7 +2360,7 @@ function updateWizSpanHint(){
   }
 }
 function addCalibShot(){
-  if(!S.calib.imageLoaded){showErr('Load this shot’s calibration photo first.');return;}
+  if(!S.calib.imageLoaded){showErr('Load calibration photo first.');return;}
   const d=parseFloat($('wiz-dist-inp').value);
   const w=parseFloat($('wiz-width-inp').value);
   if(!(d>0)){showErr('Enter this shot’s distance (m).');return;}
@@ -2394,6 +2396,9 @@ function renderWizShots(){
         resid=`<span class="shot-resid" style="color:${col}">±${rp.toFixed(2)}%</span>`;}
       return `<div class="wiz-shot-item"><span>${s.d.toFixed(3)} m · ${s.w.toFixed(1)} mm · ${s.span.toFixed(0)} px → <strong>${s.r.toFixed(3)} px/mm</strong></span>${resid}<button class="wiz-shot-del" onclick="deleteCalibShot(${i})" title="Remove">✕</button></div>`;
     }).join('');
+    const n=shots.length;
+    const g=n===1?'Add another 2–4 shots.':n===2?'Add another 1–3 shots.':n===3?'Ideally, add another 1–2 shots.':n===4?'Ideally, add 1 more shot.':'Maximum of 5 shots reached.';
+    list.innerHTML+=`<div id="wiz-shot-guide" style="font-size:11px;color:rgba(232,248,249,0.5);margin-top:2px">${g}</div>`;
   }
   updateWizFitSummary();
 }
@@ -3695,13 +3700,23 @@ function guardActive(fn){
   $('modal-cancel').onclick=close;
 }
 function startOver(){guardActive(resetAll);}
+document.addEventListener('keydown',e=>{
+  if(!INTERFACE_MODE||e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
+  const t=e.target,tag=t&&t.tagName;
+  if(t&&(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||t.isContentEditable))return;
+  if(['modal','info-modal'].some(id=>{const m=$(id);return m&&m.style.display==='flex';}))return;
+  const k=(e.key||'').toLowerCase(),pro=INTERFACE_MODE!=='simple';
+  if(k==='c'&&pro){e.preventDefault();if(S.screen==='calibrate')startMeasuringFromCalib();else showScreen('calibrate');}
+  else if(k==='b'&&pro){e.preventDefault();showScreen(S.screen==='formula'?'workflow':'formula');}
+  else if(k==='l'){e.preventDefault();showScreen(S.screen==='log'?'workflow':'log');}
+});
 function showInfo(kind){
   const simple=INTERFACE_MODE==='simple';
   const msg=kind==='b'
     ?'<strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.'
     :(simple
-      ?'<strong>Approach A needs an adjustment coefficient.</strong> In the Approach A panel below: <strong>Measure</strong> — enter a coefficient you obtained earlier; <strong>Calibrate</strong> — if this crack’s width is known, enter it to obtain the coefficient.'
-      :'<strong>Approach A needs a calibration coefficient.</strong> In the Approach A panel below: <strong>Measure</strong> — enter a coefficient you obtained earlier; <strong>Calibrate</strong> — if this crack’s width is known (reference crack or gauge), enter it to obtain the coefficient.');
+      ?'<strong>Approach A needs an adjustment coefficient.</strong> In the Approach A panel below: <strong>Calibrate</strong> — if this crack’s width is known, enter it to obtain the coefficient. <strong>Measure</strong> — enter a coefficient you obtained earlier, or use the one kept automatically from your last calibration.'
+      :'<strong>Approach A needs a calibration coefficient.</strong> In the Approach A panel below: <strong>Calibrate</strong> — if this crack’s width is known (reference crack or gauge), enter it to obtain the coefficient. <strong>Measure</strong> — enter a coefficient you obtained earlier, or use the one kept automatically from your last calibration.');
   $('info-msg').innerHTML=msg;
   $('info-modal').style.display='flex';
   try{$('info-ok').focus({preventScroll:true});}catch(e){}
@@ -4418,7 +4433,7 @@ document.addEventListener('keydown',e=>{
 window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);});
 
 document.documentElement.style.setProperty('--chrome',isTouch?'200px':'150px');
-window.addEventListener('resize',()=>{placeFooter();if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
+window.addEventListener('resize',()=>{if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
 S.lineView=storageGet(LINE_VIEW_KEY)==='thin'?'thin':'band';
 applyLineViewBtn();
 buildStepBar();
