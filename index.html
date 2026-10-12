@@ -399,7 +399,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.5.4-beta</div>
+  <div id="version-tag">v1.5.5-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -620,6 +620,11 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <span>mm</span>
         <span id="crop-auto-hint" style="font-size:11px;color:#94a3b8">auto-detected</span>
       </div>
+      <label class="chk-row" style="margin:12px 0 0">
+        <input type="checkbox" id="chk-fwhm-cap" onchange="setFwhmCap(this.checked)">
+        <div><div class="chk-main">Limit auto window to 4 × FWHM <span id="fwhm-val" style="font-weight:400;font-size:11px;color:#94a3b8"></span></div>
+        <div class="chk-sub">Caps the auto-detected window at 4 × the depression width at half depth, centred on the crack. Wider areas need manual adjustment.</div></div>
+      </label>
     </div>
 
     <div id="base-panel" class="pro-only">
@@ -1366,7 +1371,7 @@ const S={
   zoom:1,panX:0,panY:0,isPanning:false,panAnchor:null,
   iMode:null,scaleMode:'twopoint',scalePts:[],realDist:'',directPx:'',pxMm:null,
   ptDrag:null,
-  lines:[],lineView:'band',
+  lines:[],lineView:'band',fwhmCap:false,
   drawStart:null,drawCur:null,measLine:null,nLines:40,
   doAlign:false,avgMethod:'mean',doAdaptive:false,
   results:null,busy:false,
@@ -1406,7 +1411,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10504;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10505;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1416,7 +1421,7 @@ function applyInterfaceMode(tier){
   if (INTERFACE_MODE === 'simple') {
     document.body.classList.add('simple');
 
-    S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false;
+    S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false; S.fwhmCap = false;
     const a=$('chk-align'); if(a)a.checked=true;
     const ad=$('chk-adaptive'); if(ad)ad.checked=false;
     const med=document.querySelector('input[name="avgMethod"][value="median"]');
@@ -2628,7 +2633,7 @@ function updateResultsDisplay(){
   $('stats-row').innerHTML=
     `<div>scale: ${S.pxMm.toFixed(3)} px/mm · area: ${area} lum·mm${isAdj?' (adjusted)':''} · calib 1mm: ${r.calib} lum·mm</div>`+
     `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}${src}</div>`+
-    `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?' (auto-bounded)':''}</div>`;
+    `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?(r.capped?` (auto, capped ${FWHM_CAP_K}×FWHM)`:' (auto-bounded)'):''}${r.fwhmMm!=null?` · FWHM ${r.fwhmMm.toFixed(3)} mm`:''}</div>`;
   updateCropUI();updateLogNowBtn();
 }
 
@@ -2637,6 +2642,8 @@ function updateCropUI(){
   $('crop-badge').style.display=isCustom?'':'none';
   $('btn-reset-crop').style.display=isCustom?'':'none';
   $('crop-auto-hint').style.display=isCustom?'none':'';
+  $('crop-auto-hint').textContent=(S.results&&S.results.capped)?`auto · capped at ${FWHM_CAP_K}×FWHM`:'auto-detected';
+  const fv=$('fwhm-val');if(fv)fv.textContent=(S.results&&S.results.fwhmMm!=null)?`· FWHM ${S.results.fwhmMm.toFixed(3)} mm`:'';
 }
 
 function resetCrop(){
@@ -2884,6 +2891,8 @@ function addLogEntry(silent){
     toneResponse:isHdSource()?S.pixels.tone:'',
     lineNo:nextLineNo(),
     baselineAdjusted:baselineAdjusted(),
+    windowCap:windowCapLabel(),
+    fwhm:(S.results&&S.results.fwhmMm!=null)?S.results.fwhmMm:null,
     windowEdited:windowEdited(),
     note:measNoteValue()
   };
@@ -2903,9 +2912,9 @@ function refreshLastLog(){
   const a=(dv.aWidth!=null&&dv.aWidth!=='')?+(+dv.aWidth).toFixed(4):null;
   const b=+(+dv.bWidth).toFixed(4);
   const cl=+(+dv.cL).toFixed(3),cr=+(+dv.cR).toFixed(3);
-  const ba=baselineAdjusted(),we=windowEdited();
-  if(e.widthA===a&&e.widthB===b&&e.cropLeft===cl&&e.cropRight===cr&&e.baselineAdjusted===ba&&e.windowEdited===we)return;
-  e.widthA=a;e.widthB=b;e.cropLeft=cl;e.cropRight=cr;e.baselineAdjusted=ba;e.windowEdited=we;
+  const ba=baselineAdjusted(),we=windowEdited(),wc=windowCapLabel();
+  if(e.widthA===a&&e.widthB===b&&e.cropLeft===cl&&e.cropRight===cr&&e.baselineAdjusted===ba&&e.windowEdited===we&&e.windowCap===wc)return;
+  e.widthA=a;e.widthB=b;e.cropLeft=cl;e.cropRight=cr;e.baselineAdjusted=ba;e.windowEdited=we;e.windowCap=wc;
   persistMeasLog();
   if(S.screen==='log')renderMeasLog();
 }
@@ -2957,6 +2966,7 @@ function exportMeasLogCSV(){
     ['widthA','Width A (mm)'],['widthB','Width B (mm)'],
     ['cropLeft','Window from (mm)'],['cropRight','Window to (mm)'],
     ['windowEdited','Window edited'],['baselineAdjusted','Baseline adjusted'],
+    ['windowCap','Window cap'],['fwhm','FWHM (mm)'],
     ['x1','Line x1 (px)'],['y1','Line y1 (px)'],['x2','Line x2 (px)'],['y2','Line y2 (px)'],
     ['resolutionMP','Image MP'],['bitDepth','Source depth'],['toneResponse','Tone response'],['note','Note']];
   const header=cols.map(c=>csvEscape(c[1])).join(',');
@@ -3583,7 +3593,7 @@ function runAnalysis(){
         area:+area.toFixed(4),width:+width.toFixed(4),calib:+calib.toFixed(2),
         chartData,isDep,crackMm:+(minIdx/pxMm_pd).toFixed(3),
         boundLeft:+(left/pxMm_pd).toFixed(3),boundRight:+(right/pxMm_pd).toFixed(3),
-        boundLeftIdx:left,boundRightIdx:right,
+        boundLeftIdx:left,boundRightIdx:right,workerLeftIdx:left,workerRightIdx:right,workerArea:area,
         prof:[...prof],baseArr:[...base],pxMm_pd,midIdx:minIdx,
         optsLabel:opts.join(' · '),
         linesTotal:allProfiles.length,
@@ -3591,6 +3601,7 @@ function runAnalysis(){
         sourceDepth:(S.imgMeta&&S.imgMeta.depth)||'',
         sourceTone:isHdSource()?S.pixels.tone:'',
       };
+      applyAutoBounds();
       resetAdjustments();
       S.lastLogId='';
       S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
@@ -3604,6 +3615,58 @@ function runAnalysis(){
     S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=!S.measLine;
   },100);
 }
+
+/* ── optional cap on the auto window: 4 × FWHM of the depression ── */
+const FWHM_CAP_K=4;
+const FWHM_CAP_KEY='dcg_fwhm_cap_v1';
+function fwhmInfo(prof,base,isDep,L,R){
+  const n=prof.length,sg=isDep?1:-1;
+  const r=prof.map((v,i)=>sg*(base[i]-v));
+  const sm=r.map((_,i)=>{let s=0,c=0;for(let k=Math.max(0,i-1);k<=Math.min(n-1,i+1);k++){s+=r[k];c++;}return s/c;});
+  let pi=L,pv=-Infinity;
+  for(let i=Math.max(0,L);i<=Math.min(n-1,R);i++)if(sm[i]>pv){pv=sm[i];pi=i;}
+  if(!(pv>0))return null;
+  const h=pv/2;
+  let a=pi;while(a>0&&sm[a-1]>h)a--;
+  let b=pi;while(b<n-1&&sm[b+1]>h)b++;
+  const xl=a>0?a-(sm[a]-h)/(sm[a]-sm[a-1]):a;
+  const xr=b<n-1?b+(sm[b]-h)/(sm[b]-sm[b+1]):b;
+  return{fwhm:xr-xl,centre:(xl+xr)/2};
+}
+function applyAutoBounds(){
+  const r=S.results;if(!r||!r.prof)return;
+  const n=r.prof.length;
+  let L=r.workerLeftIdx,R=r.workerRightIdx,capped=false;
+  const f=fwhmInfo(r.prof,r.baseArr,r.isDep,L,R);
+  r.fwhmMm=f?+(f.fwhm/r.pxMm_pd).toFixed(3):null;
+  if(S.fwhmCap&&f){
+    const half=Math.max(FWHM_CAP_K/2*f.fwhm,3);
+    const cl=Math.max(L,Math.round(f.centre-half)),cr=Math.min(R,Math.round(f.centre+half));
+    if(cr>cl){capped=cl>L||cr<R;L=cl;R=cr;}
+  }
+  let area=r.workerArea;
+  if(capped){
+    const sg=r.isDep?1:-1,dx=1/r.pxMm_pd;area=0;
+    for(let i=L;i<Math.min(R,n-1);i++){
+      const r1=Math.max(0,sg*(r.baseArr[i]-r.prof[i])),r2=Math.max(0,sg*(r.baseArr[i+1]-r.prof[i+1]));
+      area+=0.5*(r1+r2)*dx;
+    }
+  }
+  r.capped=capped;r.boundLeftIdx=L;r.boundRightIdx=R;
+  r.boundLeft=+(L/r.pxMm_pd).toFixed(3);r.boundRight=+(R/r.pxMm_pd).toFixed(3);
+  const{width,calib}=approachB(area,S.pxMm);
+  r.area=+area.toFixed(4);r.width=+width.toFixed(4);r.calib=+calib.toFixed(2);
+}
+function setFwhmCap(on){
+  S.fwhmCap=!!on;storageSet(FWHM_CAP_KEY,S.fwhmCap?'1':'0');
+  const c=$('chk-fwhm-cap');if(c)c.checked=S.fwhmCap;
+  if(!S.results)return;
+  applyAutoBounds();
+  if(S.cropLeft===null){S.cropLeftStr=(+S.results.boundLeft).toFixed(3);$('crop-l-inp').value=S.cropLeftStr;}
+  if(S.cropRight===null){S.cropRightStr=(+S.results.boundRight).toFixed(3);$('crop-r-inp').value=S.cropRightStr;}
+  recompute();
+}
+function windowCapLabel(){return S.fwhmCap?`${FWHM_CAP_K}×FWHM`:'';}
 
 /* ═══════════════════════════════════════════════════════════
    MULTIPLE LINES PER PHOTO
@@ -4435,6 +4498,8 @@ window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationF
 document.documentElement.style.setProperty('--chrome',isTouch?'200px':'150px');
 window.addEventListener('resize',()=>{if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
 S.lineView=storageGet(LINE_VIEW_KEY)==='thin'?'thin':'band';
+S.fwhmCap=storageGet(FWHM_CAP_KEY)==='1';
+{const c=$('chk-fwhm-cap');if(c)c.checked=S.fwhmCap;}
 applyLineViewBtn();
 buildStepBar();
 buildAuxBar();
