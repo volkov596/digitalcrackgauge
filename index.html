@@ -241,6 +241,11 @@ input[type=range]{accent-color:#0cbbcc}
 .dist-input-row select option{background:#0a3540;color:#e8f8f9}
 #dist-result{font-family:monospace;font-size:14px;color:#0cbbcc;margin-top:4px;min-height:18px}
 #dist-zoom-caution{font-size:11px;color:rgba(251,191,36,0.8);font-style:italic;margin-top:6px;line-height:1.45}
+.planum-note{font-size:11px;line-height:1.45;margin:2px 0 6px}
+#dist-zoom-caution.pl-ok,.planum-note.pl-ok{color:#7fdbe4;font-style:normal}
+#dist-zoom-caution.pl-warn,.planum-note.pl-warn{color:#fbbf24;font-style:normal}
+@media(max-width:400px){.dist-input-row input[type=number]{width:90px}}
+.planum-chip{display:inline-block;padding:1px 8px;border-radius:9px;background:rgba(16,185,129,0.18);border:1px solid rgba(52,211,153,0.55);color:#34d399;font-size:10px;font-weight:600;letter-spacing:.03em;white-space:nowrap;vertical-align:1px}
 
 /* ── Calibration wizard ── */
 .wiz-tip{font-size:11px;color:rgba(232,248,249,0.55);line-height:1.5;margin-bottom:6px;padding-left:18px;position:relative}
@@ -399,7 +404,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.5.5-beta</div>
+  <div id="version-tag">v1.6.0-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -490,6 +495,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="dist-input-row">
         <label>Distance to crack (m):</label>
         <input type="number" id="dist-inp" step="0.001" min="0" placeholder="e.g. 4.000" oninput="onDistanceInput()">
+        <span class="planum-chip" id="dist-planum-chip" style="display:none">from Planum</span>
         <button class="btn-ghost btn-small use-last" id="ul-dist" onclick="useLast('dist')" style="display:none">Use last</button>
       </div>
       <div class="dist-input-row">
@@ -826,9 +832,10 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="wiz-shot-form">
         <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin-bottom:10px"><span class="wiz-step-num">1</span>Enter this shot's distance and the known object's width</div>
         <div class="wiz-pair">
-          <label class="wiz-field"><span>Distance (m)</span><input type="number" id="wiz-dist-inp" step="0.001" min="0" placeholder="e.g. 8.000"></label>
+          <label class="wiz-field"><span>Distance (m) <span class="planum-chip" id="wiz-planum-chip" style="display:none">from Planum</span></span><input type="number" id="wiz-dist-inp" step="0.001" min="0" placeholder="e.g. 8.000"></label>
           <label class="wiz-field"><span>Object width (mm)</span><input type="number" id="wiz-width-inp" step="0.001" min="0" placeholder="e.g. 50.000"></label>
         </div>
+        <div class="planum-note" id="wiz-planum-note" style="display:none"></div>
         <div style="font-size:12px;color:#e8f8f9;font-weight:600;margin:10px 0 4px"><span class="wiz-step-num">2</span>Click the two edges of the object on the photo</div>
         <div id="wiz-span-hint">Load calibration photo first.</div>
         <div class="wiz-btns">
@@ -1308,6 +1315,146 @@ async function hdDecodeTiff(u8){
   return hdFinish(S,{bits:bps,fmt:'TIFF',label:(bps===32?'32-bit float TIFF':bps+'-bit TIFF')});
 }
 
+/* ── Planum laser distance read from photo metadata ── */
+const PLANUM_NS='https://volkov596.github.io/ns/planum/';
+const PLANUM_SCAN=2*1024*1024;
+const DIST_CAUTION='A profile is only valid at the same zoom/focal length it was calibrated at. Use the lens/zoom the profile name refers to.';
+async function readPlanum(file){
+  try{
+    if(!file||typeof file.slice!=='function')return null;
+    const u8=new Uint8Array(await file.slice(0,PLANUM_SCAN).arrayBuffer());
+    return planumFromJpeg(u8);
+  }catch(e){return null;}
+}
+function plStarts(u8,o,str){
+  if(o+str.length>u8.length)return false;
+  for(let i=0;i<str.length;i++)if(u8[o+i]!==str.charCodeAt(i))return false;
+  return true;
+}
+function planumFromJpeg(u8){
+  if(u8.length<4||u8[0]!==0xFF||u8[1]!==0xD8)return null;
+  const XH='http://ns.adobe.com/xap/1.0/\0';
+  let p=2,xmp=null,exif=null;
+  while(p+4<=u8.length){
+    if(u8[p]!==0xFF)break;
+    const m=u8[p+1];
+    if(m===0xFF){p++;continue;}
+    if(m===0xDA||m===0xD9)break;
+    if((m>=0xD0&&m<=0xD7)||m===0x01){p+=2;continue;}
+    const L=(u8[p+2]<<8)|u8[p+3];
+    if(L<2)break;
+    const a=p+4,b=Math.min(u8.length,p+2+L);
+    if(m===0xE1){
+      if(!xmp&&plStarts(u8,a,XH))xmp=u8.subarray(a+XH.length,b);
+      else if(!exif&&plStarts(u8,a,'Exif\0\0'))exif=u8.subarray(a+6,b);
+    }
+    p+=2+L;
+  }
+  let rec=null;
+  if(xmp){try{rec=planumFromXmp(new TextDecoder('utf-8').decode(xmp));}catch(e){rec=null;}}
+  if(!rec&&exif){try{rec=planumFromExif(exif);}catch(e){rec=null;}}
+  return rec?planumNormalise(rec):null;
+}
+function planumFromXmp(txt){
+  if(txt.indexOf(PLANUM_NS)<0)return null;
+  const doc=new DOMParser().parseFromString(txt.replace(/\0+$/,''),'application/xml');
+  if(doc.getElementsByTagName('parsererror').length)return null;
+  const inNs=n=>!!n.namespaceURI&&n.namespaceURI.indexOf(PLANUM_NS)===0;
+  const all=Array.from(doc.getElementsByTagName('*'));
+  const els=all.filter(inNs);
+  const js=els.find(el=>el.localName==='json');
+  if(js){
+    try{const o=JSON.parse(js.textContent);if(o&&typeof o==='object'&&!Array.isArray(o))return o;}catch(e){}
+  }
+  const o={};let n=0;
+  els.forEach(el=>{if(!el.children.length&&el.localName!=='json'){o[el.localName]=el.textContent.trim();n++;}});
+  all.forEach(el=>Array.from(el.attributes).forEach(at=>{if(inNs(at)&&!(at.localName in o)){o[at.localName]=at.value;n++;}}));
+  return n?o:null;
+}
+function planumFromExif(t){
+  if(t.length<8)return null;
+  const le=t[0]===0x49&&t[1]===0x49;
+  if(!le&&!(t[0]===0x4D&&t[1]===0x4D))return null;
+  const dv=new DataView(t.buffer,t.byteOffset,t.byteLength);
+  const u16=o=>dv.getUint16(o,le),u32=o=>dv.getUint32(o,le);
+  const find=(ifd,tag)=>{
+    const n=u16(ifd);
+    for(let i=0;i<n;i++){const e=ifd+2+i*12;if(u16(e)===tag)return{count:u32(e+4),off:e+8};}
+    return null;
+  };
+  const ex=find(u32(4),0x8769);if(!ex)return null;
+  const uc=find(u32(ex.off),0x9286);if(!uc||uc.count<=8)return null;
+  const start=u32(uc.off);
+  if(start+uc.count>t.length)return null;
+  const b=t.subarray(start,start+uc.count);
+  const pre=String.fromCharCode.apply(null,b.subarray(0,8));
+  if(pre!=='ASCII\0\0\0'&&pre!=='\0\0\0\0\0\0\0\0')return null;
+  const str=new TextDecoder('utf-8').decode(b.subarray(8)).replace(/\0+$/,'').trim();
+  if(str[0]!=='{')return null;
+  const o=JSON.parse(str);
+  if(!o||typeof o!=='object'||Array.isArray(o))return null;
+  if(!/planum/i.test(String(o.app||''))&&!(o.counter!=null&&o.type!=null))return null;
+  return o;
+}
+function planumNormalise(o){
+  const num=v=>{if(v===null||v===undefined||v===''||typeof v==='boolean')return null;const x=+v;return isFinite(x)?x:null;};
+  const type=String(o.type==null?'':o.type).trim().slice(0,40),t=type.toLowerCase();
+  let dist=num(o.distance_m);if(dist!==null&&!(dist>0&&dist<10000))dist=null;
+  const kind=(t==='angle'||t==='level')?'nodist':(t==='distance'||t==='continuous')?'ok':(t==='indirect height'||t==='indirect length')?'tilted':'unknown';
+  if(kind!=='nodist'&&dist===null)return null;
+  const cnt=num(o.counter),w=num(o.photo_width),h=num(o.photo_height);
+  return{kind,type,dist,z:num(o.offset_z_mm),counter:cnt!==null?Math.round(cnt):null,
+    meter:String(o.meter_model==null?'':o.meter_model).trim().slice(0,40),time:String(o.time==null?'':o.time),
+    w:w>0?Math.round(w):null,h:h>0?Math.round(h):null};
+}
+function planumWhen(v){
+  const d=new Date(v);if(!v||isNaN(d))return '';
+  const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],p=n=>String(n).padStart(2,'0');
+  return `${d.getDate()} ${M[d.getMonth()]} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function planumAssess(pl,meta){
+  if(!pl)return null;
+  const head='Planum'+(pl.counter!==null?` #${pl.counter}`:'');
+  const dTxt=pl.dist!==null?`${pl.dist.toFixed(4)} m`+(pl.z!==null?` (Z ${+pl.z.toFixed(1)} mm)`:''):'';
+  const tail=[pl.meter,planumWhen(pl.time)].filter(Boolean).map(x=>' · '+x).join('');
+  let why='';
+  if(pl.kind==='nodist')why=`${pl.type} reading — no distance recorded`;
+  else if(pl.kind==='tilted')why=`${pl.type} ${dTxt} — along a tilted beam; not filled in`;
+  else if(pl.kind==='unknown')why=`${dTxt} — reading type ${pl.type?'“'+pl.type+'” ':''}not recognised; not filled in`;
+  else if(meta&&pl.w&&pl.h){
+    const W=meta.origW,H=meta.origH;
+    if(!((W===pl.w&&H===pl.h)||(W===pl.h&&H===pl.w)))why=`${dTxt} — photo resized or cropped since capture (${pl.w}×${pl.h} → ${W}×${H}); not filled in`;
+  }
+  if(why)return{ok:false,fill:null,text:`⚠ ${head} · ${why}${tail}`};
+  return{ok:true,fill:+pl.dist.toFixed(5),text:`${head} · ${dTxt}${tail}`};
+}
+function planumChipOn(a,inp){return !!(a&&a.ok&&inp&&Math.abs(parseFloat(inp.value)-a.fill)<1e-9);}
+function updatePlanumChip(){const c=$('dist-planum-chip');if(c)c.style.display=planumChipOn(S.planum,$('dist-inp'))?'':'none';}
+function renderPlanumNote(){
+  const el=$('dist-zoom-caution'),a=S.planum;
+  if(el){el.textContent=a?a.text:DIST_CAUTION;el.className=a?(a.ok?'pl-ok':'pl-warn'):'';}
+  updatePlanumChip();
+}
+function applyPlanum(pl){
+  S.planum=planumAssess(pl,S.imgMeta);
+  if(S.planum&&S.step===2){
+    if(S.planum.ok){const di=$('dist-inp');if(di)di.value=String(S.planum.fill);}
+    switchScaleMode('distance');
+    focusScaleField();
+  }
+  renderPlanumNote();
+}
+function renderWizPlanum(){
+  const a=S.calib.planum,n=$('wiz-planum-note');
+  if(n){n.textContent=a?a.text:'';n.className='planum-note'+(a?(a.ok?' pl-ok':' pl-warn'):'');n.style.display=a?'':'none';}
+  const c=$('wiz-planum-chip');if(c)c.style.display=planumChipOn(a,$('wiz-dist-inp'))?'':'none';
+}
+function applyWizPlanum(a){
+  S.calib.planum=a||null;
+  if(a&&a.ok){const di=$('wiz-dist-inp');if(di)di.value=String(a.fill);}
+  renderWizPlanum();
+}
+
 async function hdDecodeBuffer(u8,name){
   const kind=hdSniff(u8,name);
   if(!kind)return null;
@@ -1388,13 +1535,14 @@ const S={
   lastLogId:'',
   staleClient:false,
   scaleDist:'',
+  planum:null,
   hdMore:null,
   calibShots:[],
   calibActive:false,
   screen:'workflow',
   calib:{
     imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
-    zoom:1,panX:0,panY:0,scalePts:[],imageLoaded:false,reused:false,shots:[]
+    zoom:1,panX:0,panY:0,scalePts:[],imageLoaded:false,reused:false,shots:[],planum:null
   },
   touchMode:'navigate',
   live:null,
@@ -1411,7 +1559,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10505;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10600;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -2175,6 +2323,7 @@ function onScaleProfileSelect(){
 }
 function onDistanceInput(){
   S.scaleDist=$('dist-inp')?$('dist-inp').value:'';
+  updatePlanumChip();
   updateConfirmBtn();
   const out=$('dist-result');if(!out)return;
   const d=parseFloat(S.scaleDist);
@@ -2285,7 +2434,11 @@ function enterCalibScreen(){
     S.calib.resizeFactor=S.resizeFactor;S.calib.imgMeta=S.imgMeta;
     S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;S.calib.scalePts=[];
     S.calib.imageLoaded=true;S.calib.reused=true;
+    S.calib.planum=S.planum;
+    const wd=$('wiz-dist-inp');
+    if(S.planum&&S.planum.ok&&wd&&!wd.value)wd.value=String(S.planum.fill);
   }
+  renderWizPlanum();
   applyTipsState(storageGet(TIPS_KEY)==='1');
   renderScaleProfileSelect();
   renderWizShots();updateWizSpanHint();
@@ -2319,8 +2472,12 @@ function loadCalibImage(ev){
   if(!file)return;
   clearErr();hdBusy('');
   const seq=++decodeSeq;
+  const pp=readPlanum(file);
   decodeImage(file,d=>{
     if(seq!==decodeSeq)return;
+    if(planumChipOn(S.calib.planum,$('wiz-dist-inp')))$('wiz-dist-inp').value='';
+    S.calib.planum=null;renderWizPlanum();
+    pp.then(pl=>{if(S.calib.imgEl===d.imgEl)applyWizPlanum(planumAssess(pl,d.imgMeta));});
     S.calib.imgEl=d.imgEl;S.calib.pixels=d.pixels;
     S.calib.dispW=d.dispW;S.calib.dispH=d.dispH;S.calib.dispScale=d.dispScale;
     S.calib.resizeFactor=d.resizeFactor;S.calib.imgMeta=d.imgMeta;
@@ -2379,8 +2536,8 @@ function addCalibShot(){
   if(S.calib.shots.length>=5){showErr('Maximum 5 shots. Delete one to add another.');return;}
   S.calib.shots.push({d,w,span:+spanOrig.toFixed(2),r});
   clearErr();
-  S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
-  $('wiz-dist-inp').value='';$('wiz-width-inp').value='';
+  S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;S.calib.planum=null;
+  $('wiz-dist-inp').value='';$('wiz-width-inp').value='';renderWizPlanum();
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur();
   renderWizShots();updateCalibUploadPrompt();updateWizSpanHint();paintCanvas();
 }
@@ -2449,7 +2606,7 @@ function saveCalibProfile(){
   calibSaveMsg('',true);
   S.calib.shots=[];S.calib.scalePts=[];
   ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
-  renderWizShots();renderScaleProfileSelect();updateWizSpanHint();
+  renderWizShots();renderScaleProfileSelect();updateWizSpanHint();renderWizPlanum();
   const msg=$('calib-saved-msg');if(msg){msg.textContent=`Saved “${name}”. Reset to calibrate another, or start measuring.`;msg.style.display='block';setTimeout(()=>{if(msg)msg.style.display='none';},4000);}
 }
 function calibrateAnother(){
@@ -2458,16 +2615,17 @@ function calibrateAnother(){
   }
   S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
   ['wiz-dist-inp','wiz-width-inp','wiz-name-inp','wiz-note-inp'].forEach(id=>{if($(id))$(id).value='';});
-  S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
+  S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;S.calib.planum=null;
   calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
-  renderWizShots();updateCalibUploadPrompt();updateWizSpanHint();paintCanvas();
+  renderWizShots();updateCalibUploadPrompt();updateWizSpanHint();renderWizPlanum();paintCanvas();
 }
 function startMeasuringFromCalib(){
   if(hasUnsavedCalib()){
     if(!confirm('You have unsaved calibration shots. Leave without saving?'))return;
   }
   S.calib.shots=[];S.calib.scalePts=[];S.calib.imageLoaded=false;S.calib.reused=false;
-  S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;
+  if(planumChipOn(S.calib.planum,$('wiz-dist-inp')))$('wiz-dist-inp').value='';
+  S.calib.imgEl=null;S.calib.pixels=null;S.calib.dispW=0;S.calib.planum=null;renderWizPlanum();
   calibSaveMsg('',true);const sm=$('calib-saved-msg');if(sm)sm.style.display='none';
   showScreen('workflow');
   restoreWorkflowStep();
@@ -3502,9 +3660,10 @@ function loadFile(file){
   clearErr();hdBusy('');
   const seq=++decodeSeq;
   const name=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
+  const pp=INTERFACE_MODE==='simple'?Promise.resolve(null):readPlanum(file);
   decodeImage(file,d=>{
     if(seq!==decodeSeq)return;
-    S.photoName=name;S.lastLogId='';S.hdMore=null;
+    S.photoName=name;S.lastLogId='';S.hdMore=null;S.planum=null;
     if($('meas-note-inp'))$('meas-note-inp').value='';
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
@@ -3517,6 +3676,8 @@ function loadFile(file){
     showStep(2);updateMetaBar();updateScaleHint();updateScaleDisplay();
     applyHints();focusScaleField();
     requestAnimationFrame(paintCanvas);
+    renderPlanumNote();
+    pp.then(pl=>{if(S.imgEl===d.imgEl)applyPlanum(pl);});
   });
 }
 
@@ -3974,11 +4135,12 @@ function resetAll(){
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
   S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
-  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];decodeSeq++;
+  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;decodeSeq++;
   hideLoupe();
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   resetAdjustments();clearErr();hdBusy('');
   if($('dist-inp'))$('dist-inp').value='';
+  renderPlanumNote();
   if($('meas-note-inp'))$('meas-note-inp').value='';
   $('canvas-wrap').className='';
   $('q-badge').innerHTML='';$('band-width').textContent='';
@@ -4181,6 +4343,7 @@ if(calibCanvas){
 function updateCalibZoom(){const l=$('calib-zoom-label');if(l)l.textContent=S.calib.zoom.toFixed(1)+'×';}
 function resetCalibView(){S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;updateCalibZoom();paintCanvas();}
 ['wiz-dist-inp','wiz-width-inp'].forEach(id=>{const el=$(id);if(el)el.addEventListener('keydown',wizFieldKey);});
+{const el=$('wiz-dist-inp');if(el)el.addEventListener('input',renderWizPlanum);}
 
 
 imgCanvas.addEventListener('mousedown',e=>{
