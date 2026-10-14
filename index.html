@@ -67,6 +67,8 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 #line-list td{padding:4px 6px;color:#e8f8f9;border-top:1px solid rgba(255,255,255,0.06)}
 #line-list .num{font-family:monospace;text-align:right}
 #line-list tr.tot td{color:#c4b5fd;font-size:11px}
+#line-list tr.act td{color:#7fdbe4}
+#line-list .ln.act{background:rgba(12,187,204,0.35);color:#e8f8f9}
 #line-list .ln{display:inline-block;min-width:22px;padding:1px 6px;border-radius:9px;background:rgba(124,58,237,0.4);color:#ede9fe;font-size:11px;text-align:center}
 #line-list .nm{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
@@ -128,6 +130,8 @@ input[type=range]{accent-color:#0cbbcc}
 
 #chart-wrap{padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(12,187,204,0.18);margin-bottom:12px}
 #chart-title{font-size:13px;font-weight:500;color:#e8f8f9;margin-bottom:2px}
+.chart-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#btn-chart-reset{padding:2px 10px;font-size:11px}
 #chart-subtitle{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px}
 #chart-canvas{display:block;width:100%;height:220px;cursor:default;touch-action:none}
 
@@ -245,6 +249,7 @@ input[type=range]{accent-color:#0cbbcc}
 #dist-zoom-caution.pl-ok,.planum-note.pl-ok{color:#7fdbe4;font-style:normal}
 #dist-zoom-caution.pl-warn,.planum-note.pl-warn{color:#fbbf24;font-style:normal}
 @media(max-width:400px){.dist-input-row input[type=number]{width:90px}}
+.planum-chip.warn{background:rgba(217,119,6,0.18);border-color:rgba(251,191,36,0.6);color:#fbbf24}
 .planum-chip{display:inline-block;padding:1px 8px;border-radius:9px;background:rgba(16,185,129,0.18);border:1px solid rgba(52,211,153,0.55);color:#34d399;font-size:10px;font-weight:600;letter-spacing:.03em;white-space:nowrap;vertical-align:1px}
 
 /* ── Calibration wizard ── */
@@ -318,6 +323,11 @@ body.simple #aux-bar .pro-only{display:none}
 
 .simple-only{display:none}
 body.simple .pro-only{display:none}
+body.simple .pro-feat{position:relative;cursor:pointer}
+body.simple .pro-feat>*{opacity:.35;filter:grayscale(1);pointer-events:none;user-select:none}
+body.simple .pro-feat::after{content:'PRO';position:absolute;top:8px;right:10px;padding:1px 7px;border-radius:6px;border:1px solid rgba(12,187,204,0.55);color:#0cbbcc;background:rgba(8,26,30,0.9);font-size:10px;font-weight:600;letter-spacing:.1em;line-height:1.5;pointer-events:none}
+body.simple .pro-feat.pf-mini::after{top:-7px;right:-9px;padding:0 4px;font-size:8px;border-radius:5px}
+body.simple .tab.pro-feat{color:rgba(232,248,249,0.3);border-style:dashed}
 body.simple span.simple-only{display:inline}
 body.simple div.simple-only{display:block}
 #calib-mode-toggle,#calib-mode-toggle-pro{display:inline-flex;border:1px solid rgba(12,187,204,0.35);border-radius:8px;overflow:hidden;margin-bottom:12px}
@@ -404,7 +414,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.6.0-beta</div>
+  <div id="version-tag">v1.6.2-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -486,7 +496,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="tab-row">
       <button class="tab active" id="tab-twopoint" onclick="switchScaleMode('twopoint')">Click two reference points</button>
       <button class="tab" id="tab-direct" title="Use this if previously measured" onclick="switchScaleMode('direct')">Enter pixels/mm directly</button>
-      <button class="tab pro-only" id="tab-distance" title="Use a saved camera calibration + distance" onclick="switchScaleMode('distance')">Distance + camera</button>
+      <button class="tab pro-feat pf-mini" id="tab-distance" title="Use a saved camera calibration + distance" onclick="switchScaleMode('distance')">Distance + camera</button>
     </div>
     <div class="card" id="scale-hint">Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size</div>
 
@@ -536,7 +546,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <span id="q-badge"></span>
     </div>
 
-    <div class="avg-section pro-only">
+    <div class="avg-section pro-feat">
       <div class="avg-title">Profile Averaging</div>
       <label class="chk-row">
         <input type="checkbox" id="chk-align">
@@ -607,10 +617,10 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button class="btn btn-nav" id="btn-log-now" style="display:none" onclick="logNow()">＋ Log this measurement</button>
     </div>
 
-    <div id="stats-row" class="pro-only"></div>
+    <div id="stats-row" class="pro-feat"></div>
 
-    <div id="chart-wrap" class="pro-only">
-      <div id="chart-title">Luminance profile across crack</div>
+    <div id="chart-wrap" class="pro-feat">
+      <div class="chart-head"><div id="chart-title">Luminance profile across crack</div><button class="btn-ghost btn-small" id="btn-chart-reset" style="display:none" onclick="resetChartView()">Reset zoom</button></div>
       <div id="chart-subtitle">Blue = profile · red dashed = baseline · amber = crack centre · blue shading = integration region · drag blue handles to adjust</div>
       <canvas id="chart-canvas"></canvas>
       <div class="panel-hdr" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(12,187,204,0.12)">
@@ -633,7 +643,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </label>
     </div>
 
-    <div id="base-panel" class="pro-only">
+    <div id="base-panel" class="pro-feat">
       <div class="panel-hdr" style="margin-bottom:0">
         <button id="btn-base-toggle" onclick="toggleBaseCorr()"><span id="base-toggle-txt">▸ Baseline correction</span><span id="base-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#2563eb;display:none">· active</span></button>
         <button class="btn-ghost" id="btn-base-reset" style="display:none" onclick="resetBaseCorr()">Reset</button>
@@ -696,7 +706,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
-    <div id="formula-panel" class="pro-only">
+    <div id="formula-panel" class="pro-feat">
       <div class="panel-hdr" style="margin-bottom:0">
         <button id="btn-formula-toggle" onclick="toggleFormula()"><span id="formula-toggle-txt">▸ Approach B formula</span><span id="formula-active-badge" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;color:#0cbbcc;display:none">· modified</span></button>
         <button class="btn-ghost" id="btn-formula-reset" style="display:none" onclick="resetFormula()">Reset</button>
@@ -745,7 +755,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
 
 
-    <div id="fcalib-panel" class="pro-only">
+    <div id="fcalib-panel" class="pro-feat">
       <div class="panel-hdr" style="margin-bottom:0">
         <button id="btn-fcalib-toggle" onclick="toggleFcalib()"><span id="fcalib-toggle-txt">▸ Calibrate the Approach B formula (advanced)</span></button>
       </div>
@@ -1415,24 +1425,27 @@ function planumWhen(v){
 function planumAssess(pl,meta){
   if(!pl)return null;
   const head='Planum'+(pl.counter!==null?` #${pl.counter}`:'');
-  const dTxt=pl.dist!==null?`${pl.dist.toFixed(4)} m`+(pl.z!==null?` (Z ${+pl.z.toFixed(1)} mm)`:''):'';
-  const tail=[pl.meter,planumWhen(pl.time)].filter(Boolean).map(x=>' · '+x).join('');
-  let why='';
-  if(pl.kind==='nodist')why=`${pl.type} reading — no distance recorded`;
-  else if(pl.kind==='tilted')why=`${pl.type} ${dTxt} — along a tilted beam; not filled in`;
-  else if(pl.kind==='unknown')why=`${dTxt} — reading type ${pl.type?'“'+pl.type+'” ':''}not recognised; not filled in`;
-  else if(meta&&pl.w&&pl.h){
+  const dSeg=pl.dist!==null?[`${pl.dist.toFixed(4)} m`].concat(pl.z!==null?[`Offset ${+pl.z.toFixed(1)} mm`]:[]):[];
+  const tail=[pl.meter,planumWhen(pl.time)].filter(Boolean);
+  const line=(warn,mid)=>(warn?'⚠ ':'')+[head].concat(mid,tail).join(' · ');
+  if(pl.kind==='nodist')return{ok:false,warn:true,fill:null,text:line(true,[`${pl.type} mode — no distance recorded`])};
+  if(pl.kind==='unknown')return{ok:false,warn:true,fill:null,text:line(true,dSeg.concat([`reading type ${pl.type?'“'+pl.type+'” ':''}not recognised; not filled in`]))};
+  if(meta&&pl.w&&pl.h){
     const W=meta.origW,H=meta.origH;
-    if(!((W===pl.w&&H===pl.h)||(W===pl.h&&H===pl.w)))why=`${dTxt} — photo resized or cropped since capture (${pl.w}×${pl.h} → ${W}×${H}); not filled in`;
+    if(!((W===pl.w&&H===pl.h)||(W===pl.h&&H===pl.w)))
+      return{ok:false,warn:true,fill:null,text:line(true,dSeg.concat([`photo resized or cropped since capture (${pl.w}×${pl.h} → ${W}×${H}); not filled in`]))};
   }
-  if(why)return{ok:false,fill:null,text:`⚠ ${head} · ${why}${tail}`};
-  return{ok:true,fill:+pl.dist.toFixed(5),text:`${head} · ${dTxt}${tail}`};
+  const fill=+pl.dist.toFixed(5);
+  if(pl.kind==='tilted')return{ok:true,warn:true,fill,text:line(true,dSeg.concat([`${pl.type} mode`]))};
+  return{ok:true,warn:false,fill,text:line(false,dSeg)};
 }
+function planumWarn(a){return !!(a&&(a.warn||!a.ok));}
+function setPlanumChip(c,a,inp){if(!c)return;c.style.display=planumChipOn(a,inp)?'':'none';c.classList.toggle('warn',planumWarn(a));}
 function planumChipOn(a,inp){return !!(a&&a.ok&&inp&&Math.abs(parseFloat(inp.value)-a.fill)<1e-9);}
-function updatePlanumChip(){const c=$('dist-planum-chip');if(c)c.style.display=planumChipOn(S.planum,$('dist-inp'))?'':'none';}
+function updatePlanumChip(){setPlanumChip($('dist-planum-chip'),S.planum,$('dist-inp'));}
 function renderPlanumNote(){
   const el=$('dist-zoom-caution'),a=S.planum;
-  if(el){el.textContent=a?a.text:DIST_CAUTION;el.className=a?(a.ok?'pl-ok':'pl-warn'):'';}
+  if(el){el.textContent=a?a.text:DIST_CAUTION;el.className=a?(planumWarn(a)?'pl-warn':'pl-ok'):'';}
   updatePlanumChip();
 }
 function applyPlanum(pl){
@@ -1446,8 +1459,8 @@ function applyPlanum(pl){
 }
 function renderWizPlanum(){
   const a=S.calib.planum,n=$('wiz-planum-note');
-  if(n){n.textContent=a?a.text:'';n.className='planum-note'+(a?(a.ok?' pl-ok':' pl-warn'):'');n.style.display=a?'':'none';}
-  const c=$('wiz-planum-chip');if(c)c.style.display=planumChipOn(a,$('wiz-dist-inp'))?'':'none';
+  if(n){n.textContent=a?a.text:'';n.className='planum-note'+(a?(planumWarn(a)?' pl-warn':' pl-ok'):'');n.style.display=a?'':'none';}
+  setPlanumChip($('wiz-planum-chip'),a,$('wiz-dist-inp'));
 }
 function applyWizPlanum(a){
   S.calib.planum=a||null;
@@ -1548,6 +1561,7 @@ const S={
   live:null,
   chartGeom:null,
   chartDrag:null,
+  chartView:null,chartPan:null,chartPinch:null,
 };
 
 const $=id=>document.getElementById(id);
@@ -1559,7 +1573,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10600;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10602;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1570,6 +1584,13 @@ function applyInterfaceMode(tier){
     document.body.classList.add('simple');
 
     S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false; S.fwhmCap = false;
+    const fc=$('chk-fwhm-cap'); if(fc)fc.checked=false;
+    const sr=$('stats-row'); if(sr)sr.innerHTML='<div>scale · area · calibration</div><div>scan lines · combining method · source</div><div>integration window · FWHM</div>';
+    document.querySelectorAll('.pro-feat').forEach(el=>{
+      Array.from(el.children).forEach(c=>{c.inert=true;});
+      el.title='Available in Pro';
+      if(!el.classList.contains('pf-mini'))el.addEventListener('click',()=>showInfo('pro'));
+    });
     const a=$('chk-align'); if(a)a.checked=true;
     const ad=$('chk-adaptive'); if(ad)ad.checked=false;
     const med=document.querySelector('input[name="avgMethod"][value="median"]');
@@ -1677,6 +1698,7 @@ function recomputeCalib(){
   const aw=calibAWidth(area);
   updateAResult(aw!==null?parseFloat(aw):null);
   refreshLastLog();
+  if(S.step===4&&S.results){renderLineList();paintCanvas();}
 }
 
 function calibAWidth(area){
@@ -1755,8 +1777,13 @@ function paintCanvas(){
     ctx.restore();
   };
 
-  {const rc=canvas.getBoundingClientRect();drawConfirmedOnScreen(ctx,(rc.width>0?src.dispW/rc.width:1)/src.zoom);}
-  if(S.measLine)drawBand(S.measLine.p1,S.measLine.p2);
+  const rc=canvas.getBoundingClientRect(),uS=(rc.width>0?src.dispW/rc.width:1)/src.zoom;
+  drawConfirmedOnScreen(ctx,uS);
+  if(S.measLine){
+    drawBand(S.measLine.p1,S.measLine.p2);
+    const act=S.step===4?activeLineObj():null;
+    if(act)screenLabel(ctx,act,(S.nLines/2)*S.dispScale+12*uS,uS,'rgba(8,104,116,0.92)');
+  }
   else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
 
   drawRefPts(ctx,S.scalePts,iZ);
@@ -1818,10 +1845,19 @@ function showLoupe(cv,src,pt,clientX,clientY){
 }
 function hideLoupe(){const lp=$('loupe');if(lp)lp.style.display='none';}
 
+function demoChartData(){
+  const d=[];
+  for(let i=0;i<=300;i++){
+    const mm=i*0.08,z=(mm-12)/0.45;
+    const b=180+mm*0.6;
+    d.push({mm:+mm.toFixed(3),Profile:+(b-70*Math.exp(-z*z/2)+2*Math.sin(i*1.7)+1.2*Math.sin(i*0.43)).toFixed(1),Baseline:+b.toFixed(1)});
+  }
+  return d;
+}
 function drawChart(){
-  if(INTERFACE_MODE==='simple')return;   // chart hidden in simple mode
+  const demo=INTERFACE_MODE==='simple';
   const canvas=$('chart-canvas');
-  if(!canvas||!S.results)return;
+  if(!canvas||(!demo&&!S.results))return;
   const dpr=Math.min(window.devicePixelRatio||1,2);
   const cssW=canvas.offsetWidth,cssH=canvas.offsetHeight||220;
   if(cssW===0)return;
@@ -1830,11 +1866,11 @@ function drawChart(){
   ctx.scale(dpr,dpr);
   const W=cssW,H=cssH;
 
-  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
-  const chartData=isAdj&&S.live?.corrChartData?S.live.corrChartData:S.results.chartData;
-  const crackMm=isAdj&&S.live?S.live.crackMm:S.results.crackMm;
-  const cLmm=isAdj&&S.live?S.live.cropLeftMm:S.results.boundLeft;
-  const cRmm=isAdj&&S.live?S.live.cropRightMm:S.results.boundRight;
+  const isAdj=!demo&&(S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0);
+  const chartData=demo?demoChartData():(isAdj&&S.live?.corrChartData?S.live.corrChartData:S.results.chartData);
+  const crackMm=demo?12:(isAdj&&S.live?S.live.crackMm:S.results.crackMm);
+  const cLmm=demo?10.6:(isAdj&&S.live?S.live.cropLeftMm:S.results.boundLeft);
+  const cRmm=demo?13.4:(isAdj&&S.live?S.live.cropRightMm:S.results.boundRight);
   const baseChanged=isAdj&&(S.live?.baselineChanged||false);
 
   if(!chartData||!chartData.length)return;
@@ -1843,19 +1879,27 @@ function drawChart(){
   const pw=W-ml-mr,ph=H-mt-mb;
 
   const allY=chartData.flatMap(d=>{const v=[d.Profile,d.Baseline];if(d.OrigBaseline!==undefined)v.push(d.OrigBaseline);return v;});
-  const xMin=chartData[0].mm,xMax=chartData[chartData.length-1].mm;
+  const dMin=chartData[0].mm,dMax=chartData[chartData.length-1].mm;
+  const dStep=chartData.length>1?(chartData[1].mm-chartData[0].mm):1;
+  let xMin=dMin,xMax=dMax;
+  if(S.chartView&&!demo){
+    xMin=Math.max(dMin,S.chartView.x0);xMax=Math.min(dMax,S.chartView.x1);
+    if(!(xMax-xMin>0)){S.chartView=null;xMin=dMin;xMax=dMax;}
+  }
+  updateChartResetBtn();
   const yMin=Math.floor(Math.min(...allY)-3),yMax=Math.ceil(Math.max(...allY)+3);
 
   const xPx=mm=>ml+(mm-xMin)/(xMax-xMin)*pw;
   const yPx=lum=>mt+(1-(lum-yMin)/(yMax-yMin))*ph;
   const pxToMm=px=>xMin+(px-ml)/pw*(xMax-xMin);
 
-  S.chartGeom={ml,mr,mt,mb,pw,ph,xMin,xMax,yMin,yMax,xPx,yPx,pxToMm,cssW,cssH};
+  S.chartGeom={ml,mr,mt,mb,pw,ph,xMin,xMax,dMin,dMax,dStep,yMin,yMax,xPx,yPx,pxToMm,cssW,cssH};
 
   ctx.fillStyle='rgba(6,20,24,0.9)';ctx.fillRect(0,0,W,H);
 
   ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
   const xTicks=niceTicks(xMin,xMax,6),yTicks=niceTicks(yMin,yMax,5);
+  const xDec=xTicks.length>1?Math.min(3,Math.max(1,Math.ceil(-Math.log10(xTicks[1]-xTicks[0])+1e-9))):1;
   xTicks.forEach(v=>{const x=xPx(v);ctx.beginPath();ctx.moveTo(x,mt);ctx.lineTo(x,mt+ph);ctx.stroke();});
   yTicks.forEach(v=>{const y=yPx(v);ctx.beginPath();ctx.moveTo(ml,y);ctx.lineTo(ml+pw,y);ctx.stroke();});
 
@@ -1866,7 +1910,7 @@ function drawChart(){
   ctx.strokeRect(ml,mt,pw,ph);
 
   ctx.fillStyle='rgba(232,248,249,0.45)';ctx.font='10px monospace';ctx.textAlign='center';
-  xTicks.forEach(v=>{ctx.fillText(v.toFixed(1),xPx(v),mt+ph+14);});
+  xTicks.forEach(v=>{ctx.fillText(v.toFixed(xDec),xPx(v),mt+ph+14);});
   ctx.textAlign='right';
   yTicks.forEach(v=>{ctx.fillText(v.toFixed(0),ml-4,yPx(v)+3);});
 
@@ -1895,7 +1939,8 @@ function drawChart(){
   ctx.restore(); // end clip
 
   const drawHandle=(xmm,side)=>{
-    const x=Math.max(ml,Math.min(ml+pw,xPx(xmm)));
+    const x=xPx(xmm);
+    if(x<ml-0.5||x>ml+pw+0.5)return;
     ctx.strokeStyle='#0cbbcc';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(x,mt);ctx.lineTo(x,mt+ph);ctx.stroke();
 
@@ -1907,7 +1952,7 @@ function drawChart(){
   };
   drawHandle(cLmm,'left');drawHandle(cRmm,'right');
 
-  $('chart-subtitle').textContent=`Blue = profile · ${baseChanged?'red = corrected baseline · gray dashed = original':'red dashed = baseline'} · amber = crack centre · blue shading = integration region · drag handles to adjust`;
+  $('chart-subtitle').textContent=`Blue = profile · ${baseChanged?'red = corrected baseline · gray dashed = original':'red dashed = baseline'} · amber = crack centre · blue shading = integration region · drag handles to adjust · ${isTouch?'pinch':'scroll'} to stretch`;
 }
 
 function niceTicks(min,max,count=5){
@@ -1952,7 +1997,7 @@ function recompute(){
   let peakIdx=cL,peakVal=-Infinity;
   for(let i=cL;i<=Math.min(cR,n-1);i++){const r=sign*(corrBase[i]-prof[i]);if(r>peakVal){peakVal=r;peakIdx=i;}}
 
-  const stride=Math.max(1,Math.floor(n/300));
+  const stride=Math.max(1,Math.floor(n/1500));
   const baselineChanged=S.tilt!==0||S.bow!==0||S.shift!==0;
   const corrChartData=prof.reduce((acc,v,i)=>{
     if(i%stride===0){const pt={mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+corrBase[i].toFixed(1)};if(baselineChanged)pt.OrigBaseline=+baseArr[i].toFixed(1);acc.push(pt);}
@@ -1999,13 +2044,13 @@ function buildStepBar(){
 function buildAuxBar(){
   const bar=$('aux-bar');if(!bar)return;
   bar.innerHTML='';
-  const item=document.createElement('div');item.className='aux-item pro-only';
-  item.onclick=()=>{if(S.screen==='calibrate')startMeasuringFromCalib();else showScreen('calibrate');};
+  const item=document.createElement('div');item.className='aux-item pro-feat pf-mini';
+  item.onclick=()=>{if(INTERFACE_MODE==='simple'){showInfo('pro');return;}if(S.screen==='calibrate')startMeasuringFromCalib();else showScreen('calibrate');};
   const circle=document.createElement('div');circle.className='aux-circle';circle.id='aux-calib';circle.textContent='C';
   const lbl=document.createElement('span');lbl.className='aux-lbl';lbl.textContent='Calibrate';item.title='Calibrate (C)';
   item.append(circle,lbl);bar.append(item);
-  const item2=document.createElement('div');item2.className='aux-item pro-only';
-  item2.onclick=()=>showScreen(S.screen==='formula'?'workflow':'formula');
+  const item2=document.createElement('div');item2.className='aux-item pro-feat pf-mini';
+  item2.onclick=()=>INTERFACE_MODE==='simple'?showInfo('pro'):showScreen(S.screen==='formula'?'workflow':'formula');
   const circle2=document.createElement('div');circle2.className='aux-circle';circle2.id='aux-formula';circle2.textContent='B';
   const lbl2=document.createElement('span');lbl2.className='aux-lbl';lbl2.textContent='Formula';item2.title='Formula (B)';
   item2.append(circle2,lbl2);bar.append(item2);
@@ -2252,11 +2297,12 @@ function logNow(){
 }
 
 function switchScaleMode(mode){
+  if(mode==='distance'&&INTERFACE_MODE==='simple'){showInfo('pro');return;}
   S.scaleMode=mode;S.scalePts=[];S.realDist='';S.directPx='';
   const tw=$('tab-twopoint');
   tw.className='tab'+(mode==='twopoint'?' active':'');
   $('tab-direct').className='tab'+(mode==='direct'?' active':'');
-  const td=$('tab-distance');if(td)td.className='tab pro-only'+(mode==='distance'?' active':'');
+  const td=$('tab-distance');if(td)td.className='tab pro-feat pf-mini'+(mode==='distance'?' active':'');
   const distPanel=$('scale-distance-panel');
   const hintCard=$('scale-hint');
   if(mode==='distance'){
@@ -3091,6 +3137,7 @@ function updateLogNote(id,val){
 }
 function measNoteValue(){const el=$('meas-note-inp');return el?el.value.trim():'';}
 function onMeasNoteInput(){
+  if(S.step===4)renderLineList();
   if(!S.lastLogId)return;
   const e=S.measLog.find(x=>x.id===S.lastLogId);
   if(e){e.note=measNoteValue();persistMeasLog();if(S.screen==='log')renderMeasLog();}
@@ -3741,7 +3788,7 @@ function runAnalysis(){
       const prof=r.prof,base=r.base,area=r.area,isDep=r.isDep,left=r.left,right=r.right;
       if(!prof||prof.length<10){showErr('Profile extraction failed. Try a longer line.');S.busy=false;$('btn-analyze').textContent='Analyze →';$('btn-analyze').disabled=false;return;}
       const{width,calib}=approachB(area,S.pxMm);
-      const stride=Math.max(1,Math.floor(prof.length/300));
+      const stride=Math.max(1,Math.floor(prof.length/1500));
       const chartData=prof.reduce((acc,v,i)=>{if(i%stride===0)acc.push({mm:+(i/pxMm_pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+base[i].toFixed(1)});return acc;},[]);
       let minIdx=0;
       if(isDep){let mv=Infinity;prof.forEach((v,i)=>{if(v<mv){mv=v;minIdx=i;}});}
@@ -3764,6 +3811,7 @@ function runAnalysis(){
       };
       applyAutoBounds();
       resetAdjustments();
+      S.chartView=null;
       S.lastLogId='';
       S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
       $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
@@ -3874,16 +3922,19 @@ function toggleLineView(){
 function renderLineList(){
   const el=$('line-list');if(!el)return;
   const show=S.lines.length>0&&(S.step===3||S.step===4);
+  const act=(show&&S.step===4)?activeLineObj():null;
+  const items=act?S.lines.concat([act]):S.lines;
   el.style.display=show?'block':'none';
   const vb=$('btn-line-view');if(vb)vb.style.display=show?'':'none';
   ['btn-save-3','btn-save-zoom-3'].forEach(id=>{const b=$(id);if(b)b.style.display=(S.step===3&&S.lines.length)?'':'none';});
   if(!show){el.innerHTML='';return;}
-  const st=lineStats(S.lines);
-  const tot=S.lines.length>1?
+  const st=lineStats(items);
+  const tot=items.length>1?
     `<tr class="tot"><td></td><td>Max</td><td class="num">${fmtW(st.maxA)}</td><td class="num">${fmtW(st.maxB)}</td><td></td></tr>`+
     `<tr class="tot"><td></td><td>Mean</td><td class="num">${fmtW(st.meanA)}</td><td class="num">${fmtW(st.meanB)}</td><td></td></tr>`:'';
   el.innerHTML='<table><tr><th>#</th><th>Name</th><th class="num">A mm</th><th class="num">B mm</th><th></th></tr>'+
     S.lines.map(L=>`<tr><td><span class="ln">${L.n}</span></td><td class="nm" title="${escapeHtml(L.name||'')}">${escapeHtml(L.name||'')}</td><td class="num">${fmtW(L.widthA)}</td><td class="num">${fmtW(L.widthB)}</td><td style="text-align:right"><button class="wiz-shot-del" onclick="deleteLine(${L.n})" title="Delete line">✕</button></td></tr>`).join('')+
+    (act?`<tr class="act" title="Not confirmed yet"><td><span class="ln act">${act.n}</span></td><td class="nm">${escapeHtml(measNoteValue())}</td><td class="num">${fmtW(act.widthA)}</td><td class="num">${fmtW(act.widthB)}</td><td></td></tr>`:'')+
     tot+'</table>';
 }
 function deleteLine(n){
@@ -3936,7 +3987,9 @@ document.addEventListener('keydown',e=>{
 });
 function showInfo(kind){
   const simple=INTERFACE_MODE==='simple';
-  const msg=kind==='b'
+  const msg=kind==='pro'
+    ?'<strong>Pro feature.</strong> Available with a Pro access code — please get in touch using the links at the bottom of the page.'
+    :kind==='b'
     ?'<strong>Approach B accuracy note:</strong> For concrete cracks, treat this as an estimate — typical accuracy 10–20%. Use Approach A (physical reference) for critical measurements.'
     :(simple
       ?'<strong>Approach A needs an adjustment coefficient.</strong> In the Approach A panel below: <strong>Calibrate</strong> — if this crack’s width is known, enter it to obtain the coefficient. <strong>Measure</strong> — enter a coefficient you obtained earlier, or use the one kept automatically from your last calibration.'
@@ -3971,15 +4024,23 @@ function drawConfirmedOnScreen(ctx,u){
     ctx.strokeStyle='#a78bfa';ctx.lineWidth=(band?1.5:2)*u;ctx.setLineDash(band?[5*u,3*u]:[]);
     ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='#a78bfa';[p1,p2].forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,3*u,0,Math.PI*2);ctx.fill();});
-    const up=ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny};
-    const off=(band?bh:0)+12*u,cx=(p1.x+p2.x)/2+up.x*off,cy=(p1.y+p2.y)/2+up.y*off;
-    const txt=lineLabel(L);
-    ctx.font=`600 ${11*u}px monospace`;
-    const tw=ctx.measureText(txt).width,pad=4*u,h=15*u;
-    ctx.fillStyle='rgba(76,29,149,0.88)';ctx.fillRect(cx-tw/2-pad,cy-h/2,tw+pad*2,h);
-    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,cx,cy);
+    screenLabel(ctx,L,(band?bh:0)+12*u,u,'rgba(76,29,149,0.88)');
     ctx.restore();
   });
+}
+function screenLabel(ctx,L,off,u,bg){
+  const p1=L.p1,p2=L.p2,l=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+  if(l<2)return;
+  const nx=-(p2.y-p1.y)/l,ny=(p2.x-p1.x)/l;
+  const up=ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny};
+  const cx=(p1.x+p2.x)/2+up.x*off,cy=(p1.y+p2.y)/2+up.y*off;
+  const txt=lineLabel(L);
+  ctx.save();
+  ctx.font=`600 ${11*u}px monospace`;
+  const tw=ctx.measureText(txt).width,pad=4*u,h=15*u;
+  ctx.fillStyle=bg;ctx.fillRect(cx-tw/2-pad,cy-h/2,tw+pad*2,h);
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,cx,cy);
+  ctx.restore();
 }
 function drawLinesOut(ctx,toP,kw,s,drawLabel){
   const band=S.lineView==='band';
@@ -3988,7 +4049,7 @@ function drawLinesOut(ctx,toP,kw,s,drawLabel){
     const ddx=p2.x-p1.x,ddy=p2.y-p1.y,len=Math.hypot(ddx,ddy);
     if(len<=1)return;
     const nx=-ddy/len,ny=ddx/len,bh=L.nLines/2*kw;
-    const c=L.active?'37,99,235':'124,58,237';
+    const c='124,58,237';
     ctx.save();
     if(band){
       ctx.fillStyle=`rgba(${c},0.12)`;ctx.strokeStyle=`rgba(${c},0.35)`;ctx.lineWidth=s;
@@ -4515,75 +4576,142 @@ function getChartPos(e){
 function hitHandle(x,hitW){
   hitW=hitW||10;
   const g=S.chartGeom;if(!g)return null;
+  const inView=px=>px>=g.ml-0.5&&px<=g.ml+g.pw+0.5;
   const cLpx=g.xPx(S.cropLeft!==null?S.cropLeft:S.results?.boundLeft??0);
   const cRpx=g.xPx(S.cropRight!==null?S.cropRight:S.results?.boundRight??0);
-  if(Math.abs(x-cLpx)<hitW)return'left';
-  if(Math.abs(x-cRpx)<hitW)return'right';
+  const dL=inView(cLpx)?Math.abs(x-cLpx):Infinity,dR=inView(cRpx)?Math.abs(x-cRpx):Infinity;
+  if(dL<hitW&&dL<=dR)return'left';
+  if(dR<hitW)return'right';
   return null;
 }
 
-chartCanvas.addEventListener('mousedown',e=>{
-  if(e.button!==0||!S.results)return;
-  const{x}=getChartPos(e);
-  S.chartDrag=hitHandle(x);
-  if(S.chartDrag)e.preventDefault();
-});
-
-chartCanvas.addEventListener('mousemove',e=>{
-  if(!S.chartGeom||!S.results)return;
-  const{x}=getChartPos(e);
-  if(S.chartDrag){
-    const g=S.chartGeom;
-    const mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
-    if(S.chartDrag==='left'){
-      const cR=S.cropRight!==null?S.cropRight:S.results.boundRight;
-      const v=Math.min(mm,cR-0.001);
-      S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
-      $('crop-l-inp').value=S.cropLeftStr;
-    } else {
-      const cL=S.cropLeft!==null?S.cropLeft:S.results.boundLeft;
-      const maxV=S.results.prof?(S.results.prof.length/S.results.pxMm_pd):g.xMax;
-      const v=Math.max(mm,cL+0.001);
-      S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
-      $('crop-r-inp').value=S.cropRightStr;
-    }
-    updateCropUI();recompute();
-  } else {
-    chartCanvas.style.cursor=hitHandle(x)?'ew-resize':'default';
+function chartActive(){return !!(S.results&&S.chartGeom&&INTERFACE_MODE!=='simple');}
+function updateChartResetBtn(){const b=$('btn-chart-reset');if(b)b.style.display=(S.chartView&&INTERFACE_MODE!=='simple')?'':'none';}
+function setChartView(x0,x1){
+  const g=S.chartGeom;if(!g)return;
+  const full=g.dMax-g.dMin,span=x1-x0;
+  if(span>=full*0.999){S.chartView=null;}
+  else{
+    if(x0<g.dMin){x0=g.dMin;x1=x0+span;}
+    if(x1>g.dMax){x1=g.dMax;x0=x1-span;}
+    S.chartView={x0:Math.max(g.dMin,x0),x1:Math.min(g.dMax,x1)};
   }
-});
-
-document.addEventListener('mouseup',()=>{S.chartDrag=null;});
-chartCanvas.addEventListener('mouseleave',()=>{if(!S.chartDrag)chartCanvas.style.cursor='default';});
-
-chartCanvas.addEventListener('touchstart',e=>{
-  if(!S.results||e.touches.length!==1)return;
-  e.preventDefault();
-  const r=chartCanvas.getBoundingClientRect();
-  const x=e.touches[0].clientX-r.left;
-  S.chartDrag=hitHandle(x,24);
-},{passive:false});
-
-chartCanvas.addEventListener('touchmove',e=>{
-  if(!S.chartDrag||!S.chartGeom||!S.results)return;
-  e.preventDefault();
-  const r=chartCanvas.getBoundingClientRect();
-  const x=e.touches[0].clientX-r.left;
-  const g=S.chartGeom,mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
+  updateChartResetBtn();drawChart();
+}
+function resetChartView(){S.chartView=null;updateChartResetBtn();drawChart();}
+function chartZoomAt(px,factor){
+  const g=S.chartGeom;if(!g)return;
+  const span=g.xMax-g.xMin,full=g.dMax-g.dMin;
+  const minSpan=Math.min(full,Math.max(full/100,6*g.dStep));
+  const ns=Math.min(full,Math.max(minSpan,span/factor));
+  const at=g.pxToMm(Math.max(g.ml,Math.min(g.ml+g.pw,px)));
+  const t=(at-g.xMin)/span;
+  const x0=at-t*ns;
+  setChartView(x0,x0+ns);
+}
+function chartPanTo(x0Start,span,dPx){
+  const g=S.chartGeom;if(!g||!S.chartView)return;
+  const x0=x0Start-dPx/g.pw*span;
+  setChartView(x0,x0+span);
+}
+function chartDragTo(x){
+  const g=S.chartGeom;
+  const mm=Math.max(g.xMin,Math.min(g.xMax,g.pxToMm(x)));
   if(S.chartDrag==='left'){
     const cR=S.cropRight!==null?S.cropRight:S.results.boundRight;
-    const v=Math.min(mm,cR-0.001);S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
+    const v=Math.min(mm,cR-0.001);
+    S.cropLeft=+v.toFixed(3);S.cropLeftStr=S.cropLeft.toFixed(3);
     $('crop-l-inp').value=S.cropLeftStr;
   } else {
     const cL=S.cropLeft!==null?S.cropLeft:S.results.boundLeft;
     const maxV=S.results.prof?(S.results.prof.length/S.results.pxMm_pd):g.xMax;
-    const v=Math.max(mm,cL+0.001);S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
+    const v=Math.max(mm,cL+0.001);
+    S.cropRight=+Math.min(maxV,v).toFixed(3);S.cropRightStr=S.cropRight.toFixed(3);
     $('crop-r-inp').value=S.cropRightStr;
   }
   updateCropUI();recompute();
+}
+
+chartCanvas.addEventListener('mousedown',e=>{
+  if(e.button!==0||!chartActive())return;
+  const{x}=getChartPos(e);
+  S.chartDrag=hitHandle(x);
+  if(S.chartDrag){e.preventDefault();return;}
+  if(S.chartView){
+    const g=S.chartGeom;
+    S.chartPan={x,x0:g.xMin,span:g.xMax-g.xMin};
+    chartCanvas.style.cursor='grabbing';e.preventDefault();
+  }
+});
+
+chartCanvas.addEventListener('mousemove',e=>{
+  if(!chartActive())return;
+  const{x}=getChartPos(e);
+  if(S.chartDrag){chartDragTo(x);return;}
+  if(S.chartPan){chartPanTo(S.chartPan.x0,S.chartPan.span,x-S.chartPan.x);return;}
+  chartCanvas.style.cursor=hitHandle(x)?'ew-resize':(S.chartView?'grab':'default');
+});
+
+document.addEventListener('mouseup',()=>{S.chartDrag=null;if(S.chartPan){S.chartPan=null;chartCanvas.style.cursor=S.chartView?'grab':'default';}});
+chartCanvas.addEventListener('mouseleave',()=>{if(!S.chartDrag&&!S.chartPan)chartCanvas.style.cursor='default';});
+chartCanvas.addEventListener('dblclick',e=>{if(!chartActive())return;e.preventDefault();resetChartView();});
+chartCanvas.addEventListener('wheel',e=>{
+  if(!chartActive())return;
+  e.preventDefault();
+  const g=S.chartGeom,{x}=getChartPos(e);
+  const horiz=e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY);
+  if(horiz){
+    if(!S.chartView)return;
+    const d=e.shiftKey?(e.deltaY||e.deltaX):e.deltaX;
+    chartPanTo(g.xMin,g.xMax-g.xMin,-d);
+    return;
+  }
+  if(!e.deltaY)return;
+  chartZoomAt(x,e.deltaY<0?1.25:0.8);
 },{passive:false});
 
-chartCanvas.addEventListener('touchend',()=>{S.chartDrag=null;});
+chartCanvas.addEventListener('touchstart',e=>{
+  if(!chartActive())return;
+  e.preventDefault();
+  const r=chartCanvas.getBoundingClientRect(),g=S.chartGeom;
+  if(e.touches.length>=2){
+    S.chartDrag=null;S.chartPan=null;
+    const x1=e.touches[0].clientX-r.left,x2=e.touches[1].clientX-r.left;
+    const mid=(x1+x2)/2;
+    S.chartPinch={d:Math.max(20,Math.abs(x1-x2)),x0:g.xMin,span:g.xMax-g.xMin,midMm:g.pxToMm(Math.max(g.ml,Math.min(g.ml+g.pw,mid)))};
+    return;
+  }
+  const x=e.touches[0].clientX-r.left;
+  S.chartDrag=hitHandle(x,24);
+  if(!S.chartDrag&&S.chartView)S.chartPan={x,x0:g.xMin,span:g.xMax-g.xMin};
+},{passive:false});
+
+chartCanvas.addEventListener('touchmove',e=>{
+  if(!chartActive())return;
+  e.preventDefault();
+  const r=chartCanvas.getBoundingClientRect(),g=S.chartGeom;
+  if(e.touches.length>=2&&S.chartPinch){
+    const p=S.chartPinch;
+    const x1=e.touches[0].clientX-r.left,x2=e.touches[1].clientX-r.left;
+    const d=Math.max(20,Math.abs(x1-x2)),mid=(x1+x2)/2;
+    const full=g.dMax-g.dMin,minSpan=Math.min(full,Math.max(full/100,6*g.dStep));
+    const ns=Math.min(full,Math.max(minSpan,p.span*p.d/d));
+    const t=(Math.max(g.ml,Math.min(g.ml+g.pw,mid))-g.ml)/g.pw;
+    const x0=p.midMm-t*ns;
+    setChartView(x0,x0+ns);
+    return;
+  }
+  if(e.touches.length!==1)return;
+  const x=e.touches[0].clientX-r.left;
+  if(S.chartDrag){chartDragTo(x);return;}
+  if(S.chartPan)chartPanTo(S.chartPan.x0,S.chartPan.span,x-S.chartPan.x);
+},{passive:false});
+
+chartCanvas.addEventListener('touchend',e=>{
+  S.chartDrag=null;S.chartPan=null;
+  if(!e.touches||e.touches.length<2)S.chartPinch=null;
+});
+chartCanvas.addEventListener('touchcancel',()=>{S.chartDrag=null;S.chartPan=null;S.chartPinch=null;});
 
 $('file-input').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];
