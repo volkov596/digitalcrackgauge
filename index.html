@@ -414,7 +414,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.6.3-beta</div>
+  <div id="version-tag">v1.7.0-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -440,7 +440,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="panel-1" class="panel show">
     <div id="info-grid">
       <div><div class="info-head">Formats</div>JPEG · PNG · WebP · TIFF</div>
-      <div><div class="info-head">Size</div>Up to 50 MP<br>TIFF &amp; 16-bit PNG up to 24 MP<br>Larger images reduced automatically</div>
+      <div><div class="info-head">Size</div>Up to 52 MP, any format<br>Larger photos: crop, don't resize</div>
       <div><div class="info-head">Best results</div>High contrast between crack and surface · good lighting · 16-bit where available</div>
     </div>
     <div id="drop-zone">
@@ -636,11 +636,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <span>mm</span>
         <span id="crop-auto-hint" style="font-size:11px;color:#94a3b8">auto-detected</span>
       </div>
-      <label class="chk-row" style="margin:12px 0 0">
-        <input type="checkbox" id="chk-fwhm-cap" onchange="setFwhmCap(this.checked)">
-        <div><div class="chk-main">Limit auto window to 4 × FWHM <span id="fwhm-val" style="font-weight:400;font-size:11px;color:#94a3b8"></span></div>
-        <div class="chk-sub">Caps the auto-detected window at 4 × the depression width at half depth, centred on the crack. Wider areas need manual adjustment.</div></div>
-      </label>
     </div>
 
     <div id="base-panel" class="pro-feat">
@@ -715,20 +710,20 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <div class="help"><div class="help-txt">Approach B estimates width from a calibrated function. The default constants suit general use, but a specific camera and site condition will perform better with tuned values. This is an estimate — for best results use Approach A (physical reference). Changes affect the Approach B result only.</div><button class="help-more">more</button></div>
         <div class="formula-input-row">
           <label>Coefficient (c):</label>
-          <input type="number" id="bcoeff-inp" step="0.001" value="0.357" oninput="onFormulaChange()">
-          <span class="formula-default">default 0.357</span>
+          <input type="number" id="bcoeff-inp" step="0.001" value="0.4093" oninput="onFormulaChange()">
+          <span class="formula-default">default 0.4093</span>
         </div>
         <div class="formula-input-row">
           <label>Exponent (α):</label>
-          <input type="number" id="bexp-inp" step="0.01" value="0.16" oninput="onFormulaChange()">
-          <span class="formula-default">default 0.16</span>
+          <input type="number" id="bexp-inp" step="0.01" value="0.154" oninput="onFormulaChange()">
+          <span class="formula-default">default 0.154</span>
         </div>
 
         <div class="profile-divider"></div>
         <div class="profile-label">Saved formula profiles</div>
         <div class="profile-row">
           <select id="profile-select" onchange="onProfileSelect()">
-            <option value="">— Default (0.357, 0.16) —</option>
+            <option value="">— Default (0.4093, 0.154) —</option>
           </select>
           <div class="profile-btns">
             <button class="btn-ghost btn-small" id="btn-profile-save" onclick="showProfileSaveForm()">Save current…</button>
@@ -744,7 +739,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
           <input type="text" id="profile-name-inp" placeholder="Profile name — e.g. Sony a6700 (105 mm)" maxlength="60">
           <input type="text" id="profile-desc-inp" placeholder="Optional note — e.g. calibrated 1–32 m, white background" maxlength="120">
           <div class="profile-meta-row">
-            <span>Will store: c=<span id="pf-c">0.357</span>, α=<span id="pf-a">0.16</span>, scan lines=<span id="pf-n">40</span></span>
+            <span>Will store: c=<span id="pf-c">0.4093</span>, α=<span id="pf-a">0.154</span>, scan lines=<span id="pf-n">40</span></span>
           </div>
           <div class="profile-btns" style="margin-top:8px">
             <button class="btn btn-primary btn-small" onclick="saveProfile()">Save profile</button>
@@ -880,8 +875,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="avg-section" style="margin-bottom:14px">
       <div class="avg-title">Formula constants</div>
       <div class="const-pair">
-        <label class="const-field"><span>Coefficient (c)</span><input type="number" id="bcoeff-inp-scr" step="0.001" value="0.357" oninput="onFormulaChangeScr()"><span class="formula-default">default 0.357</span></label>
-        <label class="const-field"><span>Exponent (α)</span><input type="number" id="bexp-inp-scr" step="0.01" value="0.16" oninput="onFormulaChangeScr()"><span class="formula-default">default 0.16</span></label>
+        <label class="const-field"><span>Coefficient (c)</span><input type="number" id="bcoeff-inp-scr" step="0.001" value="0.4093" oninput="onFormulaChangeScr()"><span class="formula-default">default 0.4093</span></label>
+        <label class="const-field"><span>Exponent (α)</span><input type="number" id="bexp-inp-scr" step="0.01" value="0.154" oninput="onFormulaChangeScr()"><span class="formula-default">default 0.154</span></label>
       </div>
       <div class="wiz-btns" style="margin-top:10px">
         <button class="btn-ghost btn-small" id="btn-formula-reset-scr" style="display:none" onclick="resetFormula()">Reset to default</button>
@@ -893,7 +888,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div class="avg-title">Saved formula profiles</div>
       <div class="profile-row">
         <select id="profile-select-scr" onchange="onProfileSelectScr()">
-          <option value="">— Default (0.357, 0.16) —</option>
+          <option value="">— Default (0.4093, 0.154) —</option>
         </select>
         <div class="profile-btns">
           <button class="btn-ghost btn-small" id="btn-profile-delete-scr" onclick="deleteProfileScr()" disabled>Delete</button>
@@ -986,7 +981,13 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
 <script>
 
-const HD_MAX_PIXELS=24e6;
+const HD_MAX_PIXELS=52e6;
+const MAX_IMAGE_PIXELS=52e6;
+const B_DEF_C=0.4093,B_DEF_A=0.154;
+function tooBigMsg(w,h){
+  return `This photo is ${w}×${h} px (${(w*h/1e6).toFixed(1)} MP); the limit is ${MAX_IMAGE_PIXELS/1e6} MP. Crop it to ${MAX_IMAGE_PIXELS/1e6} MP or less around the crack — don't resize — and load it again. Cropping keeps the original px/mm.`;
+}
+function tooBigErr(w,h){const e=new Error('too large');e.userMsg=tooBigMsg(w,h);return e;}
 const HD_PREVIEW_MAX=2560;
 
 function hdSrgbEncode(l){
@@ -1164,6 +1165,7 @@ async function hdDecodePng(u8){
   if(!CH)throw new Error('unsupported PNG colour type');
   const w=ih.w,h=ih.h,bpp=CH*2,stride=w*bpp;
   if(!(w>0&&h>0))throw new Error('bad PNG dimensions');
+  if(w*h>MAX_IMAGE_PIXELS)throw tooBigErr(w,h);
   let tone='srgb';
   if(!srgb&&gama&&Math.abs(gama-100000)<2000)tone='linear';
   const S=hdSink(w,h,HD_MAX_PIXELS,HD_PREVIEW_MAX,tone);
@@ -1261,6 +1263,7 @@ async function hdDecodeTiff(u8){
   const one=(k,d)=>T[k]&&T[k].length?T[k][0]:d;
   const w=one(256,0),h=one(257,0);
   if(!(w>0&&h>0))throw new Error('TIFF has no image dimensions');
+  if(w*h>MAX_IMAGE_PIXELS)throw tooBigErr(w,h);
   if(T[322]||T[324])throw new Error('tiled TIFF is not supported — re-save as a stripped TIFF');
   const bpsArr=T[258]&&T[258].length?T[258]:[one(258,1)];
   const spp=one(277,bpsArr.length>1?bpsArr.length:1);
@@ -1537,7 +1540,7 @@ const S={
   results:null,busy:false,
   cropLeft:null,cropRight:null,cropLeftStr:'',cropRightStr:'',
   tilt:0,bow:0,shift:0,showBaseCorr:false,
-  bCoeff:0.357,bExp:0.16,
+  bCoeff:B_DEF_C,bExp:B_DEF_A,
   profiles:[],activeProfile:'',
   scaleProfiles:[],activeScaleProfile:'',
   calibDatasets:[],activeCalibDataset:'',
@@ -1574,7 +1577,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10603;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10700;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1766,7 +1769,7 @@ function paintCanvas(){
   const drawBand=(p1,p2)=>{
     const ddx=p2.x-p1.x,ddy=p2.y-p1.y,l=Math.sqrt(ddx*ddx+ddy*ddy);
     if(l<2)return;
-    const nx=-ddy/l,ny=ddx/l,bh=(S.nLines/2)*S.dispScale;
+    const nx=-ddy/l,ny=ddx/l,bh=((S.measLine&&p1===S.measLine.p1?analysedLines():S.nLines)/2)*S.dispScale;
     ctx.save();
     ctx.fillStyle='rgba(12,187,204,0.12)';ctx.strokeStyle='rgba(12,187,204,0.30)';ctx.lineWidth=iZ;
     ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
@@ -1783,7 +1786,7 @@ function paintCanvas(){
   if(S.measLine){
     drawBand(S.measLine.p1,S.measLine.p2);
     const act=S.step===4?activeLineObj():null;
-    if(act)screenLabel(ctx,act,(S.nLines/2)*S.dispScale+12*uS,uS,'rgba(8,104,116,0.92)');
+    if(act)screenLabel(ctx,act,(analysedLines()/2)*S.dispScale+12*uS,uS,'rgba(8,104,116,0.92)');
   }
   else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
 
@@ -1975,7 +1978,7 @@ function recompute(){
 
   let pre=0;const ms=Math.floor(n*0.1),me=Math.ceil(n*0.9);
   for(let i=ms;i<me;i++){const r=baseArr[i]-prof[i];if(Math.abs(r)>Math.abs(pre))pre=r;}
-  const preSign=pre>=0?1:-1;
+  const preSign=S.results.isDep?1:-1;
   let pivotIdx=midIdx,pivotVal=-Infinity;
   for(let i=cL;i<=Math.min(cR,n-1);i++){const r=preSign*(baseArr[i]-prof[i]);if(r>pivotVal){pivotVal=r;pivotIdx=i;}}
 
@@ -1984,7 +1987,7 @@ function recompute(){
   let peakRes=0;
   const midS=Math.floor(n*0.1),midE=Math.ceil(n*0.9);
   for(let i=midS;i<midE;i++){const r=corrBase[i]-prof[i];if(Math.abs(r)>Math.abs(peakRes))peakRes=r;}
-  const sign=peakRes>=0?1:-1;
+  const sign=S.results.isDep?1:-1;
   const dx=1/pxMm_pd;
   let area=0;
   for(let i=cL;i<Math.min(cR,n-1);i++){
@@ -2012,7 +2015,7 @@ function recompute(){
 }
 
 function formulaModified(){
-  return Math.abs(S.bCoeff-0.357)>1e-9||Math.abs(S.bExp-0.16)>1e-9;
+  return Math.abs(S.bCoeff-B_DEF_C)>1e-9||Math.abs(S.bExp-B_DEF_A)>1e-9;
 }
 function getDisplayValues(){
   const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
@@ -2839,7 +2842,7 @@ function updateResultsDisplay(){
   $('stats-row').innerHTML=
     `<div>scale: ${S.pxMm.toFixed(3)} px/mm · area: ${area} lum·mm${isAdj?' (adjusted)':''} · calib 1mm: ${r.calib} lum·mm</div>`+
     `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}${src}</div>`+
-    `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?(r.capped?` (auto, capped ${FWHM_CAP_K}×FWHM)`:' (auto-bounded)'):''}${r.fwhmMm!=null?` · FWHM ${r.fwhmMm.toFixed(3)} mm`:''}</div>`;
+    `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?(r.capped?` (auto, capped ${FWHM_CAP_K}×FWHM)`:' (auto)'):''}${r.fwhmMm!=null?` · FWHM ${r.fwhmMm.toFixed(3)} mm`:''} · baseline: ${r.baseMode==='local'?'local':`<span style="color:#fbbf24">${r.baseMode}</span>`}</div>`;
   updateCropUI();updateLogNowBtn();
 }
 
@@ -2933,10 +2936,10 @@ function onFormulaChange(){
   if(S.results)recompute();
 }
 function resetFormula(){
-  S.bCoeff=0.357;S.bExp=0.16;
-  $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
-  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value='0.357';
-  if($('bexp-inp-scr'))$('bexp-inp-scr').value='0.16';
+  S.bCoeff=B_DEF_C;S.bExp=B_DEF_A;
+  $('bcoeff-inp').value=String(B_DEF_C);$('bexp-inp').value=String(B_DEF_A);
+  if($('bcoeff-inp-scr'))$('bcoeff-inp-scr').value=String(B_DEF_C);
+  if($('bexp-inp-scr'))$('bexp-inp-scr').value=String(B_DEF_A);
   clearActiveFormulaProfile();
   updateFormulaActive();
   if(S.results)recompute();
@@ -3097,6 +3100,7 @@ function addLogEntry(silent){
     toneResponse:isHdSource()?S.pixels.tone:'',
     lineNo:nextLineNo(),
     baselineAdjusted:baselineAdjusted(),
+    baselineMode:(S.results&&S.results.baseMode)||'',
     windowCap:windowCapLabel(),
     fwhm:(S.results&&S.results.fwhmMm!=null)?S.results.fwhmMm:null,
     windowEdited:windowEdited(),
@@ -3172,7 +3176,7 @@ function exportMeasLogCSV(){
     ['scaleMode','Scale mode'],['distance','Distance (m)'],['cameraProfile','Camera profile'],
     ['widthA','Width A (mm)'],['widthB','Width B (mm)'],
     ['cropLeft','Window from (mm)'],['cropRight','Window to (mm)'],
-    ['windowEdited','Window edited'],['baselineAdjusted','Baseline adjusted'],
+    ['windowEdited','Window edited'],['baselineAdjusted','Baseline adjusted'],['baselineMode','Baseline mode'],
     ['windowCap','Window cap'],['fwhm','FWHM (mm)'],
     ['x1','Line x1 (px)'],['y1','Line y1 (px)'],['x2','Line x2 (px)'],['y2','Line y2 (px)'],
     ['resolutionMP','Image MP'],['bitDepth','Source depth'],['toneResponse','Tone response'],['note','Note']];
@@ -3460,7 +3464,7 @@ function persistProfiles(){
 }
 function renderProfileList(){
   const cur=S.activeProfile;
-  const opts='<option value="">— Default (0.357, 0.16) —</option>'+
+  const opts='<option value="">— Default (0.4093, 0.154) —</option>'+
     S.profiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   const sel=$('profile-select');
   if(sel){sel.innerHTML=opts;sel.value=cur;}
@@ -3476,8 +3480,8 @@ function onProfileSelect(){
   S.activeProfile=id;
   if(!id){
 
-    S.bCoeff=0.357;S.bExp=0.16;
-    $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+    S.bCoeff=B_DEF_C;S.bExp=B_DEF_A;
+    $('bcoeff-inp').value=String(B_DEF_C);$('bexp-inp').value=String(B_DEF_A);
     $('profile-note').textContent='';
   } else {
     const p=S.profiles.find(x=>x.id===id);
@@ -3542,8 +3546,8 @@ function deleteProfile(confirmed){
   $('profile-note').textContent='';
   const ns=$('profile-note-scr');if(ns)ns.textContent='';
 
-  S.bCoeff=0.357;S.bExp=0.16;
-  $('bcoeff-inp').value='0.357';$('bexp-inp').value='0.16';
+  S.bCoeff=B_DEF_C;S.bExp=B_DEF_A;
+  $('bcoeff-inp').value=String(B_DEF_C);$('bexp-inp').value=String(B_DEF_A);
   updateFormulaActive();
   if(S.results)recompute();
 }
@@ -3620,7 +3624,7 @@ function decodeImage(file, cb){
     legacyDecodeImage(file,cb);
   }).catch(err=>{
     hdBusy('');
-    showErr('Could not read this image — '+((err&&err.message)||'unknown error')+'.');
+    showErr(err&&err.userMsg?err.userMsg:'Could not read this image — '+((err&&err.message)||'unknown error')+'.');
   });
 }
 
@@ -3666,9 +3670,9 @@ function legacyDecodeImage(file, cb){
     const img=new Image();
     img.onerror=()=>showErr('This file does not appear to be a valid image.');
     img.onload=()=>{
-      const origW=img.width,origH=img.height,totalPx=origW*origH,MAX_MP=50e6;
+      const origW=img.width,origH=img.height,totalPx=origW*origH,MAX_MP=MAX_IMAGE_PIXELS;
+      if(totalPx>MAX_MP){showErr(tooBigMsg(origW,origH));return;}
       let pw=origW,ph=origH,rf=1;
-      if(totalPx>MAX_MP){rf=Math.sqrt(MAX_MP/totalPx);pw=Math.round(origW*rf);ph=Math.round(origH*rf);}
       const MAX_DISP=dispMax();
       const dw=Math.min(pw,MAX_DISP),dh=Math.round(dw*ph/pw),ds=dw/pw;
       const oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
@@ -3808,10 +3812,11 @@ function runAnalysis(){
         boundLeftIdx:left,boundRightIdx:right,workerLeftIdx:left,workerRightIdx:right,workerArea:area,
         prof:[...prof],baseArr:[...base],pxMm_pd,midIdx:minIdx,
         optsLabel:opts.join(' · '),
-        linesTotal:allProfiles.length,
+        linesTotal:allProfiles.length,nLinesSetting:S.nLines,
         linesKept:doAdaptive?Math.max(2,Math.round(allProfiles.length*0.7)):allProfiles.length,
         sourceDepth:(S.imgMeta&&S.imgMeta.depth)||'',
         sourceTone:isHdSource()?S.pixels.tone:'',
+        baseMode:baseModeLabel(r.baseMode),
       };
       applyAutoBounds();
       resetAdjustments();
@@ -3829,7 +3834,7 @@ function runAnalysis(){
   },100);
 }
 
-/* ── optional cap on the auto window: 4 × FWHM of the depression ── */
+/* ── FWHM of the depression ── */
 const FWHM_CAP_K=4;
 const FWHM_CAP_KEY='dcg_fwhm_cap_v1';
 function fwhmInfo(prof,base,isDep,L,R){
@@ -3880,6 +3885,7 @@ function setFwhmCap(on){
   recompute();
 }
 function windowCapLabel(){return S.fwhmCap?`${FWHM_CAP_K}×FWHM`:'';}
+function baseModeLabel(m){return m==='local'?'local':m==='one-side'?'one side only':m==='fallback'?'fallback (whole line)':'whole line';}
 
 /* ═══════════════════════════════════════════════════════════
    PROFILE EXPORT (Pro): every line's profile + metadata → .xlsx
@@ -3982,7 +3988,7 @@ function exportCorrBase(r,cL,cR){
   if(S.tilt===0&&S.bow===0&&S.shift===0)return baseArr.slice();
   let pre=0;const ms=Math.floor(n*0.1),me=Math.ceil(n*0.9);
   for(let i=ms;i<me;i++){const q=baseArr[i]-prof[i];if(Math.abs(q)>Math.abs(pre))pre=q;}
-  const preSign=pre>=0?1:-1;
+  const preSign=r.isDep?1:-1;
   let pivotIdx=midIdx,pivotVal=-Infinity;
   for(let i=cL;i<=Math.min(cR,n-1);i++){const q=preSign*(baseArr[i]-prof[i]);if(q>pivotVal){pivotVal=q;pivotIdx=i;}}
   return baseArr.map((b,i)=>{const t=(i-pivotIdx)/half;return b+S.tilt*t+S.bow*t*t+S.shift;});
@@ -4012,9 +4018,9 @@ function lineSnapshot(){
   const meta=S.imgMeta||{};
   return{
     p1:o,p2:q,lenPx,lenMm:lenPx/S.pxMm,
-    nSetting:S.nLines,linesTotal:r.linesTotal,linesKept:r.linesKept,stripMm:(r.linesTotal-1)/k,
+    nSetting:analysedLines(),linesTotal:r.linesTotal,linesKept:r.linesKept,stripMm:(r.linesTotal-1)/k,
     method:S.avgMethod,align:!!S.doAlign,adaptive:!!S.doAdaptive,
-    cap:windowCapLabel(),windowEdited:windowEdited(),tilt:S.tilt,bow:S.bow,shift:S.shift,
+    cap:windowCapLabel(),baseMode:r.baseMode||'',windowEdited:windowEdited(),tilt:S.tilt,bow:S.bow,shift:S.shift,
     format:meta.format||'',depth:meta.depth||'8-bit',bits:(S.pixels&&S.pixels.bits)||8,
     tone:isHdSource()?S.pixels.tone:'srgb (8-bit)',hd:isHdSource(),toneKey:isHdSource()?S.pixels.tone:'srgb',
     origW:meta.origW||null,origH:meta.origH||null,anW:S.pixels?S.pixels.width:null,anH:S.pixels?S.pixels.height:null,
@@ -4148,7 +4154,7 @@ const PX_SUMMARY=[
   ['Line length (px)',x=>x.lenPx],['Line length (mm)',x=>x.lenMm,1],
   ['Scan lines (setting)',x=>x.nSetting],['Scan lines used',x=>x.linesTotal],['Scan lines kept',x=>x.linesKept],['Strip width (mm)',x=>x.stripMm,1],
   ['Combining method',x=>x.method],['Aligned',x=>yn(x.align)],['Adaptive',x=>yn(x.adaptive)],
-  ['Window cap',x=>x.cap||'none'],['Window edited',x=>yn(x.windowEdited)],['Baseline tilt',x=>x.tilt],['Baseline bow',x=>x.bow],['Baseline shift',x=>x.shift],
+  ['Baseline mode',x=>x.baseMode],['Window edited',x=>yn(x.windowEdited)],['Baseline tilt',x=>x.tilt],['Baseline bow',x=>x.bow],['Baseline shift',x=>x.shift],
   ['Source format',x=>x.format],['Bit depth',x=>x.depth],['Tone response',x=>x.tone],
   ['Image width (px)',x=>x.origW],['Image height (px)',x=>x.origH],['Analysis width (px)',x=>x.anW],['Analysis height (px)',x=>x.anH],
   ['px/mm (image)',x=>x.pxMm],['px/mm (analysis)',x=>x.pxMmWork],
@@ -4168,7 +4174,7 @@ const PX_SUMMARY=[
 function pxLineSheet(x,meta){
   const hd=x.hd&&x.bits>8,n=x.prof.length,k=x.pxMmWork;
   const head=['Position (mm)','Grey 0–255 (DCG)','Linear sRGB (0–255)','Linear γ1.8 (0–255)',
-    'Baseline, Worker (0–255)','Baseline used (0–255)','Residual = baseline used − grey','In window (1/0)'];
+    'Baseline, Worker local (0–255)','Baseline used (0–255)','Residual = baseline used − grey','In window (1/0)'];
   if(hd)head.push('16-bit file value');
   const rows=[head];
   for(let i=0;i<n;i++){
@@ -4182,10 +4188,10 @@ function pxLineSheet(x,meta){
     ['px/mm (analysis)',x.pxMmWork],['Samples',n],
     ['Window from (mm)',x.winFrom,1],['Window to (mm)',x.winTo,1],
     ['Worker window from (mm)',x.wL/k,1],['Worker window to (mm)',x.wR/k,1],
-    ['Area (lum·mm)',x.area],['Worker area (lum·mm)',x.workerArea],['FWHM (mm)',x.fwhm,1],['Depression',yn(x.isDep)],
+    ['Area (lum·mm)',x.area],['Worker area (lum·mm)',x.workerArea],['FWHM (mm)',x.fwhm,1],['Depression',yn(x.isDep)],['Baseline mode',x.baseMode],
     ['Crack centre (mm)',x.crackMm,1],['Surface at crack centre',x.surface],['Darkest in window',x.darkest],['Darkest position (mm)',x.darkMm,1],
-    ['Width A (mm)',x.widthA,1],['Width B (mm)',x.widthB,1],
-    ['Scan lines used',x.linesTotal],['Combining',[x.method,x.align?'aligned':'',x.adaptive?'adaptive':''].filter(Boolean).join(' · ')],
+    ['Width A (mm)',x.widthA,1],['Width B (mm)',x.widthB,1],['Width B note','uses px/mm (image)'],['B c, α',`${x.bC}, ${x.bA}`],
+    ['Scan lines (setting)',x.nSetting],['Scan lines used',x.linesTotal],['Scan lines rule','used = 2·⌊setting/2⌋ + 1 (centre line + equal number each side)'],['Combining',[x.method,x.align?'aligned':'',x.adaptive?'adaptive':''].filter(Boolean).join(' · ')],
     ['Tone response',x.tone],
     ['Linear sRGB','sRGB decode of grey, × 255'],['Linear γ1.8','(grey/255)^1.8 × 255'],
     ['Area rule','trapezoid of max(0, ±residual) over in-window rows, step = 1 row; − sign if no depression']
@@ -4238,10 +4244,11 @@ function origPt(p){return{x:+(p.x/S.dispScale/S.resizeFactor).toFixed(1),y:+(p.y
 function baselineAdjusted(){return (S.tilt!==0||S.bow!==0||S.shift!==0)?'yes':'';}
 function windowEdited(){return (S.cropLeft!==null||S.cropRight!==null)?'yes':'';}
 function fmtW(v){return v==null?'—':(v<0.001?'<0.001':v.toFixed(3));}
+function analysedLines(){return(S.results&&S.results.nLinesSetting)||S.nLines;}
 function activeLineObj(){
   if(!S.measLine||!S.results)return null;
   const dv=getDisplayValues();
-  return{n:nextLineNo(),p1:S.measLine.p1,p2:S.measLine.p2,nLines:S.nLines,
+  return{n:nextLineNo(),p1:S.measLine.p1,p2:S.measLine.p2,nLines:analysedLines(),
     widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,active:true};
 }
 function allLineItems(){const a=activeLineObj();return a?S.lines.concat([a]):S.lines.slice();}
@@ -4300,7 +4307,7 @@ function confirmLine(mode){
   const dv=getDisplayValues();
   if(S.lastLogId)refreshLastLog();
   else if(S.autoLog)addLogEntry(true);
-  S.lines.push({n:nextLineNo(),p1:{...S.measLine.p1},p2:{...S.measLine.p2},nLines:S.nLines,name:measNoteValue(),
+  S.lines.push({n:nextLineNo(),p1:{...S.measLine.p1},p2:{...S.measLine.p2},nLines:analysedLines(),name:measNoteValue(),
     widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,logId:S.lastLogId||'',exp:safeLineSnapshot()});
   S.lastLogId='';
   decodeSeq++;
@@ -5139,8 +5146,6 @@ window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationF
 document.documentElement.style.setProperty('--chrome',isTouch?'200px':'150px');
 window.addEventListener('resize',()=>{if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
 S.lineView=storageGet(LINE_VIEW_KEY)==='thin'?'thin':'band';
-S.fwhmCap=storageGet(FWHM_CAP_KEY)==='1';
-{const c=$('chk-fwhm-cap');if(c)c.checked=S.fwhmCap;}
 applyLineViewBtn();
 buildStepBar();
 buildAuxBar();
