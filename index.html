@@ -19,7 +19,7 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 .step-line{flex:1;height:2px;background:rgba(255,255,255,0.12);transition:background .3s}
 .step-line.done{background:#0cbbcc}
 .step-line.invis{background:transparent}
-.step-circle{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(232,248,249,0.4);transition:all .3s}
+.step-circle{width:26px;height:26px;border-radius:50%;flex-shrink:0;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(232,248,249,0.4);transition:all .3s}
 .step-circle.active{background:#0cbbcc;border-color:#0cbbcc;color:#081a1e}
 .step-circle.done{background:#0a9aab;border-color:#0a9aab;color:#fff}
 .step-lbl{font-size:11px;margin-top:4px;color:rgba(232,248,249,0.35);font-weight:400;transition:color .2s}
@@ -414,7 +414,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.6.2-beta</div>
+  <div id="version-tag">v1.6.3-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -1549,6 +1549,7 @@ const S={
   staleClient:false,
   scaleDist:'',
   planum:null,
+  exif:null,
   hdMore:null,
   calibShots:[],
   calibActive:false,
@@ -1573,7 +1574,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10602;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10603;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -2039,6 +2040,7 @@ function buildStepBar(){
     const lbl=document.createElement('span');lbl.className='step-lbl';lbl.id=`sl-lbl-${n}`;lbl.textContent=label;
     item.append(row,lbl);bar.append(item);
   });
+  const c4=$('sc-4');if(c4)c4.addEventListener('click',onStep4Tap);
 }
 
 function buildAuxBar(){
@@ -3708,9 +3710,11 @@ function loadFile(file){
   const seq=++decodeSeq;
   const name=(file&&file.name)?file.name:`pasted_image_${Date.now()}.png`;
   const pp=INTERFACE_MODE==='simple'?Promise.resolve(null):readPlanum(file);
+  const pe=INTERFACE_MODE==='simple'?Promise.resolve(null):readExif(file);
   decodeImage(file,d=>{
     if(seq!==decodeSeq)return;
-    S.photoName=name;S.lastLogId='';S.hdMore=null;S.planum=null;
+    S.photoName=name;S.lastLogId='';S.hdMore=null;S.planum=null;S.exif=null;
+    pe.then(x=>{if(S.imgEl===d.imgEl)S.exif=x;});
     if($('meas-note-inp'))$('meas-note-inp').value='';
     S.imgEl=d.imgEl;S.pixels=d.pixels;
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
@@ -3878,6 +3882,352 @@ function setFwhmCap(on){
 function windowCapLabel(){return S.fwhmCap?`${FWHM_CAP_K}×FWHM`:'';}
 
 /* ═══════════════════════════════════════════════════════════
+   PROFILE EXPORT (Pro): every line's profile + metadata → .xlsx
+═══════════════════════════════════════════════════════════ */
+const PX_TAPS=3,PX_TAP_MS=1500;
+let pxTaps=[],pxBusy=false;
+function onStep4Tap(){
+  if(INTERFACE_MODE!=='pro'||S.screen!=='workflow')return;
+  const t=Date.now();
+  pxTaps=pxTaps.filter(x=>t-x<PX_TAP_MS);pxTaps.push(t);
+  if(pxTaps.length>=PX_TAPS){pxTaps=[];exportLineProfiles();}
+}
+
+/* ── EXIF (camera, lens, exposure) ── */
+const EXIF_SCAN=2*1024*1024;
+async function readExif(file){
+  try{
+    if(!file||typeof file.slice!=='function')return null;
+    let u8=new Uint8Array(await file.slice(0,EXIF_SCAN).arrayBuffer());
+    if(hdIsTiff(u8)&&file.size>EXIF_SCAN&&file.size<4e8)u8=new Uint8Array(await file.arrayBuffer());
+    const t=exifBlock(u8);
+    return t?exifParse(t):null;
+  }catch(e){return null;}
+}
+function exifBlock(u8){
+  if(hdIsTiff(u8))return u8;
+  if(u8.length>4&&u8[0]===0xFF&&u8[1]===0xD8){
+    let p=2;
+    while(p+4<=u8.length){
+      if(u8[p]!==0xFF)break;
+      const m=u8[p+1];
+      if(m===0xFF){p++;continue;}
+      if(m===0xDA||m===0xD9)break;
+      if((m>=0xD0&&m<=0xD7)||m===0x01){p+=2;continue;}
+      const L=(u8[p+2]<<8)|u8[p+3];if(L<2)break;
+      if(m===0xE1&&plStarts(u8,p+4,'Exif\0\0'))return u8.subarray(p+10,Math.min(u8.length,p+2+L));
+      p+=2+L;
+    }
+    return null;
+  }
+  if(hdIsPng(u8)){
+    const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);let p=8;
+    while(p+8<=u8.length){
+      const len=dv.getUint32(p);
+      if(plStarts(u8,p+4,'eXIf'))return u8.subarray(p+8,Math.min(u8.length,p+8+len));
+      if(plStarts(u8,p+4,'IEND'))break;
+      p+=12+len;
+    }
+    return null;
+  }
+  if(plStarts(u8,0,'RIFF')&&plStarts(u8,8,'WEBP')){
+    const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);let p=12;
+    while(p+8<=u8.length){
+      const len=dv.getUint32(p+4,true);
+      if(plStarts(u8,p,'EXIF')){let a=p+8;if(plStarts(u8,a,'Exif\0\0'))a+=6;return u8.subarray(a,Math.min(u8.length,p+8+len));}
+      p+=8+len+(len&1);
+    }
+  }
+  return null;
+}
+function exifParse(t){
+  if(t.length<8)return null;
+  const le=t[0]===0x49&&t[1]===0x49;
+  if(!le&&!(t[0]===0x4D&&t[1]===0x4D))return null;
+  const dv=new DataView(t.buffer,t.byteOffset,t.byteLength),L=t.length;
+  const u16=o=>dv.getUint16(o,le),u32=o=>dv.getUint32(o,le);
+  const SZ={1:1,2:1,3:2,4:4,5:8,7:1,9:4,10:8};
+  const ifd=off=>{
+    const out={};
+    if(!(off>=8&&off+2<=L))return out;
+    const n=u16(off);
+    for(let i=0;i<n&&i<1000;i++){
+      const e=off+2+i*12;if(e+12>L)break;
+      const tag=u16(e),ty=u16(e+2),cnt=u32(e+4),sz=SZ[ty];
+      if(!sz||!cnt)continue;
+      const tot=sz*cnt,vo=tot<=4?e+8:u32(e+8);
+      if(vo+tot>L)continue;
+      let v=null;
+      if(ty===2)v=new TextDecoder('utf-8').decode(t.subarray(vo,vo+cnt)).replace(/\0[\s\S]*$/,'').trim()||null;
+      else if(ty===3)v=u16(vo);
+      else if(ty===4)v=u32(vo);
+      else if(ty===9)v=dv.getInt32(vo,le);
+      else if(ty===5){const d=u32(vo+4);v=d?u32(vo)/d:null;}
+      else if(ty===10){const d=dv.getInt32(vo+4,le);v=d?dv.getInt32(vo,le)/d:null;}
+      out[tag]=v;
+    }
+    return out;
+  };
+  const i0=ifd(u32(4)),ie=i0[0x8769]?ifd(i0[0x8769]):{};
+  const g=(o,k)=>(o[k]===undefined?null:o[k]);
+  const r={make:g(i0,0x010F),model:g(i0,0x0110),lensMake:g(ie,0xA433),lens:g(ie,0xA434),
+    focal:g(ie,0x920A),focal35:g(ie,0xA405),iso:g(ie,0x8827),exposure:g(ie,0x829A),
+    fnumber:g(ie,0x829D),taken:g(ie,0x9003)||g(i0,0x0132)};
+  return Object.values(r).some(v=>v!==null)?r:null;
+}
+
+/* ── per-line snapshot (taken on Confirm, and for the active line on export) ── */
+function exportCorrBase(r,cL,cR){
+  const{prof,baseArr,midIdx}=r,n=prof.length,half=n/2;
+  if(S.tilt===0&&S.bow===0&&S.shift===0)return baseArr.slice();
+  let pre=0;const ms=Math.floor(n*0.1),me=Math.ceil(n*0.9);
+  for(let i=ms;i<me;i++){const q=baseArr[i]-prof[i];if(Math.abs(q)>Math.abs(pre))pre=q;}
+  const preSign=pre>=0?1:-1;
+  let pivotIdx=midIdx,pivotVal=-Infinity;
+  for(let i=cL;i<=Math.min(cR,n-1);i++){const q=preSign*(baseArr[i]-prof[i]);if(q>pivotVal){pivotVal=q;pivotIdx=i;}}
+  return baseArr.map((b,i)=>{const t=(i-pivotIdx)/half;return b+S.tilt*t+S.bow*t*t+S.shift;});
+}
+function distanceSource(){
+  if(S.scaleMode!=='distance')return '';
+  if(planumChipOn(S.planum,$('dist-inp')))return S.planum.warn?'Planum laser (warning)':'Planum laser';
+  return 'typed';
+}
+function lineSnapshot(){
+  const r=S.results;
+  if(!r||!r.prof||!r.baseArr||!S.measLine)return null;
+  const n=r.prof.length,k=r.pxMm_pd,cl=i=>Math.max(0,Math.min(n-1,i));
+  const cL=cl(S.cropLeft!==null?Math.round(S.cropLeft*k):r.boundLeftIdx);
+  const cR=cl(S.cropRight!==null?Math.round(S.cropRight*k):r.boundRightIdx);
+  const corr=exportCorrBase(r,cL,cR);
+  const dv=getDisplayValues();
+  const isAdj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
+  const crackMm=(isAdj&&S.live)?S.live.crackMm:r.crackMm;
+  const ci=cl(Math.round(crackMm*k));
+  let dmin=Infinity,di=cL;
+  for(let i=cL;i<=cR;i++)if(r.prof[i]<dmin){dmin=r.prof[i];di=i;}
+  const o=origPt(S.measLine.p1),q=origPt(S.measLine.p2);
+  const lenPx=Math.hypot(q.x-o.x,q.y-o.y);
+  const f=calibFields(),fv=id=>{const el=$(id);const v=el?parseFloat(el.value):NaN;return isFinite(v)?v:null;};
+  const cam=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
+  const meta=S.imgMeta||{};
+  return{
+    p1:o,p2:q,lenPx,lenMm:lenPx/S.pxMm,
+    nSetting:S.nLines,linesTotal:r.linesTotal,linesKept:r.linesKept,stripMm:(r.linesTotal-1)/k,
+    method:S.avgMethod,align:!!S.doAlign,adaptive:!!S.doAdaptive,
+    cap:windowCapLabel(),windowEdited:windowEdited(),tilt:S.tilt,bow:S.bow,shift:S.shift,
+    format:meta.format||'',depth:meta.depth||'8-bit',bits:(S.pixels&&S.pixels.bits)||8,
+    tone:isHdSource()?S.pixels.tone:'srgb (8-bit)',hd:isHdSource(),toneKey:isHdSource()?S.pixels.tone:'srgb',
+    origW:meta.origW||null,origH:meta.origH||null,anW:S.pixels?S.pixels.width:null,anH:S.pixels?S.pixels.height:null,
+    pxMm:S.pxMm,pxMmWork:k,scaleMode:S.scaleMode,
+    distance:(S.scaleMode==='distance'&&parseFloat(S.scaleDist)>0)?+S.scaleDist:null,distSource:distanceSource(),
+    camProfile:(S.scaleMode==='distance'&&cam)?cam.name:'',
+    refMm:(S.scaleMode==='twopoint'&&parseFloat(S.realDist)>0)?+S.realDist:null,
+    planum:S.planum?S.planum.text:'',
+    exif:S.exif,
+    prof:r.prof.slice(),base:r.baseArr.slice(),corr,
+    cL,cR,wL:r.workerLeftIdx,wR:r.workerRightIdx,
+    winFrom:+dv.cL,winTo:+dv.cR,area:+dv.area,workerArea:r.workerArea,fwhm:r.fwhmMm,isDep:!!r.isDep,
+    crackMm,surface:corr[ci],darkest:dmin,darkMm:di/k,
+    aMode:calibMode,aCoeff:fv(f.coeffId),aRef:calibMode==='calibrate'?fv(f.widthId):null,
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,
+    bC:S.bCoeff,bA:S.bExp,bK:S.bCoeff*256*Math.pow(S.pxMm,S.bExp),widthB:+dv.bWidth
+  };
+}
+function safeLineSnapshot(){
+  if(INTERFACE_MODE==='simple')return null;
+  try{return lineSnapshot();}catch(e){return null;}
+}
+
+/* ── minimal .xlsx writer (inline strings, deflate when available) ── */
+const XL_CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function xlCrc(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=XL_CRC[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+async function xlDeflate(u8){
+  if(typeof CompressionStream==='undefined')return null;
+  try{
+    const cs=new CompressionStream('deflate-raw'),w=cs.writable.getWriter();
+    const pump=(async()=>{await w.write(u8);await w.close();})().catch(()=>{});
+    const out=new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    await pump;return out;
+  }catch(e){return null;}
+}
+async function xlZip(files){
+  const enc=new TextEncoder(),parts=[],cen=[];let off=0;
+  const d=new Date();
+  const dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF;
+  const dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  for(const f of files){
+    const nm=enc.encode(f.name),raw=enc.encode(f.xml),crc=xlCrc(raw),def=await xlDeflate(raw);
+    const use=def&&def.length<raw.length,comp=use?def:raw,method=use?8:0;
+    const lh=new Uint8Array(30+nm.length),v=new DataView(lh.buffer);
+    v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x0800,true);v.setUint16(8,method,true);
+    v.setUint16(10,dt,true);v.setUint16(12,dd,true);v.setUint32(14,crc,true);v.setUint32(18,comp.length,true);
+    v.setUint32(22,raw.length,true);v.setUint16(26,nm.length,true);lh.set(nm,30);
+    parts.push(lh,comp);
+    const ch=new Uint8Array(46+nm.length),c=new DataView(ch.buffer);
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);
+    c.setUint16(10,method,true);c.setUint16(12,dt,true);c.setUint16(14,dd,true);c.setUint32(16,crc,true);
+    c.setUint32(20,comp.length,true);c.setUint32(24,raw.length,true);c.setUint16(28,nm.length,true);
+    c.setUint32(42,off,true);ch.set(nm,46);
+    cen.push(ch);off+=lh.length+comp.length;
+  }
+  const cenLen=cen.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array(22),e=new DataView(end.buffer);
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);
+  e.setUint32(12,cenLen,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...cen,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function xlCol(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=(i-m-1)/26;}return s;}
+function xlEsc(s){return String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F￾￿]/g,'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function xlCell(ref,v,st){
+  if(v===null||v===undefined||v==='')return '';
+  const s=st?` s="${st}"`:'';
+  if(typeof v==='number')return isFinite(v)?`<c r="${ref}"${s}><v>${v}</v></c>`:'';
+  if(typeof v==='boolean')v=v?'yes':'no';
+  return `<c r="${ref}" t="inlineStr"${s}><is><t xml:space="preserve">${xlEsc(v)}</t></is></c>`;
+}
+function xlSheet(rows,widths,style){
+  const out=['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
+    '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'];
+  if(widths)out.push('<cols>'+widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols>');
+  out.push('<sheetData>');
+  rows.forEach((row,r)=>{
+    if(!row)return;
+    let cs='';
+    for(let c=0;c<row.length;c++){const v=row[c];if(v===undefined||v===null||v==='')continue;cs+=xlCell(xlCol(c)+(r+1),v,style(r,c));}
+    if(cs)out.push(`<row r="${r+1}">${cs}</row>`);
+  });
+  out.push('</sheetData></worksheet>');
+  return out.join('');
+}
+const XL_STYLES='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+  '<numFmts count="1"><numFmt numFmtId="164" formatCode="0.0000"/></numFmts>'+
+  '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'+
+  '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'+
+  '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'+
+  '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+  '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+
+  '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'+
+  '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>'+
+  '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+async function xlBook(sheets){
+  const wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+    sheets.map((s,i)=>`<sheet name="${xlEsc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')+'</sheets></workbook>';
+  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')+
+    `<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+    sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')+'</Types>';
+  const root='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+  return xlZip([{name:'[Content_Types].xml',xml:ct},{name:'_rels/.rels',xml:root},{name:'xl/workbook.xml',xml:wb},
+    {name:'xl/_rels/workbook.xml.rels',xml:rels},{name:'xl/styles.xml',xml:XL_STYLES}]
+    .concat(sheets.map((s,i)=>({name:`xl/worksheets/sheet${i+1}.xml`,xml:s.xml}))));
+}
+function xlSheetName(base,used){
+  let nm=String(base).replace(/[\[\]:*?\/\\]/g,'_').replace(/^'+|'+$/g,'').trim().slice(0,31)||'Sheet';
+  let k=2,cand=nm;
+  while(used.has(cand.toLowerCase())){const sfx=` (${k++})`;cand=nm.slice(0,31-sfx.length)+sfx;}
+  used.add(cand.toLowerCase());
+  return cand;
+}
+
+/* ── workbook content ── */
+const srgbDecode255=v=>{const c=Math.max(0,v)/255;return(c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4))*255;};
+const g18Decode255=v=>Math.pow(Math.max(0,v)/255,1.8)*255;
+function fileValue16(v,tone){
+  if(tone==='linear')return srgbDecode255(v)/255*65535;
+  if(tone==='g22')return Math.pow(srgbDecode255(v)/255,1/2.2)*65535;
+  return v*65535/255;
+}
+const yn=b=>b?'yes':'no';
+const PX_SUMMARY=[
+  ['File',(x,m)=>m.file],['Line #',x=>x.n],['Name',x=>x.name],['Confirmed',x=>yn(x.confirmed)],
+  ['x1 (px)',x=>x.p1.x],['y1 (px)',x=>x.p1.y],['x2 (px)',x=>x.p2.x],['y2 (px)',x=>x.p2.y],
+  ['Line length (px)',x=>x.lenPx],['Line length (mm)',x=>x.lenMm,1],
+  ['Scan lines (setting)',x=>x.nSetting],['Scan lines used',x=>x.linesTotal],['Scan lines kept',x=>x.linesKept],['Strip width (mm)',x=>x.stripMm,1],
+  ['Combining method',x=>x.method],['Aligned',x=>yn(x.align)],['Adaptive',x=>yn(x.adaptive)],
+  ['Window cap',x=>x.cap||'none'],['Window edited',x=>yn(x.windowEdited)],['Baseline tilt',x=>x.tilt],['Baseline bow',x=>x.bow],['Baseline shift',x=>x.shift],
+  ['Source format',x=>x.format],['Bit depth',x=>x.depth],['Tone response',x=>x.tone],
+  ['Image width (px)',x=>x.origW],['Image height (px)',x=>x.origH],['Analysis width (px)',x=>x.anW],['Analysis height (px)',x=>x.anH],
+  ['px/mm (image)',x=>x.pxMm],['px/mm (analysis)',x=>x.pxMmWork],
+  ['Scale mode',x=>({twopoint:'two points',direct:'px/mm entered',distance:'distance + camera'}[x.scaleMode]||x.scaleMode)],
+  ['Distance (m)',x=>x.distance],['Distance source',x=>x.distSource],['Camera profile',x=>x.camProfile],['Two-point reference (mm)',x=>x.refMm,1],['Planum reading',x=>x.planum],
+  ['Camera make',x=>x.exif&&x.exif.make],['Camera model',x=>x.exif&&x.exif.model],['Lens make',x=>x.exif&&x.exif.lensMake],['Lens model',x=>x.exif&&x.exif.lens],
+  ['Focal length (mm)',x=>x.exif&&x.exif.focal],['Focal length 35 mm eq. (mm)',x=>x.exif&&x.exif.focal35],['ISO',x=>x.exif&&x.exif.iso],
+  ['Exposure time (s)',x=>x.exif&&x.exif.exposure],['Aperture (f-number)',x=>x.exif&&x.exif.fnumber],['Date taken',x=>x.exif&&x.exif.taken],
+  ['Surface at crack centre (0–255)',x=>x.surface],['Darkest in window (0–255)',x=>x.darkest],['Crack centre (mm)',x=>x.crackMm,1],['Darkest position (mm)',x=>x.darkMm,1],
+  ['Window from (mm)',x=>x.winFrom,1],['Window to (mm)',x=>x.winTo,1],['Worker window from (mm)',x=>x.wL/x.pxMmWork,1],['Worker window to (mm)',x=>x.wR/x.pxMmWork,1],
+  ['Area (lum·mm)',x=>x.area],['Worker area (lum·mm)',x=>x.workerArea],['FWHM (mm)',x=>x.fwhm,1],['Depression',x=>yn(x.isDep)],
+  ['Approach A mode',x=>x.aMode],['A coefficient (lum·mm/mm)',x=>x.aCoeff],['A reference width (mm)',x=>x.aRef,1],['Width A (mm)',x=>x.widthA,1],
+  ['B coefficient c',x=>x.bC],['B exponent α',x=>x.bA],['B calibration K (lum·mm/mm)',x=>x.bK],['Width B (mm)',x=>x.widthB,1],
+  ['Reference width (mm)',()=>null,1],['Notes',()=>null],
+  ['DCG version',(x,m)=>m.version],['Exported',(x,m)=>m.when]
+];
+function pxLineSheet(x,meta){
+  const hd=x.hd&&x.bits>8,n=x.prof.length,k=x.pxMmWork;
+  const head=['Position (mm)','Grey 0–255 (DCG)','Linear sRGB (0–255)','Linear γ1.8 (0–255)',
+    'Baseline, Worker (0–255)','Baseline used (0–255)','Residual = baseline used − grey','In window (1/0)'];
+  if(hd)head.push('16-bit file value');
+  const rows=[head];
+  for(let i=0;i<n;i++){
+    const g=x.prof[i];
+    const row=[i/k,g,srgbDecode255(g),g18Decode255(g),x.base[i],x.corr[i],x.corr[i]-g,(i>=x.cL&&i<=x.cR)?1:0];
+    if(hd)row.push(fileValue16(g,x.toneKey));
+    rows.push(row);
+  }
+  const T=[
+    ['Line #',x.n],['Name',x.name],['Confirmed',yn(x.confirmed)],['File',meta.file],
+    ['px/mm (analysis)',x.pxMmWork],['Samples',n],
+    ['Window from (mm)',x.winFrom,1],['Window to (mm)',x.winTo,1],
+    ['Worker window from (mm)',x.wL/k,1],['Worker window to (mm)',x.wR/k,1],
+    ['Area (lum·mm)',x.area],['Worker area (lum·mm)',x.workerArea],['FWHM (mm)',x.fwhm,1],['Depression',yn(x.isDep)],
+    ['Crack centre (mm)',x.crackMm,1],['Surface at crack centre',x.surface],['Darkest in window',x.darkest],['Darkest position (mm)',x.darkMm,1],
+    ['Width A (mm)',x.widthA,1],['Width B (mm)',x.widthB,1],
+    ['Scan lines used',x.linesTotal],['Combining',[x.method,x.align?'aligned':'',x.adaptive?'adaptive':''].filter(Boolean).join(' · ')],
+    ['Tone response',x.tone],
+    ['Linear sRGB','sRGB decode of grey, × 255'],['Linear γ1.8','(grey/255)^1.8 × 255'],
+    ['Area rule','trapezoid of max(0, ±residual) over in-window rows, step = 1 row; − sign if no depression']
+  ];
+  if(hd)T.push(['16-bit file value','grey mapped back through the tone response']);
+  const mmRow=new Set();
+  T.forEach((t,j)=>{const r=rows[j]||(rows[j]=[]);r[10]=t[0];r[11]=t[1];if(t[2])mmRow.add(j);});
+  const widths=[13,14,15,15,16,16,18,11];if(hd)widths.push(15);while(widths.length<10)widths.push(4);widths.push(24,22);
+  const xml=xlSheet(rows,widths,(r,c)=>{if(r===0&&c<10)return 1;if(c===10)return 1;if(c===0&&r>0)return 2;if(c===11&&mmRow.has(r))return 2;return 0;});
+  return xml;
+}
+async function exportLineProfiles(){
+  if(pxBusy)return;
+  const items=S.lines.filter(L=>L.exp).map(L=>Object.assign({},L.exp,{n:L.n,name:L.name||'',confirmed:true}));
+  if(S.step===4&&S.results&&S.measLine){
+    const a=safeLineSnapshot();
+    if(a){a.n=nextLineNo();a.name=measNoteValue();a.confirmed=false;items.push(a);}
+  }
+  if(!items.length)return;
+  pxBusy=true;
+  try{
+    const d=new Date(),p2=v=>String(v).padStart(2,'0');
+    const day=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+    const meta={file:S.photoName||'',version:(($('version-tag')||{}).textContent||'').trim(),when:`${day} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`};
+    const used=new Set(['summary']);
+    const sumRows=[PX_SUMMARY.map(c=>c[0])].concat(items.map(x=>PX_SUMMARY.map(c=>{const v=c[1](x,meta);return v===undefined?null:v;})));
+    const mmCol=new Set();PX_SUMMARY.forEach((c,i)=>{if(c[2])mmCol.add(i);});
+    const sheets=[{name:'Summary',xml:xlSheet(sumRows,PX_SUMMARY.map(c=>Math.max(10,Math.min(28,c[0].length+2))),(r,c)=>r===0?1:(mmCol.has(c)?2:0))}];
+    items.forEach(x=>sheets.push({name:xlSheetName(`L${x.n}${x.name?' '+x.name:''}`,used),xml:pxLineSheet(x,meta)}));
+    const blob=await xlBook(sheets);
+    const stem=photoStem().replace(/[\\\/:*?"<>|]+/g,'_');
+    saveBlobAs(blob,`${stem}_profiles_${day}.xlsx`);
+  }catch(e){showErr('Profile export failed: '+((e&&e.message)||'unknown error'));}
+  pxBusy=false;
+}
+function saveBlobAs(blob,name){
+  const url=URL.createObjectURL(blob);
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);}
+  else{const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),2000);}
+}
+
+/* ═══════════════════════════════════════════════════════════
    MULTIPLE LINES PER PHOTO
 ═══════════════════════════════════════════════════════════ */
 const MAX_LINES=20;
@@ -3951,7 +4301,7 @@ function confirmLine(mode){
   if(S.lastLogId)refreshLastLog();
   else if(S.autoLog)addLogEntry(true);
   S.lines.push({n:nextLineNo(),p1:{...S.measLine.p1},p2:{...S.measLine.p2},nLines:S.nLines,name:measNoteValue(),
-    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,logId:S.lastLogId||''});
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,logId:S.lastLogId||'',exp:safeLineSnapshot()});
   S.lastLogId='';
   decodeSeq++;
   S.measLine=null;S.results=null;S.live=null;S.drawStart=null;S.drawCur=null;
@@ -4196,7 +4546,7 @@ function resetAll(){
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
   S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
-  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;decodeSeq++;
+  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;S.exif=null;decodeSeq++;
   hideLoupe();
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   resetAdjustments();clearErr();hdBusy('');
