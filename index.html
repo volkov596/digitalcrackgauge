@@ -387,6 +387,37 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   #calib-canvas{width:min(100%,calc((100vh - 130px) * var(--ar,1.333)));margin:0 auto 6px}
 
 }
+
+/* ── 1.7.1: labels, button heights, wide header ── */
+.step-lbl{white-space:nowrap}
+.btn-blue{background:#2563eb;color:#fff}
+.nav-row .btn-success,.nav-row .btn-primary,.nav-row .btn-blue{border:1px solid transparent}
+#result-nav-row .btn,#result-nav-row2 .btn,#panel-3 .nav-row .btn{min-height:40px;padding-top:4px;padding-bottom:4px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+.pc-locked{opacity:.45}
+.zb-group{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#line-list tr.row{cursor:pointer}
+#line-list tr.row:hover td{background:rgba(255,255,255,0.04)}
+#line-list tr.hi td{background:rgba(251,191,36,0.14)}
+#line-list .ln.hi{background:#b45309;color:#fff}
+.ln-redo{background:none;border:none;color:#7fdbe4;cursor:pointer;font-size:14px;padding:0 6px}
+@media(max-width:520px){
+  #result-nav-row .btn,#result-nav-row2 .btn,#panel-3 .nav-row .btn{min-height:40px}
+  #panel-3 .nav-row .btn{flex:0 1 auto}
+}
+@media(min-width:1100px) and (max-width:1299px){
+  #topbar{flex-wrap:wrap}
+  #backup-bar,#version-bar,#hd-busy{order:9;flex:1 1 100%;margin:0}
+}
+@media(min-width:1300px){
+  #backup-bar,#version-bar,#hd-busy{flex:0 1 480px;max-width:480px;margin:0}
+}
+@media(min-width:1100px){
+  #step-bar{min-width:400px}
+  #zoom-bar #zoom-label{order:0}
+  #zoom-bar #nav-hint{order:1}
+  #zoom-bar #img-meta{order:2;margin-left:0}
+  #zoom-bar .zb-group{order:3;margin-left:auto}
+}
 </style>
 </head>
 <body>
@@ -414,11 +445,11 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.7.0-beta</div>
+  <div id="version-tag">v1.7.1-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
-    <span id="backup-bar-text">Reminder: your camera profiles, calibration data and measurement log are saved only on this device, and can be lost if browser data is cleared or after long inactivity. Export a backup from the calibration, formula or log screens.</span>
+    <span id="backup-bar-text">Reminder: camera profiles, calibration data and the measurement log are saved only on this device and can be lost if browser data is cleared. Export a backup from the calibration, formula or log screens.</span>
     <button id="backup-bar-close" onclick="dismissBackupReminder()" title="Dismiss">✕</button>
   </div>
 
@@ -469,8 +500,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
     <div id="zoom-bar">
       <span id="zoom-label">1.0×</span>
-      <button class="btn-ghost" id="btn-reset-view">Reset view</button>
-      <button class="btn-ghost" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none">▭ Bands</button>
+      <span class="zb-group">
+      <button class="btn-ghost zb-btn" id="btn-reset-view">Reset view</button>
+      <button class="btn-ghost zb-btn" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none">▭ Bands</button>
+      <button class="btn-ghost zb-btn" id="btn-label-place" onclick="cycleLabelPlace()" title="Label position: beside each line, or staggered above and below the crack" style="display:none">↔ Beside</button>
+      <button class="btn-ghost zb-btn" id="btn-label-content" onclick="cycleLabelContent()" title="Label content: full labels · numbers when labels would overlap · numbers only" style="display:none">Full labels</button>
+      </span>
       <span id="nav-hint" style="color:#cbd5e1">Scroll to zoom · Right-drag to pan</span>
       <span id="img-meta"></span>
     </div>
@@ -605,8 +640,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       </div>
     </div>
 
+    <div class="card success-bg" id="confirmed-note" style="display:none"></div>
     <div class="nav-row" id="result-nav-row">
-      <button class="btn btn-success" id="btn-confirm-line" onclick="confirmLine('next')">✓ Confirm &amp; draw next line</button>
+      <button class="btn btn-success" id="btn-confirm-line" onclick="onConfirmBtn()">✓ Confirm</button>
       <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')">✓ Confirm &amp; next photo</button>
     </div>
     <div class="nav-row" id="result-nav-row2">
@@ -1534,7 +1570,7 @@ const S={
   zoom:1,panX:0,panY:0,isPanning:false,panAnchor:null,
   iMode:null,scaleMode:'twopoint',scalePts:[],realDist:'',directPx:'',pxMm:null,
   ptDrag:null,
-  lines:[],lineView:'band',fwhmCap:false,
+  lines:[],lineView:'band',fwhmCap:false,labelPlace:'beside',labelContent:'full',postConfirm:null,redraw:null,hiLine:null,
   drawStart:null,drawCur:null,measLine:null,nLines:40,
   doAlign:false,avgMethod:'mean',doAdaptive:false,
   results:null,busy:false,
@@ -1577,7 +1613,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10700;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10701;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1783,12 +1819,9 @@ function paintCanvas(){
 
   const rc=canvas.getBoundingClientRect(),uS=(rc.width>0?src.dispW/rc.width:1)/src.zoom;
   drawConfirmedOnScreen(ctx,uS);
-  if(S.measLine){
-    drawBand(S.measLine.p1,S.measLine.p2);
-    const act=S.step===4?activeLineObj():null;
-    if(act)screenLabel(ctx,act,(analysedLines()/2)*S.dispScale+12*uS,uS,'rgba(8,104,116,0.92)');
-  }
+  if(S.measLine){if(!S.postConfirm)drawBand(S.measLine.p1,S.measLine.p2);}
   else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
+  drawScreenLabels(ctx,uS);
 
   drawRefPts(ctx,S.scalePts,iZ);
   ctx.restore();
@@ -2229,7 +2262,7 @@ function captureHints(){
     scaleDist:S.scaleDist||h.scaleDist||'',
     realDist:S.realDist||h.realDist||'',
     pxMm:S.pxMm||h.pxMm||null,
-    note:(S.lines.length&&S.lines[0].name)||(n&&n.value.trim())||h.note||''
+    note:(S.lines.length&&baseOf(S.lines[0].name))||(n&&n.value.trim())||h.note||''
   };
 }
 function lastPxMm(){const h=S.hints||{};return h.pxMm?(+h.pxMm).toFixed(3):(h.directPx||'');}
@@ -2243,11 +2276,6 @@ function applyHints(){
   set('meas-note-inp',h.note,MEAS_NOTE_PLACEHOLDER);
   const show=(id,on)=>{const b=$(id);if(b)b.style.display=on?'':'none';};
   show('ul-direct',!!px);show('ul-real',!!h.realDist);show('ul-dist',!!h.scaleDist);show('ul-note',!!h.note&&!S.lines.length);
-}
-function nextNoteName(n){
-  if(!n)return '';
-  const m=/^(.*)_(\d+)$/.exec(n);
-  return m?`${m[1]}_${+m[2]+1}`:`${n}_2`;
 }
 function useLast(kind){
   const h=S.hints||{};
@@ -2263,7 +2291,7 @@ function useLast(kind){
     if(!h.scaleDist)return;
     const i=$('dist-inp');if(i){i.value=h.scaleDist;onDistanceInput();}
   } else if(kind==='note'){
-    const v=nextNoteName(h.note);if(!v)return;
+    const v=h.note;if(!v)return;
     const i=$('meas-note-inp');if(i){i.value=v;onMeasNoteInput();}
   }
   updateConfirmBtn();
@@ -2294,10 +2322,10 @@ function cancelLine(){
 }
 function updateLogNowBtn(){
   const b=$('btn-log-now');if(!b)return;
-  b.style.display=(S.step===4&&S.results&&!S.autoLog&&!S.lastLogId)?'':'none';
+  b.style.display=(S.step===4&&S.results&&!S.autoLog&&!S.lastLogId&&!S.postConfirm)?'':'none';
 }
 function logNow(){
-  if(!S.results||S.lastLogId)return;
+  if(!S.results||S.lastLogId||S.postConfirm)return;
   addLogEntry(true);updateLogNowBtn();
 }
 
@@ -3151,7 +3179,7 @@ function onMeasNoteInput(){
 function photoStem(){const n=S.photoName||'';const i=n.lastIndexOf('.');return(i>0?n.slice(0,i):n)||'image';}
 function outFileName(zoom){
   if(S.lines.length){
-    const b=(S.lines[0].name||'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60)||'measured_crack';
+    const b=baseOf(S.lines[0].name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60)||'measured_crack';
     return `${photoStem()}_${b}_lines${zoom?'_zoom':''}.png`;
   }
   const raw=measNoteValue();
@@ -3824,7 +3852,8 @@ function runAnalysis(){
       S.lastLogId='';
       S.cropLeftStr=(+S.results.boundLeft).toFixed(3);S.cropRightStr=(+S.results.boundRight).toFixed(3);
       $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
-      if(S.lines.length&&!measNoteValue())$('meas-note-inp').value=lineName(nextLineNo());
+      if(S.redraw){if(!measNoteValue())$('meas-note-inp').value=S.redraw.name||'';}
+      else if(S.lines.length){renameFirstLine();if(!measNoteValue())$('meas-note-inp').value=lineName(nextLineNo());}
       showStep(4);
       updateResultsDisplay();
       requestAnimationFrame(drawChart);
@@ -4206,7 +4235,7 @@ function pxLineSheet(x,meta){
 async function exportLineProfiles(){
   if(pxBusy)return;
   const items=S.lines.filter(L=>L.exp).map(L=>Object.assign({},L.exp,{n:L.n,name:L.name||'',confirmed:true}));
-  if(S.step===4&&S.results&&S.measLine){
+  if(S.step===4&&S.results&&S.measLine&&!S.postConfirm){
     const a=safeLineSnapshot();
     if(a){a.n=nextLineNo();a.name=measNoteValue();a.confirmed=false;items.push(a);}
   }
@@ -4238,15 +4267,22 @@ function saveBlobAs(blob,name){
 ═══════════════════════════════════════════════════════════ */
 const MAX_LINES=20;
 const LINE_VIEW_KEY='dcg_line_view_v1';
-function nextLineNo(){return S.lines.length?Math.max(...S.lines.map(l=>l.n))+1:1;}
-function lineName(n){const b=S.lines.length?(S.lines[0].name||''):'';return b?`${b}_#${n}`:`#${n}`;}
+function nextLineNo(){if(S.redraw)return S.redraw.n;return S.lines.length?Math.max(...S.lines.map(l=>l.n))+1:1;}
+function baseOf(name){return String(name||'').replace(/_?#\d+$/,'');}
+function lineName(n){const b=S.lines.length?baseOf(S.lines[0].name):'';return b?`${b}_#${n}`:`#${n}`;}
+function renameFirstLine(){
+  const L=S.lines[0];if(!L||/#\d+$/.test(L.name||''))return;
+  L.name=L.name?`${L.name}_#${L.n}`:`#${L.n}`;
+  if(L.logId){const e=S.measLog.find(x=>x.id===L.logId);if(e){e.note=L.name;persistMeasLog();if(S.screen==='log')renderMeasLog();}}
+  renderLineList();
+}
 function origPt(p){return{x:+(p.x/S.dispScale/S.resizeFactor).toFixed(1),y:+(p.y/S.dispScale/S.resizeFactor).toFixed(1)};}
 function baselineAdjusted(){return (S.tilt!==0||S.bow!==0||S.shift!==0)?'yes':'';}
 function windowEdited(){return (S.cropLeft!==null||S.cropRight!==null)?'yes':'';}
 function fmtW(v){return v==null?'—':(v<0.001?'<0.001':v.toFixed(3));}
 function analysedLines(){return(S.results&&S.results.nLinesSetting)||S.nLines;}
 function activeLineObj(){
-  if(!S.measLine||!S.results)return null;
+  if(!S.measLine||!S.results||S.postConfirm)return null;
   const dv=getDisplayValues();
   return{n:nextLineNo(),p1:S.measLine.p1,p2:S.measLine.p2,nLines:analysedLines(),
     widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,active:true};
@@ -4257,18 +4293,125 @@ function lineStats(list){
   const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
   return{n:list.length,maxA:A.length?Math.max(...A):null,maxB:B.length?Math.max(...B):null,meanA:mean(A),meanB:mean(B)};
 }
-function lineLabel(L){return `#${L.n}  A ${L.widthA!=null?L.widthA.toFixed(3):'-.-'} · B ${fmtW(L.widthB)} mm`;}
-function pushLineStats(mLines){
-  const st=lineStats(allLineItems());
-  if(st.n<2)return;
-  mLines.push(`${st.n} lines · max A ${fmtW(st.maxA)} · max B ${fmtW(st.maxB)} mm`);
-  mLines.push(`mean A ${fmtW(st.meanA)} · mean B ${fmtW(st.meanB)} mm`);
+function labelText(L,num){
+  if(num)return `#${L.n}`;
+  return L.widthA!=null?`#${L.n}  A ${L.widthA.toFixed(3)} · B ${fmtW(L.widthB)} mm`:`#${L.n}  B ${fmtW(L.widthB)} mm`;
+}
+function lineLabel(L){return labelText(L,false);}
+const LABEL_PLACE_KEY='dcg_label_place_v1',LABEL_CONTENT_KEY='dcg_label_content_v1';
+const LABEL_CONTENT_TXT={full:'Full labels',auto:'# if crowded',num:'# only'};
+function applyLabelBtns(){
+  const a=$('btn-label-place');if(a)a.textContent=S.labelPlace==='stagger'?'⇵ Staggered':'↔ Beside';
+  const b=$('btn-label-content');if(b)b.textContent=LABEL_CONTENT_TXT[S.labelContent];
+}
+function cycleLabelPlace(){S.labelPlace=S.labelPlace==='stagger'?'beside':'stagger';storageSet(LABEL_PLACE_KEY,S.labelPlace);applyLabelBtns();paintCanvas();}
+function cycleLabelContent(){S.labelContent={full:'auto',auto:'num',num:'full'}[S.labelContent];storageSet(LABEL_CONTENT_KEY,S.labelContent);applyLabelBtns();paintCanvas();}
+function labelsOverlap(a,m){
+  for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)
+    if(Math.abs(a[i].x-a[j].x)<(a[i].w+a[j].w)/2+m&&Math.abs(a[i].y-a[j].y)<(a[i].h+a[j].h)/2+m)return true;
+  return false;
+}
+// items: {L,p1,p2,bh,bg} in output coordinates; measure(text) → {w,h}
+function layoutLabels(items,measure,gap){
+  const geo=items.map(it=>{
+    const dx=it.p2.x-it.p1.x,dy=it.p2.y-it.p1.y,l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l;
+    return{...it,up:ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny},mx:(it.p1.x+it.p2.x)/2,my:(it.p1.y+it.p2.y)/2};
+  });
+  const order=geo.map((_,i)=>i),stag=S.labelPlace==='stagger';
+  {
+    let ax=0,ay=0;
+    geo.forEach(g=>{let x=g.up.x,y=g.up.y;if(x*ax+y*ay<0){x=-x;y=-y;}ax+=x;ay+=y;});
+    order.sort((a,b)=>(geo[a].mx*ax+geo[a].my*ay)-(geo[b].mx*ax+geo[b].my*ay));
+  }
+  const run=num=>{
+    const out=geo.map(g=>{const text=labelText(g.L,num),m=measure(text);return{g,text,w:m.w,h:m.h};});
+    order.forEach((gi,k)=>{
+      const o=out[gi],g=o.g;
+      if(stag){
+        const a=g.p1,b=g.p2,aTop=a.y<b.y-1e-6||(Math.abs(a.y-b.y)<=1e-6&&a.x<=b.x);
+        const E=(k%2===0)===aTop?a:b;
+        let ox=E.x-g.mx,oy=E.y-g.my;const ol=Math.hypot(ox,oy)||1;ox/=ol;oy/=ol;
+        const ext=Math.abs(ox)*o.w/2+Math.abs(oy)*o.h/2,lvl=(k>>1)%2,d=gap*1.5+ext+lvl*(2*ext+gap);
+        o.x=E.x+ox*d;o.y=E.y+oy*d;o.ax=E.x;o.ay=E.y;o.leader=true;o.dx=ox;o.dy=oy;o.step=2*ext+gap;
+      }else{
+        const ext=Math.abs(g.up.x)*o.w/2+Math.abs(g.up.y)*o.h/2,d=g.bh+gap+ext;
+        o.x=g.mx+g.up.x*d;o.y=g.my+g.up.y*d;o.leader=false;
+        o.ax=g.mx+g.up.x*g.bh;o.ay=g.my+g.up.y*g.bh;o.dx=g.up.x;o.dy=g.up.y;o.step=2*ext+gap;
+      }
+    });
+    return out;
+  };
+  // band of every line as an obstacle (centre line ± half-width, at least a hair)
+  const bands=geo.map(g=>{const dx=g.p2.x-g.p1.x,dy=g.p2.y-g.p1.y,l=Math.hypot(dx,dy)||1;
+    return{cx:g.mx,cy:g.my,ux:dx/l,uy:dy/l,hl:l/2,hw:Math.max(g.bh,gap/2)};});
+  const hitsBand=(o,b)=>{
+    const m=gap/3,rx=o.w/2+m,ry=o.h/2+m,ox=o.x-b.cx,oy=o.y-b.cy;
+    if(Math.abs(ox)>rx+Math.abs(b.ux)*b.hl+Math.abs(b.uy)*b.hw)return false;
+    if(Math.abs(oy)>ry+Math.abs(b.uy)*b.hl+Math.abs(b.ux)*b.hw)return false;
+    if(Math.abs(ox*b.ux+oy*b.uy)>b.hl+rx*Math.abs(b.ux)+ry*Math.abs(b.uy))return false;
+    if(Math.abs(-ox*b.uy+oy*b.ux)>b.hw+rx*Math.abs(b.uy)+ry*Math.abs(b.ux))return false;
+    return true;
+  };
+  // labels that collide with a placed label or any line are pushed outward along their own direction, with a leader line
+  const resolve=out=>{
+    const placed=[],m=gap/3;
+    order.forEach(gi=>{
+      const o=out[gi];let k=0;
+      const hit=()=>placed.some(q=>Math.abs(q.x-o.x)<(q.w+o.w)/2+m&&Math.abs(q.y-o.y)<(q.h+o.h)/2+m)||bands.some(b=>hitsBand(o,b));
+      while(k<30&&hit()){o.x+=o.dx*o.step;o.y+=o.dy*o.step;k++;}
+      if(k)o.leader=true;
+      placed.push(o);
+    });
+    return out;
+  };
+  if(S.labelContent==='num')return resolve(run(true));
+  const full=run(false);
+  if(S.labelContent==='full'||!labelsOverlap(full,gap/3))return resolve(full);
+  return resolve(run(true));
+}
+function drawLeaders(ctx,lay,lw){
+  lay.forEach(o=>{if(!o.leader)return;ctx.strokeStyle=o.g.bg;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(o.ax,o.ay);ctx.lineTo(o.x,o.y);ctx.stroke();});
+}
+function drawScreenLabels(ctx,u){
+  const band=S.lineView==='band',items=[];
+  if(S.step>=3)S.lines.forEach(L=>items.push({L,p1:L.p1,p2:L.p2,bh:band?L.nLines/2*S.dispScale:0,bg:L.n===S.hiLine?'rgba(180,83,9,0.95)':'rgba(76,29,149,0.88)'}));
+  const act=S.step===4?activeLineObj():null;
+  if(act)items.push({L:act,p1:act.p1,p2:act.p2,bh:(analysedLines()/2)*S.dispScale,bg:'rgba(8,104,116,0.92)'});
+  if(!items.length){S._labelLayout=[];return;}
+  ctx.save();
+  ctx.font=`600 ${11*u}px monospace`;
+  const pad=4*u,h=15*u;
+  const lay=layoutLabels(items,t=>({w:ctx.measureText(t).width+pad*2,h}),6*u);
+  drawLeaders(ctx,lay,1.2*u);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  lay.forEach(o=>{ctx.fillStyle=o.g.bg;ctx.fillRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);ctx.fillStyle='#fff';ctx.fillText(o.text,o.x,o.y);});
+  ctx.restore();
+  S._labelLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader}));
+}
+function infoStrip(ctx,W,H,s,head){
+  const items=allLineItems(),st=lineStats(items),segs=head.slice();
+  items.forEach(L=>segs.push(L.widthA!=null?`#${L.n} A ${L.widthA.toFixed(3)} · B ${fmtW(L.widthB)} mm`:`#${L.n} B ${fmtW(L.widthB)} mm`));
+  if(st.n>=2){
+    segs.push(`max${st.maxA!=null?` A ${fmtW(st.maxA)} ·`:''} B ${fmtW(st.maxB)} mm`);
+    segs.push(`mean${st.meanA!=null?` A ${fmtW(st.meanA)} ·`:''} B ${fmtW(st.meanB)} mm`);
+  }
+  const fs=14*s,pad=7*s,lh=fs*1.45,sep='   |   ';
+  ctx.save();ctx.font=`${fs}px monospace`;
+  const rows=[];let cur='';
+  segs.forEach(t=>{const c=cur?cur+sep+t:t;if(cur&&ctx.measureText(c).width>W-2*pad){rows.push(cur);cur=t;}else cur=c;});
+  if(cur)rows.push(cur);
+  const hh=rows.length*lh+pad*2-(lh-fs);
+  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,H-hh,W,hh);
+  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
+  rows.forEach((r,i)=>ctx.fillText(r,pad,H-hh+pad+i*lh));
+  ctx.restore();
+  S._strip={rows,height:hh,width:W};
 }
 function updateNoteHint(){
   const h=$('meas-note-hint');if(!h)return;
-  const ln=`· line #${nextLineNo()}`;
-  h.textContent=isTouch?ln:`${ln} · ⏎ next line · ⇧⏎ next photo`;
-  const b=$('btn-confirm-line');if(b)b.disabled=S.lines.length+1>=MAX_LINES;
+  const ln=S.postConfirm?`· line #${S.postConfirm} confirmed`:`· line #${nextLineNo()}`;
+  h.textContent=isTouch?ln:`${ln} · ⏎ confirm, ⏎ next line · ⇧⏎ next photo`;
+  updateConfirmBtns();
 }
 function applyLineViewBtn(){const b=$('btn-line-view');if(b)b.textContent=S.lineView==='band'?'▭ Bands':'─ Lines';}
 function toggleLineView(){
@@ -4283,6 +4426,8 @@ function renderLineList(){
   const items=act?S.lines.concat([act]):S.lines;
   el.style.display=show?'block':'none';
   const vb=$('btn-line-view');if(vb)vb.style.display=show?'':'none';
+  const showLbl=show||(S.step===4&&!!S.results);
+  ['btn-label-place','btn-label-content'].forEach(id=>{const b=$(id);if(b)b.style.display=showLbl?'':'none';});
   ['btn-save-3','btn-save-zoom-3'].forEach(id=>{const b=$(id);if(b)b.style.display=(S.step===3&&S.lines.length)?'':'none';});
   if(!show){el.innerHTML='';return;}
   const st=lineStats(items);
@@ -4290,7 +4435,7 @@ function renderLineList(){
     `<tr class="tot"><td></td><td>Max</td><td class="num">${fmtW(st.maxA)}</td><td class="num">${fmtW(st.maxB)}</td><td></td></tr>`+
     `<tr class="tot"><td></td><td>Mean</td><td class="num">${fmtW(st.meanA)}</td><td class="num">${fmtW(st.meanB)}</td><td></td></tr>`:'';
   el.innerHTML='<table><tr><th>#</th><th>Name</th><th class="num">A mm</th><th class="num">B mm</th><th></th></tr>'+
-    S.lines.map(L=>`<tr><td><span class="ln">${L.n}</span></td><td class="nm" title="${escapeHtml(L.name||'')}">${escapeHtml(L.name||'')}</td><td class="num">${fmtW(L.widthA)}</td><td class="num">${fmtW(L.widthB)}</td><td style="text-align:right"><button class="wiz-shot-del" onclick="deleteLine(${L.n})" title="Delete line">✕</button></td></tr>`).join('')+
+    S.lines.map(L=>`<tr class="row${L.n===S.hiLine?' hi':''}" onclick="toggleHiLine(${L.n})" title="Click to highlight on the photo"><td><span class="ln${L.n===S.hiLine?' hi':''}">${L.n}</span></td><td class="nm" title="${escapeHtml(L.name||'')}">${escapeHtml(L.name||'')}</td><td class="num">${fmtW(L.widthA)}</td><td class="num">${fmtW(L.widthB)}</td><td style="text-align:right;white-space:nowrap"><button class="ln-redo" onclick="event.stopPropagation();redrawConfirmed(${L.n})" title="Redraw this line">↺</button><button class="wiz-shot-del" onclick="event.stopPropagation();deleteLine(${L.n})" title="Delete line">✕</button></td></tr>`).join('')+
     (act?`<tr class="act" title="Not confirmed yet"><td><span class="ln act">${act.n}</span></td><td class="nm">${escapeHtml(measNoteValue())}</td><td class="num">${fmtW(act.widthA)}</td><td class="num">${fmtW(act.widthB)}</td><td></td></tr>`:'')+
     tot+'</table>';
 }
@@ -4298,31 +4443,84 @@ function deleteLine(n){
   const L=S.lines.find(x=>x.n===n);if(!L)return;
   if(!confirm(`Delete line #${n}? Its log entry is removed too.`))return;
   S.lines=S.lines.filter(x=>x.n!==n);
+  if(S.hiLine===n)S.hiLine=null;
   if(L.logId){S.measLog=S.measLog.filter(e=>e.id!==L.logId);persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();}
+  if(S.postConfirm===n){finishLine();return;}
   renderLineList();updateDrawHint();if(S.step===4)updateNoteHint();paintCanvas();
 }
-function confirmLine(mode){
-  if(!S.results||!S.measLine||S.busy)return;
-  if(S.lines.length>=MAX_LINES){showErr(`Maximum ${MAX_LINES} lines per photo.`);return;}
-  const dv=getDisplayValues();
-  if(S.lastLogId)refreshLastLog();
-  else if(S.autoLog)addLogEntry(true);
-  S.lines.push({n:nextLineNo(),p1:{...S.measLine.p1},p2:{...S.measLine.p2},nLines:analysedLines(),name:measNoteValue(),
-    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,logId:S.lastLogId||'',exp:safeLineSnapshot()});
-  S.lastLogId='';
-  decodeSeq++;
+function toggleHiLine(n){S.hiLine=S.hiLine===n?null:n;renderLineList();paintCanvas();}
+const LOCK_IDS=['chart-wrap','base-panel','calib-panel','formula-panel','meas-note-row'];
+function lockStep4(on){
+  LOCK_IDS.forEach(id=>{const el=$(id);if(el){el.inert=!!on;el.classList.toggle('pc-locked',!!on);}});
+  const note=$('confirmed-note');
+  if(note){note.style.display=on?'':'none';if(on)note.innerHTML=`✓ Line #${S.postConfirm} confirmed — <strong>Next line →</strong> to draw another, or ↺ in the line list to redo it.`;}
+  updateConfirmBtns();updateLogNowBtn();
+}
+function updateConfirmBtns(){
+  const b=$('btn-confirm-line');if(!b)return;
+  if(S.postConfirm){b.textContent='Next line →';b.className='btn btn-blue';b.disabled=S.lines.length>=MAX_LINES;}
+  else{b.textContent='✓ Confirm';b.className='btn btn-success';b.disabled=!S.redraw&&S.lines.length>=MAX_LINES;}
+}
+function onConfirmBtn(){confirmLine(S.postConfirm?'next':'stay');}
+function finishLine(){
+  S.postConfirm=null;lockStep4(false);
+  decodeSeq++;S.busy=false;
   S.measLine=null;S.results=null;S.live=null;S.drawStart=null;S.drawCur=null;
   resetAdjustments();
   setCalibMode('measure');            // a Calibrate-mode line leaves its coefficient for the following lines
   const ni=$('meas-note-inp');if(ni)ni.value='';
+  const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   clearErr();
   S.iMode='draw';$('img-canvas').style.cursor='crosshair';
   showStep(3);updateDrawHint();paintCanvas();
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur();
+}
+function redrawConfirmed(n){
+  const go=()=>{
+    const L=S.lines.find(x=>x.n===n);if(!L)return;
+    if(!confirm(`Redraw line #${n}? Its current measurement${L.logId?' and log entry are':' is'} removed; draw the replacement next.`))return;
+    let logIdx=-1;
+    if(L.logId){logIdx=S.measLog.findIndex(e=>e.id===L.logId);if(logIdx>=0){S.measLog.splice(logIdx,1);persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();}}
+    S.lines=S.lines.filter(x=>x.n!==n);
+    if(S.hiLine===n)S.hiLine=null;
+    S.redraw={n,name:L.name||'',logIdx};
+    finishLine();
+  };
+  if(S.postConfirm){go();return;}
+  guardActive(go);
+}
+function photoLogIds(){
+  const ids=S.lines.map(L=>L.logId).filter(Boolean);
+  if(S.lastLogId&&!ids.includes(S.lastLogId))ids.push(S.lastLogId);
+  return ids;
+}
+function confirmLine(mode){
+  if(S.postConfirm){if(mode==='photo')nextPhoto();else if(mode==='next')finishLine();return;}
+  if(!S.results||!S.measLine||S.busy)return;
+  if(!S.redraw&&S.lines.length>=MAX_LINES){showErr(`Maximum ${MAX_LINES} lines per photo.`);return;}
+  const dv=getDisplayValues();
+  if(S.lastLogId)refreshLastLog();
+  else if(S.autoLog)addLogEntry(true);
+  const n=nextLineNo();
+  S.lines.push({n,p1:{...S.measLine.p1},p2:{...S.measLine.p2},nLines:analysedLines(),name:measNoteValue(),
+    widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,logId:S.lastLogId||'',exp:safeLineSnapshot()});
+  S.lines.sort((a,b)=>a.n-b.n);
+  if(S.redraw&&S.lastLogId&&S.redraw.logIdx>=0){
+    const i=S.measLog.findIndex(e=>e.id===S.lastLogId);
+    if(i>=0){const [e]=S.measLog.splice(i,1);S.measLog.splice(Math.min(S.redraw.logIdx,S.measLog.length),0,e);persistMeasLog();if(S.screen==='log')renderMeasLog();}
+  }
+  S.redraw=null;S.lastLogId='';
+  if(mode==='stay'){
+    const ae=document.activeElement;if(ae&&ae.blur)ae.blur();
+    S.postConfirm=n;lockStep4(true);clearErr();updateNoteHint();
+    renderLineList();updateNoteHint();paintCanvas();
+    return;
+  }
+  finishLine();
   if(mode==='photo')nextPhoto();
 }
 function guardActive(fn){
-  if(!(S.step===4&&S.results)){fn();return;}
+  if(!(S.step===4&&S.results)||S.postConfirm){fn();return;}
   const m=$('modal');
   $('modal-msg').textContent=`Line #${nextLineNo()} is not confirmed yet.`;
   m.style.display='flex';
@@ -4331,7 +4529,14 @@ function guardActive(fn){
   $('modal-discard').onclick=()=>{close();fn();};
   $('modal-cancel').onclick=close;
 }
-function startOver(){guardActive(resetAll);}
+function startOver(){
+  if(!S.imgEl){resetAll();return;}
+  const ids=photoLogIds(),k=ids.length;
+  const msg=k?`Start over? The photo and its ${k} logged line${k===1?'':'s'} will be removed from the log.`:'Start over? The photo and its lines will be cleared.';
+  if(!confirm(msg))return;
+  if(k){S.measLog=S.measLog.filter(e=>!ids.includes(e.id));persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();}
+  resetAll();
+}
 document.addEventListener('keydown',e=>{
   if(!INTERFACE_MODE||e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
   const t=e.target,tag=t&&t.tagName;
@@ -4372,32 +4577,17 @@ function drawConfirmedOnScreen(ctx,u){
   S.lines.forEach(L=>{
     const p1=L.p1,p2=L.p2,ddx=p2.x-p1.x,ddy=p2.y-p1.y,l=Math.hypot(ddx,ddy);
     if(l<2)return;
-    const nx=-ddy/l,ny=ddx/l,bh=L.nLines/2*S.dispScale;
+    const nx=-ddy/l,ny=ddx/l,bh=L.nLines/2*S.dispScale,hi=L.n===S.hiLine,lc=hi?'#fbbf24':'#a78bfa';
     ctx.save();
     if(band){
-      ctx.fillStyle='rgba(167,139,250,0.16)';ctx.strokeStyle='rgba(167,139,250,0.55)';ctx.lineWidth=u;
+      ctx.fillStyle=hi?'rgba(251,191,36,0.18)':'rgba(167,139,250,0.16)';ctx.strokeStyle=hi?'rgba(251,191,36,0.7)':'rgba(167,139,250,0.55)';ctx.lineWidth=u;
       ctx.beginPath();ctx.moveTo(p1.x+nx*bh,p1.y+ny*bh);ctx.lineTo(p2.x+nx*bh,p2.y+ny*bh);ctx.lineTo(p2.x-nx*bh,p2.y-ny*bh);ctx.lineTo(p1.x-nx*bh,p1.y-ny*bh);ctx.closePath();ctx.fill();ctx.stroke();
     }
-    ctx.strokeStyle='#a78bfa';ctx.lineWidth=(band?1.5:2)*u;ctx.setLineDash(band?[5*u,3*u]:[]);
+    ctx.strokeStyle=lc;ctx.lineWidth=(band?1.5:2)*(hi?1.6:1)*u;ctx.setLineDash(band?[5*u,3*u]:[]);
     ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='#a78bfa';[p1,p2].forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,3*u,0,Math.PI*2);ctx.fill();});
-    screenLabel(ctx,L,(band?bh:0)+12*u,u,'rgba(76,29,149,0.88)');
+    ctx.fillStyle=lc;[p1,p2].forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,3*u,0,Math.PI*2);ctx.fill();});
     ctx.restore();
   });
-}
-function screenLabel(ctx,L,off,u,bg){
-  const p1=L.p1,p2=L.p2,l=Math.hypot(p2.x-p1.x,p2.y-p1.y);
-  if(l<2)return;
-  const nx=-(p2.y-p1.y)/l,ny=(p2.x-p1.x)/l;
-  const up=ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny};
-  const cx=(p1.x+p2.x)/2+up.x*off,cy=(p1.y+p2.y)/2+up.y*off;
-  const txt=lineLabel(L);
-  ctx.save();
-  ctx.font=`600 ${11*u}px monospace`;
-  const tw=ctx.measureText(txt).width,pad=4*u,h=15*u;
-  ctx.fillStyle=bg;ctx.fillRect(cx-tw/2-pad,cy-h/2,tw+pad*2,h);
-  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,cx,cy);
-  ctx.restore();
 }
 function drawLinesOut(ctx,toP,kw,s,drawLabel){
   const band=S.lineView==='band';
@@ -4416,11 +4606,16 @@ function drawLinesOut(ctx,toP,kw,s,drawLabel){
     ctx.setLineDash(band?[8*s,4*s]:[]);ctx.strokeStyle=`rgb(${c})`;ctx.lineWidth=2*s;
     ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.setLineDash([]);
     [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle=`rgb(${c})`;ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
-    const up=ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny};
-    const off=(band?bh:0)+30*s;
-    drawLabel(lineLabel(L),(p1.x+p2.x)/2+up.x*off,(p1.y+p2.y)/2+up.y*off,`rgba(${c},.90)`);
     ctx.restore();
   });
+  const items=allLineItems().map(L=>({L,p1:toP(L.p1),p2:toP(L.p2),bh:band?L.nLines/2*kw:0,bg:'rgba(124,58,237,.90)'}));
+  const fs=15*s,pad=6*s;
+  ctx.save();ctx.font=`600 ${fs}px monospace`;
+  const lay=layoutLabels(items,t=>({w:ctx.measureText(t).width+pad*2,h:fs+pad*2}),10*s);
+  drawLeaders(ctx,lay,2*s);
+  ctx.restore();
+  lay.forEach(o=>drawLabel(o.text,o.x,o.y,o.g.bg));
+  S._saveLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader}));
 }
 
 function saveImage(){
@@ -4450,16 +4645,9 @@ function saveImage(){
     ctx.restore();
   }
   drawLinesOut(ctx,toPx,k,s,drawLabel);
-  const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
-  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px  ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
-  if(hd&&S.imgMeta&&S.imgMeta.depth)mLines.push(S.imgMeta.depth);
-  pushLineStats(mLines);
-  ctx.font=`${mfs}px monospace`;
-  const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
-  const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
-  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,ph-stripH,stripW,stripH);
-  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
-  mLines.forEach((line,i)=>ctx.fillText(line,mpad,ph-stripH+mpad+i*mlineH));
+  const head=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px · ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
+  if(hd&&S.imgMeta&&S.imgMeta.depth)head.push(S.imgMeta.depth);
+  infoStrip(ctx,pw,ph,s,head);
   canvas.toBlob(blob=>{
     if(!blob)return;
     const url=URL.createObjectURL(blob);
@@ -4513,16 +4701,9 @@ function saveZoomedImage(){
 
   drawLinesOut(ctx,toEx,expScale,s,drawLabel);
 
-  const mfs=14*s,mpad=9*s,mlineH=mfs*1.6;
-  const mLines=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm  ·  zoom ${S.zoom.toFixed(1)}×`];
-  if(isHdSource()&&S.imgMeta&&S.imgMeta.depth)mLines.push(S.imgMeta.depth);
-  pushLineStats(mLines);
-  ctx.font=`${mfs}px monospace`;
-  const maxTW=Math.max(...mLines.map(t=>ctx.measureText(t).width));
-  const stripW=maxTW+mpad*2,stripH=mlineH*mLines.length+mpad*2;
-  ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,outH-stripH,stripW,stripH);
-  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
-  mLines.forEach((line,i)=>ctx.fillText(line,mpad,outH-stripH+mpad+i*mlineH));
+  const head=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm · zoom ${S.zoom.toFixed(1)}×`];
+  if(isHdSource()&&S.imgMeta&&S.imgMeta.depth)head.push(S.imgMeta.depth);
+  infoStrip(ctx,outW,outH,s,head);
   canvas.toBlob(blob=>{
     if(!blob)return;
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
@@ -4553,7 +4734,8 @@ function resetAll(){
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
   S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
-  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;S.exif=null;decodeSeq++;
+  S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;S.exif=null;S.redraw=null;S.hiLine=null;decodeSeq++;
+  if(S.postConfirm){S.postConfirm=null;lockStep4(false);}
   hideLoupe();
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   resetAdjustments();clearErr();hdBusy('');
@@ -4573,7 +4755,7 @@ function goBack(){
   if(S.lines.length){
     const n=S.lines.length;
     if(!confirm(`Changing the scale discards the ${n} confirmed line${n===1?'':'s'} on this photo (they stay in the log). Continue?`))return;
-    S.lines=[];
+    S.lines=[];S.redraw=null;S.hiLine=null;
   }
   decodeSeq++;S.busy=false;
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
@@ -4595,6 +4777,7 @@ function goBack(){
 }
 
 function redrawLine(){
+  if(S.postConfirm){redrawConfirmed(S.postConfirm);return;}
   decodeSeq++;S.busy=false;
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   S.measLine=null;S.iMode='draw';S.results=null;S.live=null;
@@ -5131,13 +5314,13 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
   if(control)return;
   if(textField){
-    if(t.id==='meas-note-inp'&&S.step===4&&S.results){
+    if(t.id==='meas-note-inp'&&S.step===4&&S.results&&!e.repeat){
       e.preventDefault();
-      confirmLine(e.shiftKey?'photo':'next');
+      confirmLine(e.shiftKey?'photo':(S.postConfirm?'next':'stay'));
     }
     return;
   }
-  if(S.step===4&&S.results&&!S.busy){e.preventDefault();confirmLine(e.shiftKey?'photo':'next');return;}
+  if(S.step===4&&S.results&&!S.busy){e.preventDefault();if(e.repeat)return;confirmLine(e.shiftKey?'photo':(S.postConfirm?'next':'stay'));return;}
   if(S.step===3&&S.measLine&&!S.busy){e.preventDefault();runAnalysis();}
 });
 
@@ -5146,6 +5329,9 @@ window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationF
 document.documentElement.style.setProperty('--chrome',isTouch?'200px':'150px');
 window.addEventListener('resize',()=>{if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
 S.lineView=storageGet(LINE_VIEW_KEY)==='thin'?'thin':'band';
+S.labelPlace=storageGet(LABEL_PLACE_KEY)==='stagger'?'stagger':'beside';
+{const lc=storageGet(LABEL_CONTENT_KEY);S.labelContent=(lc==='auto'||lc==='num')?lc:'full';}
+applyLabelBtns();
 applyLineViewBtn();
 buildStepBar();
 buildAuxBar();
