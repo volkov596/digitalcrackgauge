@@ -135,8 +135,6 @@ input[type=range]{accent-color:#0cbbcc}
 #chart-subtitle{font-size:11px;color:rgba(232,248,249,0.4);margin-bottom:12px}
 #chart-canvas{display:block;width:100%;height:220px;cursor:default;touch-action:none}
 
-#touch-mode-bar{display:none;margin-bottom:8px;gap:8px;align-items:center;flex-wrap:wrap}
-#btn-touch-mode{min-width:130px}
 
 .nav-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 #result-nav-row{margin-bottom:8px}
@@ -388,12 +386,33 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
 }
 
+/* ── 1.7.3: phone header + fixed action bar ── */
+#action-bar{display:none}
+@media(max-width:520px){
+  #topbar{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:10px;margin-bottom:10px}
+  #brand{flex:1 1 100%;display:flex;align-items:baseline;justify-content:center;gap:8px;margin-bottom:8px}
+  #brand h1{font-size:.82rem;margin:0;letter-spacing:.08em}
+  #brand #mode-badge{font-size:.62rem;padding:2px 7px}
+  #brand #version-tag{margin:0;font-size:9px}
+  #step-bar{flex:1 1 0;min-width:0;margin:0}
+  .step-lbl{font-size:10px}
+  #aux-bar{margin:0;gap:6px;flex:0 0 auto}
+  #aux-bar .aux-circle{width:26px;height:26px;font-size:12px}
+  #aux-bar .aux-lbl{display:none}
+  #backup-bar,#version-bar,#hd-busy{order:9;flex:1 1 100%;margin:10px 0 0}
+  #btn-confirm-scale,#btn-analyze,#result-nav-row{display:none}
+  #action-bar.show{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#081a1e;border-top:1px solid rgba(12,187,204,0.25);box-shadow:0 -4px 14px rgba(0,0,0,0.35)}
+  #action-bar .btn{flex:1 1 0;min-height:44px;padding:6px 10px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent}
+  body.has-ab{padding-bottom:76px}
+  body.kb-open #action-bar.show{display:none}
+}
 /* ── 1.7.1: labels, button heights, wide header ── */
 .step-lbl{white-space:nowrap}
 .btn-blue{background:#2563eb;color:#fff}
 .nav-row .btn-success,.nav-row .btn-primary,.nav-row .btn-blue{border:1px solid transparent}
 #result-nav-row .btn,#result-nav-row2 .btn,#panel-3 .nav-row .btn{min-height:40px;padding-top:4px;padding-bottom:4px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
 .pc-locked{opacity:.45}
+#confirmed-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 14px}
 .zb-group{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 #line-list tr.row{cursor:pointer}
 #line-list tr.row:hover td{background:rgba(255,255,255,0.04)}
@@ -445,7 +464,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.7.1-beta</div>
+  <div id="version-tag">v1.7.3-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -490,10 +509,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
 
   <div id="canvas-wrap">
-    <div id="touch-mode-bar">
-      <button id="btn-touch-mode" class="btn btn-nav" onclick="toggleTouchMode()">✋ Navigate</button>
-      <span id="touch-mode-hint" style="font-size:12px;color:#94a3b8">Single finger: pan · Two fingers: pinch zoom</span>
-    </div>
     <div id="img-holder">
       <canvas id="img-canvas"></canvas>
       <div id="res-warn-overlay" style="display:none"></div>
@@ -503,7 +518,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <span class="zb-group">
       <button class="btn-ghost zb-btn" id="btn-reset-view">Reset view</button>
       <button class="btn-ghost zb-btn" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none">▭ Bands</button>
-      <button class="btn-ghost zb-btn" id="btn-label-place" onclick="cycleLabelPlace()" title="Label position: beside each line, or staggered above and below the crack" style="display:none">↔ Beside</button>
+      <button class="btn-ghost zb-btn" id="btn-label-place" onclick="cycleLabelPlace()" title="Label position: all labels on one side of the crack, or alternating sides" style="display:none">↥ One side</button>
       <button class="btn-ghost zb-btn" id="btn-label-content" onclick="cycleLabelContent()" title="Label content: full labels · numbers when labels would overlap · numbers only" style="display:none">Full labels</button>
       </span>
       <span id="nav-hint" style="color:#cbd5e1">Scroll to zoom · Right-drag to pan</span>
@@ -1010,6 +1025,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
     <div class="footer-note">Patent pending. All rights reserved — please get in touch for licensing.</div>
   </footer>
+  <div id="action-bar"><button id="ab-scale"></button><button id="ab-analyze"></button><button id="ab-confirm"></button><button id="ab-photo"></button></div>
 </div>
 <div class="modal-bg" id="modal"><div class="modal-box"><div id="modal-msg"></div><div class="modal-btns"><button class="btn btn-success" id="modal-ok">Confirm line</button><button class="btn btn-nav" id="modal-discard">Discard</button><button class="btn btn-nav" id="modal-cancel">Cancel</button></div></div></div>
 <div class="modal-bg" id="info-modal" onclick="if(event.target===this)hideInfo()"><div class="modal-box"><div id="info-msg"></div><div class="modal-btns"><button class="btn btn-primary" id="info-ok" onclick="hideInfo()">OK</button></div></div></div>
@@ -1597,7 +1613,6 @@ const S={
     imgEl:null,pixels:null,dispW:0,dispH:0,dispScale:1,resizeFactor:1,imgMeta:null,
     zoom:1,panX:0,panY:0,scalePts:[],imageLoaded:false,reused:false,shots:[],planum:null
   },
-  touchMode:'navigate',
   live:null,
   chartGeom:null,
   chartDrag:null,
@@ -1613,7 +1628,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10701;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10703;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -2127,11 +2142,7 @@ function showStep(n){
   const showCanvas=n>=2&&S.dispW>0;
   $('canvas-wrap').className=showCanvas?'show':'';
 
-  if(isTouch){
-    if(n===4){S.touchMode='navigate';}
-    else if(n===2||n===3){S.touchMode='draw';}
-    updateTouchModeBtn();
-  }
+  updateNavHint();syncActionBar();
   if(n===2){renderHdPanel();applyHints();updateConfirmBtn();}
   if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();updateNoteHint();}
   renderLineList();
@@ -2331,7 +2342,7 @@ function logNow(){
 
 function switchScaleMode(mode){
   if(mode==='distance'&&INTERFACE_MODE==='simple'){showInfo('pro');return;}
-  S.scaleMode=mode;S.scalePts=[];S.realDist='';S.directPx='';
+  S.scaleMode=mode;updateNavHint();S.scalePts=[];S.realDist='';S.directPx='';
   const tw=$('tab-twopoint');
   tw.className='tab'+(mode==='twopoint'?' active':'');
   $('tab-direct').className='tab'+(mode==='direct'?' active':'');
@@ -2453,6 +2464,7 @@ function showScreen(name){
     requestAnimationFrame(paintCanvas);
   }
   updateAuxBar();
+  syncActionBar();
 }
 function enterLogScreen(){
   const t=$('autolog-toggle');if(t)t.checked=S.autoLog;
@@ -2906,20 +2918,31 @@ function commitCropRight(str){
   $('crop-r-inp').value=S.cropRightStr;recompute();
 }
 
-function toggleTouchMode(){
-  S.touchMode=S.touchMode==='navigate'?'draw':'navigate';
-  updateTouchModeBtn();
+const AB=[['ab-scale','btn-confirm-scale',2],['ab-analyze','btn-analyze',3],['ab-confirm','btn-confirm-line',4],['ab-photo','btn-confirm-photo',4]];
+function mirrorAB(id,src){const a=$(id),b=$(src);if(!a||!b)return;a.textContent=b.textContent;a.className=b.className;a.disabled=b.disabled;}
+function syncActionBar(){
+  const bar=$('action-bar');if(!bar)return;
+  const on=!!INTERFACE_MODE&&S.screen==='workflow'&&S.step>=2&&S.step<=4;
+  AB.forEach(([id,src,st])=>{mirrorAB(id,src);const a=$(id);if(a)a.style.display=(on&&S.step===st)?'':'none';});
+  bar.classList.toggle('show',on);document.body.classList.toggle('has-ab',on);
 }
-function updateTouchModeBtn(){
-  const btn=$('btn-touch-mode'),hint=$('touch-mode-hint');
-  if(!btn)return;
-  if(S.touchMode==='navigate'){
-    btn.textContent='✋ Navigate';btn.style.background='';btn.style.color='';
-    if(hint)hint.textContent='Single finger: pan  ·  Two fingers: pinch zoom';
-  } else {
-    btn.textContent='✏️ Measure';btn.style.background='#2563eb';btn.style.color='#fff';
-    if(hint)hint.textContent=S.step===2?'Tap to place A / B  ·  drag a point to adjust  ·  Two fingers: pinch zoom':'Single finger: draw line  ·  Two fingers: pinch zoom';
-  }
+function initActionBar(){
+  AB.forEach(([id,src])=>{
+    const a=$(id),b=$(src);if(!a||!b)return;
+    a.addEventListener('click',()=>{if(!b.disabled)b.click();});
+    new MutationObserver(()=>mirrorAB(id,src)).observe(b,{attributes:true,childList:true,characterData:true,subtree:true});
+  });
+  const kb=t=>t&&(t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&/^(text|number|search|email|tel)$/.test(t.type)));
+  document.addEventListener('focusin',e=>{if(kb(e.target))document.body.classList.add('kb-open');});
+  document.addEventListener('focusout',e=>{if(kb(e.target))document.body.classList.remove('kb-open');});
+  syncActionBar();
+}
+function updateNavHint(){
+  if(!isTouch)return;
+  const h=$('nav-hint');if(!h)return;
+  h.textContent=S.step===3?'Drag across the crack to draw · two fingers to zoom and pan'
+    :(S.step===2&&S.scaleMode==='twopoint')?'Tap to place A / B · drag to pan · pinch to zoom'
+    :'Drag to pan · pinch to zoom';
 }
 function toggleBaseCorr(){
   S.showBaseCorr=!S.showBaseCorr;
@@ -4301,7 +4324,7 @@ function lineLabel(L){return labelText(L,false);}
 const LABEL_PLACE_KEY='dcg_label_place_v1',LABEL_CONTENT_KEY='dcg_label_content_v1';
 const LABEL_CONTENT_TXT={full:'Full labels',auto:'# if crowded',num:'# only'};
 function applyLabelBtns(){
-  const a=$('btn-label-place');if(a)a.textContent=S.labelPlace==='stagger'?'⇵ Staggered':'↔ Beside';
+  const a=$('btn-label-place');if(a)a.textContent=S.labelPlace==='stagger'?'⇵ Staggered':'↥ One side';
   const b=$('btn-label-content');if(b)b.textContent=LABEL_CONTENT_TXT[S.labelContent];
 }
 function cycleLabelPlace(){S.labelPlace=S.labelPlace==='stagger'?'beside':'stagger';storageSet(LABEL_PLACE_KEY,S.labelPlace);applyLabelBtns();paintCanvas();}
@@ -4312,38 +4335,22 @@ function labelsOverlap(a,m){
   return false;
 }
 // items: {L,p1,p2,bh,bg} in output coordinates; measure(text) → {w,h}
+// Labels sit beyond the line ends (off the crack); labels that would collide are spread
+// along the crack keeping the order of their lines, so leader lines never cross.
 function layoutLabels(items,measure,gap){
+  if(!items.length)return[];
   const geo=items.map(it=>{
-    const dx=it.p2.x-it.p1.x,dy=it.p2.y-it.p1.y,l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l;
-    return{...it,up:ny>=0?{x:-nx,y:-ny}:{x:nx,y:ny},mx:(it.p1.x+it.p2.x)/2,my:(it.p1.y+it.p2.y)/2};
+    const dx=it.p2.x-it.p1.x,dy=it.p2.y-it.p1.y,l=Math.hypot(dx,dy)||1;
+    return{...it,ux:dx/l,uy:dy/l,len:l,mx:(it.p1.x+it.p2.x)/2,my:(it.p1.y+it.p2.y)/2};
   });
-  const order=geo.map((_,i)=>i),stag=S.labelPlace==='stagger';
-  {
-    let ax=0,ay=0;
-    geo.forEach(g=>{let x=g.up.x,y=g.up.y;if(x*ax+y*ay<0){x=-x;y=-y;}ax+=x;ay+=y;});
-    order.sort((a,b)=>(geo[a].mx*ax+geo[a].my*ay)-(geo[b].mx*ax+geo[b].my*ay));
-  }
-  const run=num=>{
-    const out=geo.map(g=>{const text=labelText(g.L,num),m=measure(text);return{g,text,w:m.w,h:m.h};});
-    order.forEach((gi,k)=>{
-      const o=out[gi],g=o.g;
-      if(stag){
-        const a=g.p1,b=g.p2,aTop=a.y<b.y-1e-6||(Math.abs(a.y-b.y)<=1e-6&&a.x<=b.x);
-        const E=(k%2===0)===aTop?a:b;
-        let ox=E.x-g.mx,oy=E.y-g.my;const ol=Math.hypot(ox,oy)||1;ox/=ol;oy/=ol;
-        const ext=Math.abs(ox)*o.w/2+Math.abs(oy)*o.h/2,lvl=(k>>1)%2,d=gap*1.5+ext+lvl*(2*ext+gap);
-        o.x=E.x+ox*d;o.y=E.y+oy*d;o.ax=E.x;o.ay=E.y;o.leader=true;o.dx=ox;o.dy=oy;o.step=2*ext+gap;
-      }else{
-        const ext=Math.abs(g.up.x)*o.w/2+Math.abs(g.up.y)*o.h/2,d=g.bh+gap+ext;
-        o.x=g.mx+g.up.x*d;o.y=g.my+g.up.y*d;o.leader=false;
-        o.ax=g.mx+g.up.x*g.bh;o.ay=g.my+g.up.y*g.bh;o.dx=g.up.x;o.dy=g.up.y;o.step=2*ext+gap;
-      }
-    });
-    return out;
-  };
-  // band of every line as an obstacle (centre line ± half-width, at least a hair)
-  const bands=geo.map(g=>{const dx=g.p2.x-g.p1.x,dy=g.p2.y-g.p1.y,l=Math.hypot(dx,dy)||1;
-    return{cx:g.mx,cy:g.my,ux:dx/l,uy:dy/l,hl:l/2,hw:Math.max(g.bh,gap/2)};});
+  // crack direction a = mean line normal; side b = across the crack, pointing up (or left)
+  let ax=0,ay=0;
+  geo.forEach(g=>{let x=-g.uy,y=g.ux;if(x*ax+y*ay<0){x=-x;y=-y;}ax+=x;ay+=y;});
+  let al=Math.hypot(ax,ay);if(!(al>1e-9)){ax=1;ay=0;al=1;}ax/=al;ay/=al;
+  let bx=-ay,by=ax;if(by>1e-9||(Math.abs(by)<=1e-9&&bx>0)){bx=-bx;by=-by;}
+  const order=geo.map((_,i)=>i).sort((i,j)=>(geo[i].mx*ax+geo[i].my*ay)-(geo[j].mx*ax+geo[j].my*ay));
+  const stag=S.labelPlace==='stagger';
+  const bands=geo.map(g=>({cx:g.mx,cy:g.my,ux:g.ux,uy:g.uy,hl:g.len/2,hw:Math.max(g.bh,gap/2)}));
   const hitsBand=(o,b)=>{
     const m=gap/3,rx=o.w/2+m,ry=o.h/2+m,ox=o.x-b.cx,oy=o.y-b.cy;
     if(Math.abs(ox)>rx+Math.abs(b.ux)*b.hl+Math.abs(b.uy)*b.hw)return false;
@@ -4352,22 +4359,54 @@ function layoutLabels(items,measure,gap){
     if(Math.abs(-ox*b.uy+oy*b.ux)>b.hw+rx*Math.abs(b.uy)+ry*Math.abs(b.ux))return false;
     return true;
   };
-  // labels that collide with a placed label or any line are pushed outward along their own direction, with a leader line
-  const resolve=out=>{
-    const placed=[],m=gap/3;
-    order.forEach(gi=>{
-      const o=out[gi];let k=0;
-      const hit=()=>placed.some(q=>Math.abs(q.x-o.x)<(q.w+o.w)/2+m&&Math.abs(q.y-o.y)<(q.h+o.h)/2+m)||bands.some(b=>hitsBand(o,b));
-      while(k<30&&hit()){o.x+=o.dx*o.step;o.y+=o.dy*o.step;k++;}
-      if(k)o.leader=true;
-      placed.push(o);
+  const run=num=>{
+    const out=geo.map(g=>{const text=labelText(g.L,num),m=measure(text);return{g,text,w:m.w,h:m.h};});
+    order.forEach((gi,k)=>{
+      const o=out[gi],g=o.g,side=(stag&&k%2===1)?-1:1;
+      let sbx=g.ux,sby=g.uy;if(sbx*bx*side+sby*by*side<0){sbx=-sbx;sby=-sby;}   // continue the line beyond its end on this side
+      const E=(g.p1.x*sbx+g.p1.y*sby)>=(g.p2.x*sbx+g.p2.y*sby)?g.p1:g.p2;
+      o.extA=Math.abs(ax)*o.w+Math.abs(ay)*o.h;o.extB=Math.abs(sbx)*o.w+Math.abs(sby)*o.h;
+      const d=gap*1.5+o.extB/2;
+      o.x=E.x+sbx*d;o.y=E.y+sby*d;o.ax=E.x;o.ay=E.y;o.sbx=sbx;o.sby=sby;o.lane=side;o.leader=true;
+      o.pa=o.x*ax+o.y*ay;
     });
     return out;
   };
-  if(S.labelContent==='num')return resolve(run(true));
+  const spread1=arr=>{
+      const cl=[];
+      arr.forEach(o=>{
+        cl.push({items:[o],w:o.extA,start:o.pa-o.extA/2});
+        while(cl.length>1){
+          const B=cl[cl.length-1],A=cl[cl.length-2];
+          if(A.start+A.w+gap<=B.start)break;
+          const its=A.items.concat(B.items);let off=0;const offs=its.map(it=>{const r=off;off+=it.extA+gap;return r;});
+          const start=its.reduce((acc,it,i)=>acc+(it.pa-it.extA/2-offs[i]),0)/its.length;
+          cl.splice(-2,2,{items:its,w:off-gap,start});
+        }
+      });
+      cl.forEach(c=>{let off=0;c.items.forEach(it=>{const pa=c.start+off+it.extA/2,dp=pa-it.pa;it.x+=ax*dp;it.y+=ay*dp;it.pa=pa;off+=it.extA+gap;});});
+  };
+  const spread=out=>{
+    const lanes={};
+    order.forEach(gi=>{const o=out[gi];(lanes[o.lane]=lanes[o.lane]||[]).push(o);});
+    Object.values(lanes).forEach(arr=>{
+      const keep=arr.map(o=>({x:o.x,y:o.y,pa:o.pa}));
+      spread1(arr);
+      const far=arr.some((o,i)=>Math.abs(o.pa-keep[i].pa)>Math.max(...arr.map(q=>q.extA)));
+      if(far&&arr.length>2&&arr.every(o=>o.extA>o.extB)){
+        // two rows: every other label one row further out, each row spread on its own
+        arr.forEach((o,i)=>{o.x=keep[i].x;o.y=keep[i].y;o.pa=keep[i].pa;if(i%2){o.x+=o.sbx*(o.extB+gap);o.y+=o.sby*(o.extB+gap);}});
+        spread1(arr.filter((_,i)=>i%2===0));spread1(arr.filter((_,i)=>i%2===1));
+      }
+    });
+    // keep clear of every line and band: step outward across the crack
+    out.forEach(o=>{let k=0;while(k<12&&bands.some(b=>hitsBand(o,b))){o.x+=o.sbx*(o.extB/2+gap);o.y+=o.sby*(o.extB/2+gap);k++;}});
+    return out;
+  };
+  if(S.labelContent==='num')return spread(run(true));
   const full=run(false);
-  if(S.labelContent==='full'||!labelsOverlap(full,gap/3))return resolve(full);
-  return resolve(run(true));
+  if(S.labelContent==='full'||!labelsOverlap(full,gap/3))return spread(full);
+  return spread(run(true));
 }
 function drawLeaders(ctx,lay,lw){
   lay.forEach(o=>{if(!o.leader)return;ctx.strokeStyle=o.g.bg;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(o.ax,o.ay);ctx.lineTo(o.x,o.y);ctx.stroke();});
@@ -4386,7 +4425,7 @@ function drawScreenLabels(ctx,u){
   ctx.textAlign='center';ctx.textBaseline='middle';
   lay.forEach(o=>{ctx.fillStyle=o.g.bg;ctx.fillRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);ctx.fillStyle='#fff';ctx.fillText(o.text,o.x,o.y);});
   ctx.restore();
-  S._labelLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader}));
+  S._labelLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader,ax:o.ax,ay:o.ay}));
 }
 function infoStrip(ctx,W,H,s,head){
   const items=allLineItems(),st=lineStats(items),segs=head.slice();
@@ -4453,12 +4492,12 @@ const LOCK_IDS=['chart-wrap','base-panel','calib-panel','formula-panel','meas-no
 function lockStep4(on){
   LOCK_IDS.forEach(id=>{const el=$(id);if(el){el.inert=!!on;el.classList.toggle('pc-locked',!!on);}});
   const note=$('confirmed-note');
-  if(note){note.style.display=on?'':'none';if(on)note.innerHTML=`✓ Line #${S.postConfirm} confirmed — <strong>Next line →</strong> to draw another, or ↺ in the line list to redo it.`;}
+  if(note){note.style.display=on?'':'none';if(on)note.innerHTML=`✓ Line #${S.postConfirm} confirmed · ↺ in the line list to redo`;}
   updateConfirmBtns();updateLogNowBtn();
 }
 function updateConfirmBtns(){
   const b=$('btn-confirm-line');if(!b)return;
-  if(S.postConfirm){b.textContent='Next line →';b.className='btn btn-blue';b.disabled=S.lines.length>=MAX_LINES;}
+  if(S.postConfirm){b.textContent='Next line →';b.className='btn btn-primary';b.disabled=S.lines.length>=MAX_LINES;}
   else{b.textContent='✓ Confirm';b.className='btn btn-success';b.disabled=!S.redraw&&S.lines.length>=MAX_LINES;}
 }
 function onConfirmBtn(){confirmLine(S.postConfirm?'next':'stay');}
@@ -4615,7 +4654,7 @@ function drawLinesOut(ctx,toP,kw,s,drawLabel){
   drawLeaders(ctx,lay,2*s);
   ctx.restore();
   lay.forEach(o=>drawLabel(o.text,o.x,o.y,o.g.bg));
-  S._saveLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader}));
+  S._saveLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader,ax:o.ax,ay:o.ay}));
 }
 
 function saveImage(){
@@ -5041,7 +5080,7 @@ imgCanvas.addEventListener('touchstart',e=>{
 
   singleTouchPan={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY,moved:false};
 
-  if(S.step===3&&S.iMode==='draw'&&S.touchMode==='draw'&&S.lines.length<MAX_LINES){
+  if(S.step===3&&S.iMode==='draw'&&S.lines.length<MAX_LINES){
     const pos=getImgTouchPos(touch);
     S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;touchDraw=true;
     singleTouchPan=null;
@@ -5344,12 +5383,11 @@ loadMeasLog();
 updateAuxBar();
 
 if(isTouch){
-  $('touch-mode-bar').style.display='flex';
-  $('nav-hint').textContent='Pinch to zoom · drag to pan';
+  updateNavHint();
   const ch=$('calib-nav-hint');if(ch)ch.textContent='Pinch to zoom · drag to pan';
   const tp=$('btn-take-photo');if(tp)tp.style.display='';
-  updateTouchModeBtn();
 }
+initActionBar();
 </script>
 </body>
 </html>
