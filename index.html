@@ -386,26 +386,31 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
 }
 
-/* ── 1.7.3: phone header + fixed action bar ── */
-#action-bar{display:none}
+/* ── 1.7.4: phone header, buttons under the photo, compact rows ── */
 @media(max-width:520px){
-  #topbar{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:10px;margin-bottom:10px}
-  #brand{flex:1 1 100%;display:flex;align-items:baseline;justify-content:center;gap:8px;margin-bottom:8px}
-  #brand h1{font-size:.82rem;margin:0;letter-spacing:.08em}
-  #brand #mode-badge{font-size:.62rem;padding:2px 7px}
-  #brand #version-tag{margin:0;font-size:9px}
+  #topbar{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:12px;margin-bottom:16px}
+  #brand{flex:1 1 100%;display:flex;align-items:baseline;justify-content:center;flex-wrap:nowrap;gap:8px;margin:4px 0 14px}
+  #brand h1{font-size:.95rem;margin:0;white-space:nowrap}
+  #brand #mode-badge{font-size:.6rem;padding:2px 7px;white-space:nowrap}
+  #brand #version-tag{margin:0;font-size:10px;letter-spacing:.06em;white-space:nowrap}
   #step-bar{flex:1 1 0;min-width:0;margin:0}
-  .step-lbl{font-size:10px}
-  #aux-bar{margin:0;gap:6px;flex:0 0 auto}
-  #aux-bar .aux-circle{width:26px;height:26px;font-size:12px}
+  #aux-bar{margin:0;gap:8px;flex:0 0 auto}
+  #aux-bar .aux-circle{width:30px;height:30px;font-size:14px}
   #aux-bar .aux-lbl{display:none}
-  #backup-bar,#version-bar,#hd-busy{order:9;flex:1 1 100%;margin:10px 0 0}
-  #btn-confirm-scale,#btn-analyze,#result-nav-row{display:none}
-  #action-bar.show{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#081a1e;border-top:1px solid rgba(12,187,204,0.25);box-shadow:0 -4px 14px rgba(0,0,0,0.35)}
-  #action-bar .btn{flex:1 1 0;min-height:44px;padding:6px 10px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent}
-  body.has-ab{padding-bottom:76px}
-  body.kb-open #action-bar.show{display:none}
+  #backup-bar,#version-bar,#hd-busy{order:9;flex:1 1 100%;margin:12px 0 0}
+  #phone-actions{gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  #phone-actions .btn{flex:0 1 auto;min-height:40px}
+  #phone-actions #result-nav-row{margin:0;gap:8px;flex-wrap:wrap}
+  #zoom-bar{gap:6px 8px}
+  #zoom-bar .zb-group{flex:1 1 calc(100% - 64px);flex-wrap:nowrap;gap:5px;justify-content:flex-end}
+  #zoom-bar .zb-btn{padding:4px 7px;font-size:11px;white-space:nowrap}
+  #nav-hint{flex:0 1 auto;font-size:11px}
+  #img-meta{font-size:10px}
+  .zb-long{display:none}
+  #scale-hint .input-row>span:first-child{flex-basis:100%}
+  #scale-distance-panel .dist-input-row>label{flex-basis:100%;min-width:0}
 }
+.nav-row .btn:disabled{background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.25)}
 /* ── 1.7.1: labels, button heights, wide header ── */
 .step-lbl{white-space:nowrap}
 .btn-blue{background:#2563eb;color:#fff}
@@ -464,7 +469,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.7.3-beta</div>
+  <div id="version-tag">v1.7.4-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -513,13 +518,14 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <canvas id="img-canvas"></canvas>
       <div id="res-warn-overlay" style="display:none"></div>
     </div>
+    <div id="phone-actions" class="nav-row" style="display:none"></div>
     <div id="zoom-bar">
       <span id="zoom-label">1.0×</span>
       <span class="zb-group">
-      <button class="btn-ghost zb-btn" id="btn-reset-view">Reset view</button>
-      <button class="btn-ghost zb-btn" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none">▭ Bands</button>
-      <button class="btn-ghost zb-btn" id="btn-label-place" onclick="cycleLabelPlace()" title="Label position: all labels on one side of the crack, or alternating sides" style="display:none">↥ One side</button>
-      <button class="btn-ghost zb-btn" id="btn-label-content" onclick="cycleLabelContent()" title="Label content: full labels · numbers when labels would overlap · numbers only" style="display:none">Full labels</button>
+      <button class="btn-ghost zb-btn" id="btn-reset-view">Reset<span class="zb-long"> view</span></button>
+      <button class="btn-ghost zb-btn" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none"><span class="zb-long">▭ </span>Bands</button>
+      <button class="btn-ghost zb-btn" id="btn-label-place" onclick="cycleLabelPlace()" title="Label position: all labels on one side of the crack, or alternating sides" style="display:none">One side</button>
+      <button class="btn-ghost zb-btn" id="btn-label-content" onclick="cycleLabelContent()" title="Label content: full labels or line numbers only" style="display:none">Labels</button>
       </span>
       <span id="nav-hint" style="color:#cbd5e1">Scroll to zoom · Right-drag to pan</span>
       <span id="img-meta"></span>
@@ -556,7 +562,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <label>Distance to crack (m):</label>
         <input type="number" id="dist-inp" step="0.001" min="0" placeholder="e.g. 4.000" oninput="onDistanceInput()">
         <span class="planum-chip" id="dist-planum-chip" style="display:none">from Planum</span>
-        <button class="btn-ghost btn-small use-last" id="ul-dist" onclick="useLast('dist')" style="display:none">Use last</button>
+        <button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-dist" onclick="useLast('dist')" style="display:none">↺ last</button>
       </div>
       <div class="dist-input-row">
         <label>Camera profile:</label>
@@ -651,7 +657,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <label for="meas-note-inp">Measurement name <span id="meas-note-hint" style="font-weight:400;color:rgba(232,248,249,0.4)"></span></label>
       <div class="note-wrap">
         <input type="text" id="meas-note-inp" maxlength="80" placeholder="e.g. north pier, mid-span — saved to the log and file names" oninput="onMeasNoteInput()">
-        <button class="btn-ghost btn-small use-last" id="ul-note" onclick="useLast('note')" style="display:none">Use last</button>
+        <button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-note" onclick="useLast('note')" style="display:none">↺ last</button>
       </div>
     </div>
 
@@ -1025,7 +1031,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
     <div class="footer-note">Patent pending. All rights reserved — please get in touch for licensing.</div>
   </footer>
-  <div id="action-bar"><button id="ab-scale"></button><button id="ab-analyze"></button><button id="ab-confirm"></button><button id="ab-photo"></button></div>
 </div>
 <div class="modal-bg" id="modal"><div class="modal-box"><div id="modal-msg"></div><div class="modal-btns"><button class="btn btn-success" id="modal-ok">Confirm line</button><button class="btn btn-nav" id="modal-discard">Discard</button><button class="btn btn-nav" id="modal-cancel">Cancel</button></div></div></div>
 <div class="modal-bg" id="info-modal" onclick="if(event.target===this)hideInfo()"><div class="modal-box"><div id="info-msg"></div><div class="modal-btns"><button class="btn btn-primary" id="info-ok" onclick="hideInfo()">OK</button></div></div></div>
@@ -1628,7 +1633,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10703;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10704;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -2142,7 +2147,7 @@ function showStep(n){
   const showCanvas=n>=2&&S.dispW>0;
   $('canvas-wrap').className=showCanvas?'show':'';
 
-  updateNavHint();syncActionBar();
+  updateNavHint();syncPhoneActions();
   if(n===2){renderHdPanel();applyHints();updateConfirmBtn();}
   if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();updateNoteHint();}
   renderLineList();
@@ -2247,7 +2252,7 @@ function updateBandWidth(){
 function updateScaleHint(){
   const hint=$('scale-hint');
   if(S.scaleMode==='direct'){
-    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:150px"><span>pixels / mm</span><button class="btn-ghost btn-small use-last" id="ul-direct" onclick="useLast(\'direct\')" style="display:none">Use last</button></div>';
+    hint.innerHTML='<div class="input-row"><span>Image resolution:</span><input type="number" id="direct-px-inp" min="0.1" step="any" style="width:150px"><span>pixels / mm</span><button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-direct" onclick="useLast(\'direct\')" style="display:none">↺ last</button></div>';
     const inp=$('direct-px-inp');
     if(inp){inp.value=S.directPx;inp.oninput=e=>{S.directPx=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
     applyHints();updateConfirmBtn();
@@ -2257,7 +2262,7 @@ function updateScaleHint(){
   const tap=isTouch?'Tap':'Click';
   if(S.scalePts.length===0)hint.innerHTML=intro+`${tap} <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size`;
   else if(S.scalePts.length===1)hint.innerHTML=`Now ${tap.toLowerCase()} <strong>point B</strong> at the other end of that known distance`;
-  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:130px"><span>mm</span><button class="btn-ghost btn-small use-last" id="ul-real" onclick="useLast('real')" style="display:none">Use last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div>`;
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:130px"><span>mm</span><button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-real" onclick="useLast('real')" style="display:none">↺ last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div>`;
   const inp=$('real-dist-inp');
   if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
   applyHints();updateConfirmBtn();
@@ -2273,7 +2278,7 @@ function captureHints(){
     scaleDist:S.scaleDist||h.scaleDist||'',
     realDist:S.realDist||h.realDist||'',
     pxMm:S.pxMm||h.pxMm||null,
-    note:(S.lines.length&&baseOf(S.lines[0].name))||(n&&n.value.trim())||h.note||''
+    note:(S.lines.length&&baseOf(S.lines[0].name))||baseOf(n&&n.value.trim())||h.note||''
   };
 }
 function lastPxMm(){const h=S.hints||{};return h.pxMm?(+h.pxMm).toFixed(3):(h.directPx||'');}
@@ -2285,7 +2290,7 @@ function applyHints(){
   set('real-dist-inp',h.realDist?h.realDist+' mm':'','e.g. 100');
   set('dist-inp',h.scaleDist?h.scaleDist+' m':'','e.g. 4.000');
   set('meas-note-inp',h.note,MEAS_NOTE_PLACEHOLDER);
-  const show=(id,on)=>{const b=$(id);if(b)b.style.display=on?'':'none';};
+  const show=(id,on)=>{const b=$(id);if(b){b.style.display='';b.style.visibility=on?'':'hidden';}};
   show('ul-direct',!!px);show('ul-real',!!h.realDist);show('ul-dist',!!h.scaleDist);show('ul-note',!!h.note&&!S.lines.length);
 }
 function useLast(kind){
@@ -2464,7 +2469,6 @@ function showScreen(name){
     requestAnimationFrame(paintCanvas);
   }
   updateAuxBar();
-  syncActionBar();
 }
 function enterLogScreen(){
   const t=$('autolog-toggle');if(t)t.checked=S.autoLog;
@@ -2918,24 +2922,22 @@ function commitCropRight(str){
   $('crop-r-inp').value=S.cropRightStr;recompute();
 }
 
-const AB=[['ab-scale','btn-confirm-scale',2],['ab-analyze','btn-analyze',3],['ab-confirm','btn-confirm-line',4],['ab-photo','btn-confirm-photo',4]];
-function mirrorAB(id,src){const a=$(id),b=$(src);if(!a||!b)return;a.textContent=b.textContent;a.className=b.className;a.disabled=b.disabled;}
-function syncActionBar(){
-  const bar=$('action-bar');if(!bar)return;
-  const on=!!INTERFACE_MODE&&S.screen==='workflow'&&S.step>=2&&S.step<=4;
-  AB.forEach(([id,src,st])=>{mirrorAB(id,src);const a=$(id);if(a)a.style.display=(on&&S.step===st)?'':'none';});
-  bar.classList.toggle('show',on);document.body.classList.toggle('has-ab',on);
-}
-function initActionBar(){
-  AB.forEach(([id,src])=>{
-    const a=$(id),b=$(src);if(!a||!b)return;
-    a.addEventListener('click',()=>{if(!b.disabled)b.click();});
-    new MutationObserver(()=>mirrorAB(id,src)).observe(b,{attributes:true,childList:true,characterData:true,subtree:true});
+const PHONE_MQ=window.matchMedia('(max-width:520px)'),ACT_HOME={};
+// on phones the step's main buttons sit directly under the photo
+function placeActions(){
+  const pa=$('phone-actions');if(!pa)return;
+  ['btn-analyze','result-nav-row'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    if(!ACT_HOME[id]){const m=document.createComment(id);el.parentNode.insertBefore(m,el);ACT_HOME[id]=m;}
+    if(PHONE_MQ.matches){if(el.parentNode!==pa)pa.appendChild(el);}
+    else if(el.parentNode===pa)ACT_HOME[id].parentNode.insertBefore(el,ACT_HOME[id].nextSibling);
   });
-  const kb=t=>t&&(t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&/^(text|number|search|email|tel)$/.test(t.type)));
-  document.addEventListener('focusin',e=>{if(kb(e.target))document.body.classList.add('kb-open');});
-  document.addEventListener('focusout',e=>{if(kb(e.target))document.body.classList.remove('kb-open');});
-  syncActionBar();
+  syncPhoneActions();
+}
+function syncPhoneActions(){
+  const pa=$('phone-actions'),a=$('btn-analyze'),r=$('result-nav-row');if(!pa||!a||!r)return;
+  if(PHONE_MQ.matches){a.style.display=S.step===3?'':'none';r.style.display=S.step===4?'':'none';pa.style.display=(S.step===3||S.step===4)?'':'none';}
+  else{a.style.display='';r.style.display='';pa.style.display='none';}
 }
 function updateNavHint(){
   if(!isTouch)return;
@@ -4322,34 +4324,47 @@ function labelText(L,num){
 }
 function lineLabel(L){return labelText(L,false);}
 const LABEL_PLACE_KEY='dcg_label_place_v1',LABEL_CONTENT_KEY='dcg_label_content_v1';
-const LABEL_CONTENT_TXT={full:'Full labels',auto:'# if crowded',num:'# only'};
+const LABEL_CONTENT_TXT={full:'Labels',num:'Numbers'};
 function applyLabelBtns(){
-  const a=$('btn-label-place');if(a)a.textContent=S.labelPlace==='stagger'?'⇵ Staggered':'↥ One side';
+  const a=$('btn-label-place');if(a)a.textContent=S.labelPlace==='stagger'?'Staggered':'One side';
   const b=$('btn-label-content');if(b)b.textContent=LABEL_CONTENT_TXT[S.labelContent];
 }
 function cycleLabelPlace(){S.labelPlace=S.labelPlace==='stagger'?'beside':'stagger';storageSet(LABEL_PLACE_KEY,S.labelPlace);applyLabelBtns();paintCanvas();}
-function cycleLabelContent(){S.labelContent={full:'auto',auto:'num',num:'full'}[S.labelContent];storageSet(LABEL_CONTENT_KEY,S.labelContent);applyLabelBtns();paintCanvas();}
+function cycleLabelContent(){S.labelContent=S.labelContent==='num'?'full':'num';storageSet(LABEL_CONTENT_KEY,S.labelContent);applyLabelBtns();paintCanvas();}
 function labelsOverlap(a,m){
   for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)
     if(Math.abs(a[i].x-a[j].x)<(a[i].w+a[j].w)/2+m&&Math.abs(a[i].y-a[j].y)<(a[i].h+a[j].h)/2+m)return true;
   return false;
 }
-// items: {L,p1,p2,bh,bg} in output coordinates; measure(text) → {w,h}
-// Labels sit beyond the line ends (off the crack); labels that would collide are spread
-// along the crack keeping the order of their lines, so leader lines never cross.
-function layoutLabels(items,measure,gap){
+// items: {L,p1,p2,bh,bg} in output coordinates; measure(text) → {w,h}; B = visible area {x0,y0,x1,y1,cx,cy}
+// Labels sit beyond the line ends (off the crack), on the side facing the middle of the photo;
+// labels that would collide are spread along the crack keeping line order (leaders never cross),
+// inside the visible area. A group that cannot fit there switches to numbers.
+function layoutLabels(items,measure,gap,B){
   if(!items.length)return[];
   const geo=items.map(it=>{
     const dx=it.p2.x-it.p1.x,dy=it.p2.y-it.p1.y,l=Math.hypot(dx,dy)||1;
     return{...it,ux:dx/l,uy:dy/l,len:l,mx:(it.p1.x+it.p2.x)/2,my:(it.p1.y+it.p2.y)/2};
   });
-  // crack direction a = mean line normal; side b = across the crack, pointing up (or left)
   let ax=0,ay=0;
   geo.forEach(g=>{let x=-g.uy,y=g.ux;if(x*ax+y*ay<0){x=-x;y=-y;}ax+=x;ay+=y;});
   let al=Math.hypot(ax,ay);if(!(al>1e-9)){ax=1;ay=0;al=1;}ax/=al;ay/=al;
   let bx=-ay,by=ax;if(by>1e-9||(Math.abs(by)<=1e-9&&bx>0)){bx=-bx;by=-by;}
+  if(B){let gx=0,gy=0;geo.forEach(g=>{gx+=g.mx;gy+=g.my;});gx/=geo.length;gy/=geo.length;if((B.cx-gx)*bx+(B.cy-gy)*by<0){bx=-bx;by=-by;}}
   const order=geo.map((_,i)=>i).sort((i,j)=>(geo[i].mx*ax+geo[i].my*ay)-(geo[j].mx*ax+geo[j].my*ay));
-  const stag=S.labelPlace==='stagger';
+  const inB=(x,y,hw,hh)=>!B||(x-hw>=B.x0-0.5&&x+hw<=B.x1+0.5&&y-hh>=B.y0-0.5&&y+hh<=B.y1+0.5);
+  // part of a line inside the area (labels anchor to the visible end)
+  const clip=g=>{
+    if(!B)return[g.p1,g.p2];
+    let t0=0,t1=1;const dx=g.p2.x-g.p1.x,dy=g.p2.y-g.p1.y;
+    for(const[pp,q]of[[-dx,g.p1.x-B.x0],[dx,B.x1-g.p1.x],[-dy,g.p1.y-B.y0],[dy,B.y1-g.p1.y]]){
+      if(Math.abs(pp)<1e-12){if(q<0)return[g.p1,g.p2];continue;}
+      const r=q/pp;if(pp<0)t0=Math.max(t0,r);else t1=Math.min(t1,r);
+    }
+    if(t0>t1)return[g.p1,g.p2];
+    return[{x:g.p1.x+dx*t0,y:g.p1.y+dy*t0},{x:g.p1.x+dx*t1,y:g.p1.y+dy*t1}];
+  };
+  geo.forEach(g=>{[g.c1,g.c2]=clip(g);});
   const bands=geo.map(g=>({cx:g.mx,cy:g.my,ux:g.ux,uy:g.uy,hl:g.len/2,hw:Math.max(g.bh,gap/2)}));
   const hitsBand=(o,b)=>{
     const m=gap/3,rx=o.w/2+m,ry=o.h/2+m,ox=o.x-b.cx,oy=o.y-b.cy;
@@ -4359,54 +4374,99 @@ function layoutLabels(items,measure,gap){
     if(Math.abs(-ox*b.uy+oy*b.ux)>b.hw+rx*Math.abs(b.uy)+ry*Math.abs(b.ux))return false;
     return true;
   };
-  const run=num=>{
-    const out=geo.map(g=>{const text=labelText(g.L,num),m=measure(text);return{g,text,w:m.w,h:m.h};});
+  // range along the crack where a label centred on the line through (x,y) stays inside
+  const aRange=o=>{
+    if(!B)return[-Infinity,Infinity];
+    let lo=-Infinity,hi=Infinity;
+    for(const[d,v,a0,a1]of[[ax,o.x,B.x0+o.w/2,B.x1-o.w/2],[ay,o.y,B.y0+o.h/2,B.y1-o.h/2]]){
+      if(v<a0-0.5||v>a1+0.5){if(Math.abs(d)<0.5){lo=Infinity;hi=-Infinity;continue;}}   // off an edge it cannot slide back from
+      if(Math.abs(d)<1e-9)continue;
+      let t0=(a0-v)/d,t1=(a1-v)/d;if(t0>t1)[t0,t1]=[t1,t0];lo=Math.max(lo,t0);hi=Math.min(hi,t1);
+    }
+    return[o.pa+lo,o.pa+hi];
+  };
+  const overlaps=(a,b)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+gap/4&&Math.abs(a.y-b.y)<(a.h+b.h)/2+gap/4;
+  const run=(numOf,stag)=>{
+    const out=geo.map((g,gi)=>{const text=labelText(g.L,numOf(gi)),m=measure(text);return{g,gi,text,w:m.w,h:m.h};});
     order.forEach((gi,k)=>{
       const o=out[gi],g=o.g,side=(stag&&k%2===1)?-1:1;
       let sbx=g.ux,sby=g.uy;if(sbx*bx*side+sby*by*side<0){sbx=-sbx;sby=-sby;}   // continue the line beyond its end on this side
-      const E=(g.p1.x*sbx+g.p1.y*sby)>=(g.p2.x*sbx+g.p2.y*sby)?g.p1:g.p2;
+      const E=(g.c1.x*sbx+g.c1.y*sby)>=(g.c2.x*sbx+g.c2.y*sby)?g.c1:g.c2;
       o.extA=Math.abs(ax)*o.w+Math.abs(ay)*o.h;o.extB=Math.abs(sbx)*o.w+Math.abs(sby)*o.h;
       const d=gap*1.5+o.extB/2;
       o.x=E.x+sbx*d;o.y=E.y+sby*d;o.ax=E.x;o.ay=E.y;o.sbx=sbx;o.sby=sby;o.lane=side;o.leader=true;
-      o.pa=o.x*ax+o.y*ay;
+      o.pa=o.pa0=o.x*ax+o.y*ay;
     });
     return out;
   };
+  // one row: least-movement spread keeping order, held inside each label's own edge range; false if it cannot fit
   const spread1=arr=>{
-      const cl=[];
-      arr.forEach(o=>{
-        cl.push({items:[o],w:o.extA,start:o.pa-o.extA/2});
-        while(cl.length>1){
-          const B=cl[cl.length-1],A=cl[cl.length-2];
-          if(A.start+A.w+gap<=B.start)break;
-          const its=A.items.concat(B.items);let off=0;const offs=its.map(it=>{const r=off;off+=it.extA+gap;return r;});
-          const start=its.reduce((acc,it,i)=>acc+(it.pa-it.extA/2-offs[i]),0)/its.length;
-          cl.splice(-2,2,{items:its,w:off-gap,start});
-        }
-      });
-      cl.forEach(c=>{let off=0;c.items.forEach(it=>{const pa=c.start+off+it.extA/2,dp=pa-it.pa;it.x+=ax*dp;it.y+=ay*dp;it.pa=pa;off+=it.extA+gap;});});
-  };
-  const spread=out=>{
-    const lanes={};
-    order.forEach(gi=>{const o=out[gi];(lanes[o.lane]=lanes[o.lane]||[]).push(o);});
-    Object.values(lanes).forEach(arr=>{
-      const keep=arr.map(o=>({x:o.x,y:o.y,pa:o.pa}));
-      spread1(arr);
-      const far=arr.some((o,i)=>Math.abs(o.pa-keep[i].pa)>Math.max(...arr.map(q=>q.extA)));
-      if(far&&arr.length>2&&arr.every(o=>o.extA>o.extB)){
-        // two rows: every other label one row further out, each row spread on its own
-        arr.forEach((o,i)=>{o.x=keep[i].x;o.y=keep[i].y;o.pa=keep[i].pa;if(i%2){o.x+=o.sbx*(o.extB+gap);o.y+=o.sby*(o.extB+gap);}});
-        spread1(arr.filter((_,i)=>i%2===0));spread1(arr.filter((_,i)=>i%2===1));
+    if(!arr.length)return true;
+    const cl=[];
+    arr.forEach(o=>{
+      cl.push({items:[o],w:o.extA,start:o.pa-o.extA/2});
+      while(cl.length>1){
+        const Bc=cl[cl.length-1],A=cl[cl.length-2];
+        if(A.start+A.w+gap<=Bc.start)break;
+        const its=A.items.concat(Bc.items);let off=0;const offs=its.map(it=>{const r=off;off+=it.extA+gap;return r;});
+        const start=its.reduce((acc,it,i)=>acc+(it.pa-it.extA/2-offs[i]),0)/its.length;
+        cl.splice(-2,2,{items:its,w:off-gap,start});
       }
     });
-    // keep clear of every line and band: step outward across the crack
-    out.forEach(o=>{let k=0;while(k<12&&bands.some(b=>hitsBand(o,b))){o.x+=o.sbx*(o.extB/2+gap);o.y+=o.sby*(o.extB/2+gap);k++;}});
-    return out;
+    const p=[];cl.forEach(c=>{let off=0;c.items.forEach(it=>{p.push(c.start+off+it.extA/2);off+=it.extA+gap;});});
+    const e=arr.map(o=>o.extA),n=arr.length,rg=arr.map(aRange);
+    if(rg.some(r=>r[0]>r[1]+0.5))return false;
+    for(let i=0;i<n;i++){p[i]=Math.max(p[i],rg[i][0]);if(i)p[i]=Math.max(p[i],p[i-1]+(e[i-1]+e[i])/2+gap);}
+    for(let i=n-1;i>=0;i--){p[i]=Math.min(p[i],rg[i][1]);if(i<n-1)p[i]=Math.min(p[i],p[i+1]-(e[i]+e[i+1])/2-gap);}
+    let fits=true;
+    for(let i=0;i<n;i++){if(p[i]<rg[i][0]-0.5)fits=false;if(i&&p[i]-p[i-1]<(e[i-1]+e[i])/2+gap-0.5)fits=false;}
+    arr.forEach((o,i)=>{const dp=p[i]-o.pa;o.x+=ax*dp;o.y+=ay*dp;o.pa=p[i];});
+    return fits;
   };
-  if(S.labelContent==='num')return spread(run(true));
-  const full=run(false);
-  if(S.labelContent==='full'||!labelsOverlap(full,gap/3))return spread(full);
-  return spread(run(true));
+  const spread=out=>{
+    const lanes={},bad=new Set();
+    order.forEach(gi=>{const o=out[gi];(lanes[o.lane]=lanes[o.lane]||[]).push(o);});
+    Object.entries(lanes).forEach(([lane,arr])=>{
+      const keep=arr.map(o=>({x:o.x,y:o.y,pa:o.pa}));
+      let fits=spread1(arr);
+      const far=arr.some((o,i)=>Math.abs(o.pa-keep[i].pa)>Math.max(...arr.map(q=>q.extA)));
+      if(((far&&arr.every(o=>o.extA>o.extB))||!fits)&&arr.length>2){
+        // two rows: every other label one row further out, each row spread on its own
+        const save=arr.map(o=>({x:o.x,y:o.y,pa:o.pa}));
+        arr.forEach((o,i)=>{o.x=keep[i].x;o.y=keep[i].y;o.pa=keep[i].pa;if(i%2){o.x+=o.sbx*(o.extB+gap);o.y+=o.sby*(o.extB+gap);}});
+        const f1=spread1(arr.filter((_,i)=>i%2===0)),f2=spread1(arr.filter((_,i)=>i%2===1));
+        if(f1&&f2&&arr.every(o=>inB(o.x,o.y,o.w/2,o.h/2)))fits=true;
+        else arr.forEach((o,i)=>{o.x=save[i].x;o.y=save[i].y;o.pa=save[i].pa;});
+      }
+      if(!fits)bad.add(+lane);
+    });
+    out.forEach(o=>{
+      let k=0;while(k<12&&bands.some(b=>hitsBand(o,b))){
+        const nx=o.x+o.sbx*(o.extB/2+gap),ny=o.y+o.sby*(o.extB/2+gap);
+        if(!inB(nx,ny,o.w/2,o.h/2))break;o.x=nx;o.y=ny;k++;}
+      if(!inB(o.x,o.y,o.w/2,o.h/2))bad.add(o.lane);
+    });
+    if(B)out.forEach(o=>{
+      o.x=Math.min(Math.max(o.x,B.x0+o.w/2),Math.max(B.x0+o.w/2,B.x1-o.w/2));
+      o.y=Math.min(Math.max(o.y,B.y0+o.h/2),Math.max(B.y0+o.h/2,B.y1-o.h/2));
+    });
+    for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++)if(overlaps(out[i],out[j])){bad.add(out[i].lane);bad.add(out[j].lane);}
+    out.forEach(o=>{if(Math.abs(o.x*ax+o.y*ay-o.pa0)>8*o.h)bad.add(o.lane);});   // pushed too far from its line
+    return bad;
+  };
+  // first layout that fits: chosen placement with labels, then numbers for groups that don't fit;
+  // staggered falls back to one side; last resort all numbers
+  const tries=[],stag=S.labelPlace==='stagger',allNum=()=>true;
+  if(S.labelContent!=='num'){tries.push([()=>false,stag,true]);if(stag)tries.push([()=>false,false,true]);}
+  tries.push([allNum,stag]);if(stag)tries.push([allNum,false]);
+  let best=null;
+  for(const[numOf,st,partial]of tries){
+    let out=run(numOf,st),bad=spread(out);
+    if(bad.size&&partial){const lanesOf=out.map(o=>o.lane),b0=bad;out=run(gi=>b0.has(lanesOf[gi]),st);bad=spread(out);}
+    if(!bad.size)return out;
+    if(!best)best=out;
+  }
+  return best;
 }
 function drawLeaders(ctx,lay,lw){
   lay.forEach(o=>{if(!o.leader)return;ctx.strokeStyle=o.g.bg;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(o.ax,o.ay);ctx.lineTo(o.x,o.y);ctx.stroke();});
@@ -4416,18 +4476,21 @@ function drawScreenLabels(ctx,u){
   if(S.step>=3)S.lines.forEach(L=>items.push({L,p1:L.p1,p2:L.p2,bh:band?L.nLines/2*S.dispScale:0,bg:L.n===S.hiLine?'rgba(180,83,9,0.95)':'rgba(76,29,149,0.88)'}));
   const act=S.step===4?activeLineObj():null;
   if(act)items.push({L:act,p1:act.p1,p2:act.p2,bh:(analysedLines()/2)*S.dispScale,bg:'rgba(8,104,116,0.92)'});
-  if(!items.length){S._labelLayout=[];return;}
+  const m=2*u,Bv={x0:Math.max(0,-S.panX/S.zoom)+m,y0:Math.max(0,-S.panY/S.zoom)+m,x1:Math.min(S.dispW,(S.dispW-S.panX)/S.zoom)-m,y1:Math.min(S.dispH,(S.dispH-S.panY)/S.zoom)-m};Bv.cx=(Bv.x0+Bv.x1)/2;Bv.cy=(Bv.y0+Bv.y1)/2;
+  const vis=items.filter(it=>{const e=it.bh;return Math.max(it.p1.x,it.p2.x)+e>=Bv.x0&&Math.min(it.p1.x,it.p2.x)-e<=Bv.x1&&Math.max(it.p1.y,it.p2.y)+e>=Bv.y0&&Math.min(it.p1.y,it.p2.y)-e<=Bv.y1;});
+  if(!vis.length){S._labelLayout=[];return;}
   ctx.save();
   ctx.font=`600 ${11*u}px monospace`;
   const pad=4*u,h=15*u;
-  const lay=layoutLabels(items,t=>({w:ctx.measureText(t).width+pad*2,h}),6*u);
+  const lay=layoutLabels(vis,t=>({w:ctx.measureText(t).width+pad*2,h}),6*u,Bv);
+  S._labelBounds=Bv;
   drawLeaders(ctx,lay,1.2*u);
   ctx.textAlign='center';ctx.textBaseline='middle';
   lay.forEach(o=>{ctx.fillStyle=o.g.bg;ctx.fillRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);ctx.fillStyle='#fff';ctx.fillText(o.text,o.x,o.y);});
   ctx.restore();
   S._labelLayout=lay.map(o=>({n:o.g.L.n,text:o.text,x:o.x,y:o.y,w:o.w,h:o.h,leader:o.leader,ax:o.ax,ay:o.ay}));
 }
-function infoStrip(ctx,W,H,s,head){
+function infoStrip(ctx,W,H,s,head,draw=true){
   const items=allLineItems(),st=lineStats(items),segs=head.slice();
   items.forEach(L=>segs.push(L.widthA!=null?`#${L.n} A ${L.widthA.toFixed(3)} · B ${fmtW(L.widthB)} mm`:`#${L.n} B ${fmtW(L.widthB)} mm`));
   if(st.n>=2){
@@ -4440,11 +4503,13 @@ function infoStrip(ctx,W,H,s,head){
   segs.forEach(t=>{const c=cur?cur+sep+t:t;if(cur&&ctx.measureText(c).width>W-2*pad){rows.push(cur);cur=t;}else cur=c;});
   if(cur)rows.push(cur);
   const hh=rows.length*lh+pad*2-(lh-fs);
+  if(!draw){ctx.restore();return hh;}
   ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,H-hh,W,hh);
   ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='top';
   rows.forEach((r,i)=>ctx.fillText(r,pad,H-hh+pad+i*lh));
   ctx.restore();
   S._strip={rows,height:hh,width:W};
+  return hh;
 }
 function updateNoteHint(){
   const h=$('meas-note-hint');if(!h)return;
@@ -4452,7 +4517,7 @@ function updateNoteHint(){
   h.textContent=isTouch?ln:`${ln} · ⏎ confirm, ⏎ next line · ⇧⏎ next photo`;
   updateConfirmBtns();
 }
-function applyLineViewBtn(){const b=$('btn-line-view');if(b)b.textContent=S.lineView==='band'?'▭ Bands':'─ Lines';}
+function applyLineViewBtn(){const b=$('btn-line-view');if(b)b.innerHTML=S.lineView==='band'?'<span class="zb-long">▭ </span>Bands':'<span class="zb-long">─ </span>Lines';}
 function toggleLineView(){
   S.lineView=S.lineView==='band'?'thin':'band';
   storageSet(LINE_VIEW_KEY,S.lineView);
@@ -4628,7 +4693,7 @@ function drawConfirmedOnScreen(ctx,u){
     ctx.restore();
   });
 }
-function drawLinesOut(ctx,toP,kw,s,drawLabel){
+function drawLinesOut(ctx,toP,kw,s,drawLabel,Bo){
   const band=S.lineView==='band';
   allLineItems().forEach(L=>{
     const p1=toP(L.p1),p2=toP(L.p2);
@@ -4650,7 +4715,8 @@ function drawLinesOut(ctx,toP,kw,s,drawLabel){
   const items=allLineItems().map(L=>({L,p1:toP(L.p1),p2:toP(L.p2),bh:band?L.nLines/2*kw:0,bg:'rgba(124,58,237,.90)'}));
   const fs=15*s,pad=6*s;
   ctx.save();ctx.font=`600 ${fs}px monospace`;
-  const lay=layoutLabels(items,t=>({w:ctx.measureText(t).width+pad*2,h:fs+pad*2}),10*s);
+  const lay=layoutLabels(items,t=>({w:ctx.measureText(t).width+pad*2,h:fs+pad*2}),10*s,Bo);
+  S._saveBounds=Bo;
   drawLeaders(ctx,lay,2*s);
   ctx.restore();
   lay.forEach(o=>drawLabel(o.text,o.x,o.y,o.g.bg));
@@ -4683,9 +4749,10 @@ function saveImage(){
     }
     ctx.restore();
   }
-  drawLinesOut(ctx,toPx,k,s,drawLabel);
   const head=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px · ${S.imgMeta.mp} MP`:`${pw}×${ph} px`,`${S.pxMm.toFixed(3)} px/mm`];
   if(hd&&S.imgMeta&&S.imgMeta.depth)head.push(S.imgMeta.depth);
+  const sh=infoStrip(ctx,pw,ph,s,head,false),mg=6*s;
+  drawLinesOut(ctx,toPx,k,s,drawLabel,{x0:mg,y0:mg,x1:pw-mg,y1:ph-sh-mg,cx:pw/2,cy:(ph-sh)/2});
   infoStrip(ctx,pw,ph,s,head);
   canvas.toBlob(blob=>{
     if(!blob)return;
@@ -4738,10 +4805,11 @@ function saveZoomedImage(){
     ctx.restore();
   }
 
-  drawLinesOut(ctx,toEx,expScale,s,drawLabel);
 
   const head=[S.imgMeta?`${S.imgMeta.origW}×${S.imgMeta.origH} px (original)`:`${S.pixels.width}×${S.pixels.height} px (original)`,`${S.pxMm.toFixed(3)} px/mm · zoom ${S.zoom.toFixed(1)}×`];
   if(isHdSource()&&S.imgMeta&&S.imgMeta.depth)head.push(S.imgMeta.depth);
+  const sh=infoStrip(ctx,outW,outH,s,head,false),mg=6*s;
+  drawLinesOut(ctx,toEx,expScale,s,drawLabel,{x0:mg,y0:mg,x1:outW-mg,y1:outH-sh-mg,cx:outW/2,cy:(outH-sh)/2});
   infoStrip(ctx,outW,outH,s,head);
   canvas.toBlob(blob=>{
     if(!blob)return;
@@ -5369,7 +5437,7 @@ document.documentElement.style.setProperty('--chrome',isTouch?'200px':'150px');
 window.addEventListener('resize',()=>{if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
 S.lineView=storageGet(LINE_VIEW_KEY)==='thin'?'thin':'band';
 S.labelPlace=storageGet(LABEL_PLACE_KEY)==='stagger'?'stagger':'beside';
-{const lc=storageGet(LABEL_CONTENT_KEY);S.labelContent=(lc==='auto'||lc==='num')?lc:'full';}
+{const lc=storageGet(LABEL_CONTENT_KEY);S.labelContent=lc==='num'?'num':'full';}
 applyLabelBtns();
 applyLineViewBtn();
 buildStepBar();
@@ -5387,7 +5455,8 @@ if(isTouch){
   const ch=$('calib-nav-hint');if(ch)ch.textContent='Pinch to zoom · drag to pan';
   const tp=$('btn-take-photo');if(tp)tp.style.display='';
 }
-initActionBar();
+placeActions();
+if(PHONE_MQ.addEventListener)PHONE_MQ.addEventListener('change',placeActions);
 </script>
 </body>
 </html>
