@@ -419,8 +419,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   body .t-lg{display:none}body .t-sh{display:inline}
   #scale-distance-panel .profile-btns{flex-wrap:nowrap!important;gap:5px!important}
   #scale-distance-panel .profile-btns .btn-small{padding:5px 8px;white-space:nowrap}
-  #panel-3 .nav-row,#result-nav-row2{flex-wrap:nowrap;gap:6px}
-  #panel-3 .nav-row .btn,#result-nav-row2 .btn{padding-left:9px;padding-right:9px;white-space:nowrap;flex:0 1 auto}
+  #panel-3 .nav-row,#result-nav-row2{flex-wrap:wrap;gap:6px}
+  #panel-3 .nav-row .btn,#result-nav-row2 .btn{padding-left:7px;padding-right:7px;font-size:11px;white-space:nowrap;flex:0 1 auto}
   .avg-section{padding:11px 14px}
   .avg-title{margin-bottom:6px}
   .avg-section .chk-row{min-height:34px;padding:3px 0;margin-bottom:4px}
@@ -440,9 +440,16 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 .ov-t.dk{color:rgba(255,255,255,.92)}
 .ov-t:empty{display:none}
 #ov-res{left:9px;top:7px;font:600 11px monospace;white-space:nowrap}
-#ov-name{right:9px;top:7px;font-size:11px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ov-name{right:9px;top:7px;font-size:11px;font-weight:700;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ov-msg{left:10px;right:10px;top:25px;font-size:11.5px;line-height:1.4;text-align:center}
-#ov-msg.ok{color:#047857}#ov-msg.ok.dk{color:#6ee7b7}
+#prompt-box{padding:9px 14px;margin-bottom:12px;font-size:13px;line-height:1.45}
+#prompt-box:empty{display:none}
+@media(min-width:521px){#ov-msg{display:none}}
+@media(max-width:520px){
+  #prompt-box{display:none}
+  #ov-msg{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);padding:4px 11px;border-radius:11px;background:rgba(255,255,255,.72)}
+  #ov-msg.dk{background:rgba(15,23,42,.6)}
+}
 .ov-fit{position:absolute;bottom:8px;right:8px;width:34px;height:34px;padding:0;border:none;background:transparent;z-index:7;align-items:center;justify-content:center;cursor:pointer;color:rgba(15,23,42,.8)}
 .ov-fit.dk{color:rgba(255,255,255,.9)}
 .ov-fit.left{right:auto;left:6px}
@@ -452,7 +459,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 .step-lbl{white-space:nowrap}
 .btn-blue{background:#2563eb;color:#fff}
 .nav-row .btn-success,.nav-row .btn-primary,.nav-row .btn-blue{border:1px solid transparent}
-#result-nav-row .btn,#result-nav-row2 .btn,#panel-3 .nav-row .btn{min-height:40px;padding-top:4px;padding-bottom:4px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+#result-nav-row .btn,#panel-3 .nav-row .btn{min-height:33px;padding-top:4px;padding-bottom:4px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+#result-nav-row2{flex-wrap:wrap}
+#result-nav-row2 .btn{flex:0 1 auto;white-space:nowrap;padding-left:7px;padding-right:7px;min-height:28px;padding-top:3px;padding-bottom:3px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
 .pc-locked{opacity:.45}
 #confirmed-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 14px}
 .zb-group{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -462,7 +471,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 #line-list .ln.hi{background:#b45309;color:#fff}
 .ln-redo{background:none;border:none;color:#7fdbe4;cursor:pointer;font-size:14px;padding:0 6px}
 @media(max-width:520px){
-  #result-nav-row .btn,#result-nav-row2 .btn,#panel-3 .nav-row .btn{min-height:40px}
   #panel-3 .nav-row .btn{flex:0 1 auto}
 }
 @media(min-width:1100px) and (max-width:1299px){
@@ -506,7 +514,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.7.5-beta</div>
+  <div id="version-tag">v1.7.6-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -573,6 +581,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   </div>
 
   <div id="side">
+  <div class="card" id="prompt-box"></div>
   <div id="line-list"></div>
 
   <div id="panel-2" class="panel">
@@ -670,8 +679,8 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
       <button class="btn btn-nav" onclick="goBack()">← Back</button>
       <button class="btn btn-nav" onclick="nextPhoto()">Next photo →</button>
-      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none"><span class="t-lg">Save image ↓</span><span class="t-sh">Save ↓</span></button>
-      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none"><span class="t-lg">Save zoomed view ↓</span><span class="t-sh">Zoomed ↓</span></button>
+      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
       <span id="scale-display-3" style="display:none"></span>
     </div>
   </div>
@@ -704,11 +713,11 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="card success-bg" id="confirmed-note" style="display:none"></div>
     <div class="nav-row" id="result-nav-row">
       <button class="btn btn-success" id="btn-confirm-line" onclick="onConfirmBtn()">✓ Confirm</button>
-      <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')">Next photo →</button>
+      <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')"><span class="t-lg">Confirm &amp; next photo →</span><span class="t-sh">Next photo →</span></button>
     </div>
     <div class="nav-row" id="result-nav-row2">
-      <button class="btn btn-nav" id="btn-save" onclick="saveImage()"><span class="t-lg">Save image ↓</span><span class="t-sh">Save ↓</span></button>
-      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()"><span class="t-lg">Save zoomed view ↓</span><span class="t-sh">Zoomed ↓</span></button>
+      <button class="btn btn-nav" id="btn-save" onclick="saveImage()">Save image ↓</button>
+      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
       <button class="btn btn-nav" onclick="redrawLine()"><span class="t-lg">← Redraw line</span><span class="t-sh">← Redraw</span></button>
       <button class="btn btn-nav" onclick="startOver()">Start over</button>
       <button class="btn btn-nav" id="btn-log-now" style="display:none" onclick="logNow()">＋ Log this measurement</button>
@@ -1607,13 +1616,20 @@ function extractAllProfiles(pixels,p1,p2,nLines){
   return profiles;
 }
 
+const WORKER_TIMEOUT_MS=30000;
+async function workerFetch(body){
+  const ac=typeof AbortController!=='undefined'?new AbortController():null;
+  const t=ac?setTimeout(()=>ac.abort(),WORKER_TIMEOUT_MS):null;
+  try{
+    return await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ac?ac.signal:undefined});
+  }catch(e){
+    if(e&&e.name==='AbortError')throw new Error('no response from the analysis service — check your connection and try again');
+    throw e;
+  }finally{if(t)clearTimeout(t);}
+}
 async function analyzeViaWorker(profiles, opts, pxPerMm){
   const pin=sessionStorage.getItem('dcg_pin')||'';
-  const resp=await fetch(WORKER_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'analyze',pin,profiles,options:opts,pxPerMm}),
-  });
+  const resp=await workerFetch({action:'analyze',pin,profiles,options:opts,pxPerMm});
   const data=await resp.json();
   if(!data.ok||!Array.isArray(data.prof)||!Array.isArray(data.base)) throw new Error('analysis service unavailable');
   return data;
@@ -1673,7 +1689,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10705;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10706;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1710,14 +1726,10 @@ async function checkPin(){
   if (!/^\d{6}$/.test(pin)) { msg.textContent = 'Enter a 6-digit code.'; return; }
   btn.disabled = true; msg.style.color = 'rgba(232,248,249,0.5)'; msg.textContent = 'Checking…';
   try {
-    const resp = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action:'login', pin, client: CLIENT_VERSION }),
-    });
+    const resp = await workerFetch({ action:'login', pin, client: CLIENT_VERSION });
     const data = await resp.json();
     if (data.ok) {
-      try { sessionStorage.setItem('dcg_tier', data.tier); sessionStorage.setItem('dcg_pin', pin); } catch(e){}
+      try { sessionStorage.setItem('dcg_pin', pin); } catch(e){}
       if (typeof data.minClient === 'number' && CLIENT_VERSION < data.minClient) {
         S.staleClient = true;
       }
@@ -1741,9 +1753,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = $('pin-input');
   if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
 
-  let remembered = null;
-  try { remembered = sessionStorage.getItem('dcg_tier'); } catch(e){}
-  if (remembered === 'lite' || remembered === 'pro') applyInterfaceMode(remembered);
+  let pin = null;
+  try { pin = sessionStorage.getItem('dcg_pin'); sessionStorage.removeItem('dcg_tier'); } catch(e){}
+  if (pin && /^\d{6}$/.test(pin) && input) { input.value = pin; checkPin(); }
 });
 
 let calibMode = 'measure';   // Measure is the default
@@ -2392,10 +2404,18 @@ function cancelLine(){
 }
 function updateLogNowBtn(){
   const b=$('btn-log-now');if(!b)return;
-  b.style.display=(S.step===4&&S.results&&!S.autoLog&&!S.lastLogId&&!S.postConfirm)?'':'none';
+  const L=S.postConfirm?S.lines.find(x=>x.n===S.postConfirm):null;
+  b.style.display=(S.step===4&&S.results&&!S.autoLog&&(S.postConfirm?(L&&!L.logId):!S.lastLogId))?'':'none';
 }
 function logNow(){
-  if(!S.results||S.lastLogId||S.postConfirm)return;
+  if(!S.results)return;
+  if(S.postConfirm){
+    const L=S.lines.find(x=>x.n===S.postConfirm);if(!L||L.logId)return;
+    addLogEntry(true,L.n);L.logId=S.lastLogId;S.lastLogId='';
+    if(L.name){const e=S.measLog.find(x=>x.id===L.logId);if(e){e.note=L.name;persistMeasLog();}}
+    updateLogNowBtn();return;
+  }
+  if(S.lastLogId)return;
   addLogEntry(true);updateLogNowBtn();
 }
 
@@ -2907,12 +2927,14 @@ function updateOverlays(){
   const res=$('ov-res'),nm=$('ov-name'),msg=$('ov-msg');if(!res)return;
   res.textContent=(S.step>=3&&S.pxMm)?`${S.pxMm.toFixed(3)} px/mm`:'';
   nm.textContent=S.photoName||'';
-  const m=overlayMsg();msg.innerHTML=m.t;msg.classList.toggle('ok',!!m.ok);
+  const m=overlayMsg();msg.innerHTML=m.t;
+  const pb=$('prompt-box');if(pb)pb.innerHTML=(S.step>=2&&S.dispW>0)?m.t:'';
   updateFit();scheduleTone();
 }
 function updateFit(){
   const f=$('ov-fit');if(!f)return;
-  f.style.display=S.zoom>1.001?'flex':'none';
+  const moved=Math.abs(S.zoom-1)>0.001||Math.abs(S.panX)>0.5||Math.abs(S.panY)>0.5;
+  f.style.display=(!PHONE_MQ.matches||moved)?'flex':'none';
   f.classList.toggle('left',PHONE_MQ.matches);
   const w=$('res-warn-overlay');
   f.style.bottom=(w&&w.style.display!=='none')?(w.offsetHeight+8)+'px':'';
@@ -3247,7 +3269,7 @@ function loadMeasLog(){
 function persistMeasLog(){storageSet(MEAS_LOG_KEY,JSON.stringify(S.measLog));}
 function setAutoLog(on){S.autoLog=!!on;storageSet(AUTO_LOG_KEY,on?'1':'0');updateLogNowBtn();}
 
-function addLogEntry(silent){
+function addLogEntry(silent,lineNo){
   if(!S.results){if(!silent)logMsg('Run an analysis first.',false);return;}
   const dv=getDisplayValues();
   const prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
@@ -3265,7 +3287,7 @@ function addLogEntry(silent){
     resolutionMP:S.imgMeta?S.imgMeta.mp:'',
     bitDepth:(S.imgMeta&&S.imgMeta.depth)||'8-bit',
     toneResponse:isHdSource()?S.pixels.tone:'',
-    lineNo:nextLineNo(),
+    lineNo:lineNo||nextLineNo(),
     baselineAdjusted:baselineAdjusted(),
     baselineMode:(S.results&&S.results.baseMode)||'',
     windowCap:windowCapLabel(),
@@ -3461,7 +3483,7 @@ function saveCalibPoint(){
   if(!ds){fcalibMsg('Select or create a dataset first.',false);return;}
   const w=parseFloat($('fcalib-width-inp').value);
   if(!(w>0)){fcalibMsg('Enter the known crack width (mm).',false);$('fcalib-width-inp').focus();return;}
-  const rec={pxMm:+S.pxMm,knownWidth:+w,area:+S.results.area,date:new Date().toISOString().slice(0,10)};
+  const rec={pxMm:+S.pxMm,knownWidth:+w,area:+(+getDisplayValues().area).toFixed(4),date:new Date().toISOString().slice(0,10)};
   ds.records.push(rec);
   persistCalibDatasets();
   renderFcalibSelect();updateFcalibCount();
@@ -4704,6 +4726,7 @@ function finishLine(){
 function redrawConfirmed(n){
   const go=()=>{
     const L=S.lines.find(x=>x.n===n);if(!L)return;
+    if(S.redraw&&S.redraw.n!==n&&!confirm(`Line #${S.redraw.n} hasn't been redrawn yet — it will be lost. Continue?`))return;
     if(!confirm(`Redraw line #${n}? Its current measurement${L.logId?' and log entry are':' is'} removed; draw the replacement next.`))return;
     let logIdx=-1;
     if(L.logId){logIdx=S.measLog.findIndex(e=>e.id===L.logId);if(logIdx>=0){S.measLog.splice(logIdx,1);persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();}}
@@ -4748,11 +4771,11 @@ function confirmLine(mode){
 function guardActive(fn){
   if(!(S.step===4&&S.results)||S.postConfirm){fn();return;}
   const m=$('modal');
-  $('modal-msg').textContent=`Line #${nextLineNo()} is not confirmed yet.`;
+  $('modal-msg').textContent=`Line #${nextLineNo()} is not confirmed yet.`+(S.lastLogId?' Discard also removes its log row.':'');
   m.style.display='flex';
   const close=()=>{m.style.display='none';};
   $('modal-ok').onclick=()=>{close();confirmLine('none');fn();};
-  $('modal-discard').onclick=()=>{close();fn();};
+  $('modal-discard').onclick=()=>{close();dropUnconfirmedLog();fn();};
   $('modal-cancel').onclick=close;
 }
 function startOver(){
@@ -5005,8 +5028,14 @@ function goBack(){
   paintCanvas();
 }
 
+function dropUnconfirmedLog(){
+  if(!S.lastLogId||S.postConfirm)return;
+  S.measLog=S.measLog.filter(e=>e.id!==S.lastLogId);S.lastLogId='';
+  persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();
+}
 function redrawLine(){
   if(S.postConfirm){redrawConfirmed(S.postConfirm);return;}
+  if(S.lastLogId){if(!confirm('Redraw this line? Its log row is removed too.'))return;dropUnconfirmedLog();}
   decodeSeq++;S.busy=false;
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
   S.measLine=null;S.iMode='draw';S.results=null;S.live=null;
@@ -5017,6 +5046,7 @@ function redrawLine(){
 
 const imgCanvas=$('img-canvas');
 const zoomRef={current:1},panXRef={current:0},panYRef={current:0};
+let autoNext=null;   // press after Confirm: a drag from here starts the next line
 const dispWRef={current:0},dispHRef={current:0};
 
 function getImgCanvasPos(e){
@@ -5178,7 +5208,11 @@ function resetCalibView(){S.calib.zoom=1;S.calib.panX=0;S.calib.panY=0;updateCal
 
 imgCanvas.addEventListener('mousedown',e=>{
   if(e.button===2){const raw=getRawImgPos(e);S.isPanning=true;S.panAnchor={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY};e.preventDefault();return;}
-  if(e.button!==0||S.step===4)return;
+  if(e.button!==0)return;
+  if(S.step===4){
+    if(S.postConfirm&&S.lines.length<MAX_LINES){e.preventDefault();autoNext=getImgCanvasPos(e);}
+    return;
+  }
   e.preventDefault();
   const pos=getImgCanvasPos(e);
   if(twoPointActive()){
@@ -5193,12 +5227,14 @@ imgCanvas.addEventListener('mousedown',e=>{
 
 imgCanvas.addEventListener('mousemove',e=>{
   if(S.isPanning&&S.panAnchor){const raw=getRawImgPos(e);S.panX=S.panAnchor.px+(raw.x-S.panAnchor.rx);S.panY=S.panAnchor.py+(raw.y-S.panAnchor.ry);panXRef.current=S.panX;panYRef.current=S.panY;paintCanvas();return;}
+  if(autoNext&&!S.drawStart){const pos=getImgCanvasPos(e),d=Math.hypot(pos.x-autoNext.x,pos.y-autoNext.y)*S.zoom;if(d>5){const st=autoNext;autoNext=null;finishLine();S.drawStart={...st};S.drawCur=pos;paintCanvas();}return;}
   if(S.ptDrag&&!S.ptDrag.touch){S.scalePts[S.ptDrag.i]=getImgCanvasPos(e);paintCanvas();return;}
   if(S.iMode==='draw'&&S.drawStart){S.drawCur=getImgCanvasPos(e);paintCanvas();return;}
   if(twoPointActive())imgCanvas.style.cursor=hitPt(S.scalePts,getImgCanvasPos(e),S,imgCanvas,12)>=0?'grab':'crosshair';
 });
 
 imgCanvas.addEventListener('mouseup',e=>{
+  autoNext=null;
   if(S.isPanning){S.isPanning=false;S.panAnchor=null;return;}
   if(S.iMode==='draw'&&S.drawStart){
     const pos=getImgCanvasPos(e);
@@ -5214,7 +5250,7 @@ window.addEventListener('mouseup',()=>{
   }
 });
 
-imgCanvas.addEventListener('mouseleave',()=>{if(!S.isPanning){S.drawStart=null;S.drawCur=null;}});
+imgCanvas.addEventListener('mouseleave',()=>{autoNext=null;if(!S.isPanning){S.drawStart=null;S.drawCur=null;}});
 imgCanvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 imgCanvas.addEventListener('wheel',e=>{
@@ -5246,7 +5282,7 @@ function getImgTouchPos(t){
 imgCanvas.addEventListener('touchstart',e=>{
   e.preventDefault();
   if(e.touches.length>=2){
-    S.ptDrag=null;hideLoupe();
+    S.ptDrag=null;hideLoupe();autoNext=null;
     const t1=e.touches[0],t2=e.touches[1];
     const r=imgCanvas.getBoundingClientRect();
     const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
@@ -5269,6 +5305,10 @@ imgCanvas.addEventListener('touchstart',e=>{
   }
 
   singleTouchPan={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY,moved:false};
+  autoNext=null;
+  if(S.step===4&&S.postConfirm&&S.lines.length<MAX_LINES){
+    autoNext={...getImgTouchPos(touch),rx:raw.x,ry:raw.y};singleTouchPan=null;touchDraw=false;return;
+  }
 
   if(S.step===3&&S.iMode==='draw'&&S.lines.length<MAX_LINES){
     const pos=getImgTouchPos(touch);
@@ -5303,6 +5343,14 @@ imgCanvas.addEventListener('touchmove',e=>{
     return;
   }
   const touch=e.touches[0];
+  if(autoNext&&!touchDraw){
+    const raw=getRawTouchPos(touch);
+    if(Math.hypot(raw.x-autoNext.rx,raw.y-autoNext.ry)>12){
+      const st={x:autoNext.x,y:autoNext.y};autoNext=null;finishLine();
+      S.drawStart=st;S.drawCur=getImgTouchPos(touch);touchDraw=true;paintCanvas();
+    }
+    return;
+  }
   if(touchDraw&&S.drawStart){
     S.drawCur=getImgTouchPos(touch);paintCanvas();
   } else if(singleTouchPan){
@@ -5331,9 +5379,9 @@ imgCanvas.addEventListener('touchend',e=>{
   } else if(singleTouchPan&&!singleTouchPan.moved){
     if(twoPointActive())placeScalePt(getImgTouchPos(e.changedTouches[0]));
   }
-  pinchStart=null;singleTouchPan=null;touchDraw=false;
+  pinchStart=null;singleTouchPan=null;touchDraw=false;autoNext=null;
 },{passive:false});
-imgCanvas.addEventListener('touchcancel',()=>{S.ptDrag=null;hideLoupe();pinchStart=null;singleTouchPan=null;touchDraw=false;});
+imgCanvas.addEventListener('touchcancel',()=>{autoNext=null;S.ptDrag=null;hideLoupe();pinchStart=null;singleTouchPan=null;touchDraw=false;});
 
 const chartCanvas=$('chart-canvas');
 
