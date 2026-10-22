@@ -51,7 +51,11 @@ h1{font-size:1.25rem;font-weight:300;letter-spacing:.12em;color:#0cbbcc;text-tra
 
 #canvas-wrap{display:none;margin-bottom:0}
 #img-holder{position:relative;margin-bottom:6px}
-#res-warn-overlay{position:absolute;left:1px;right:1px;bottom:1px;padding:8px 14px;font-size:12px;line-height:1.45;text-align:center;border-bottom-left-radius:9px;border-bottom-right-radius:9px;pointer-events:none;z-index:5}
+#res-warn-overlay{position:absolute;left:1px;right:1px;bottom:1px;padding:7px 10px 7px 14px;font-size:12px;line-height:1.45;text-align:left;border-bottom-left-radius:9px;border-bottom-right-radius:9px;z-index:8;align-items:center;gap:10px}
+#res-warn-overlay .rw-txt{flex:1 1 auto}
+#res-warn-overlay .rw-ok{flex:0 0 auto;background:rgba(255,255,255,.95);color:#1f2937;border:none;border-radius:6px;padding:5px 16px;font-weight:600;font-size:13px;cursor:pointer}
+#res-warn-overlay .rw-ok.pulse{animation:rwpulse .4s ease-in-out 3}
+@keyframes rwpulse{50%{transform:scale(1.15);box-shadow:0 0 0 4px rgba(255,255,255,.5)}}
 #res-warn-overlay.warn{background:rgba(217,119,6,0.82);color:#fff}
 #res-warn-overlay.danger{background:rgba(220,38,38,0.85);color:#fff}
 #canvas-wrap.show{display:block}
@@ -398,19 +402,52 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   #aux-bar .aux-circle{width:30px;height:30px;font-size:14px}
   #aux-bar .aux-lbl{display:none}
   #backup-bar,#version-bar,#hd-busy{order:9;flex:1 1 100%;margin:12px 0 0}
-  #phone-actions{gap:8px;flex-wrap:wrap;margin:0 0 10px}
-  #phone-actions .btn{flex:0 1 auto;min-height:40px}
-  #phone-actions #result-nav-row{margin:0;gap:8px;flex-wrap:wrap}
-  #zoom-bar{gap:6px 8px}
-  #zoom-bar .zb-group{flex:1 1 calc(100% - 64px);flex-wrap:nowrap;gap:5px;justify-content:flex-end}
+  #img-holder #phone-actions{position:absolute;right:8px;bottom:8px;z-index:7;margin:0;gap:6px;flex-wrap:nowrap;justify-content:flex-end}
+  #img-holder #phone-actions #result-nav-row{margin:0;gap:6px;flex-wrap:nowrap}
+  #img-holder #phone-actions .btn{min-height:0;padding:6px 14px;font-size:13px;line-height:1.3;border:1px solid rgba(255,255,255,.35);flex:0 0 auto;white-space:nowrap}
+  #img-holder #phone-actions .btn-success{background:rgba(16,185,129,.62);color:#fff}
+  #img-holder #phone-actions .btn-primary{background:rgba(12,187,204,.62);color:#04181c}
+  #img-holder #phone-actions .btn:disabled{background:rgba(15,23,42,.25);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.6);text-shadow:0 0 2px rgba(0,0,0,.6)}
+  #img-holder #phone-actions #btn-analyze{min-width:116px}
+  #zoom-bar{gap:3px 8px;align-items:center}
+  #zoom-bar #zoom-label{order:0}
+  #zoom-bar #img-meta{order:1;margin-left:0;flex:1 1 calc(100% - 60px);text-align:right;font-size:10px}
+  #zoom-bar #img-meta span:first-child{display:none}
+  #zoom-bar #nav-hint{order:3;flex:0 1 auto;font-size:11px;white-space:nowrap}
+  #zoom-bar .zb-group{order:4;flex:0 0 auto;flex-wrap:nowrap;gap:5px;margin-left:auto}
   #zoom-bar .zb-btn{padding:4px 7px;font-size:11px;white-space:nowrap}
-  #nav-hint{flex:0 1 auto;font-size:11px}
-  #img-meta{font-size:10px}
+  body .t-lg{display:none}body .t-sh{display:inline}
+  #scale-distance-panel .profile-btns{flex-wrap:nowrap!important;gap:5px!important}
+  #scale-distance-panel .profile-btns .btn-small{padding:5px 8px;white-space:nowrap}
+  #panel-3 .nav-row,#result-nav-row2{flex-wrap:nowrap;gap:6px}
+  #panel-3 .nav-row .btn,#result-nav-row2 .btn{padding-left:9px;padding-right:9px;white-space:nowrap;flex:0 1 auto}
+  .avg-section{padding:11px 14px}
+  .avg-title{margin-bottom:6px}
+  .avg-section .chk-row{min-height:34px;padding:3px 0;margin-bottom:4px}
+  .avg-section .radio-group{gap:0}
+  .avg-section .radio-row{min-height:32px;padding:3px 0;align-items:center}
+  .avg-section .radio-row input[type=radio]{margin-top:0}
+  .avg-section .radio-label{white-space:nowrap}
+  .avg-section .method-label{margin:2px 0 2px}
   .zb-long{display:none}
   #scale-hint .input-row>span:first-child{flex-basis:100%}
   #scale-distance-panel .dist-input-row>label{flex-basis:100%;min-width:0}
 }
-.nav-row .btn:disabled{background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.25)}
+.nav-row .btn:disabled,#btn-analyze.await-ok{background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.25)}
+/* ── 1.7.5: text, buttons and reset icon on the photo ── */
+.t-sh{display:none}
+.ov-t{position:absolute;z-index:6;pointer-events:none;opacity:.9;color:rgba(15,23,42,.85)}
+.ov-t.dk{color:rgba(255,255,255,.92)}
+.ov-t:empty{display:none}
+#ov-res{left:9px;top:7px;font:600 11px monospace;white-space:nowrap}
+#ov-name{right:9px;top:7px;font-size:11px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ov-msg{left:10px;right:10px;top:25px;font-size:11.5px;line-height:1.4;text-align:center}
+#ov-msg.ok{color:#047857}#ov-msg.ok.dk{color:#6ee7b7}
+.ov-fit{position:absolute;bottom:8px;right:8px;width:34px;height:34px;padding:0;border:none;background:transparent;z-index:7;align-items:center;justify-content:center;cursor:pointer;color:rgba(15,23,42,.8)}
+.ov-fit.dk{color:rgba(255,255,255,.9)}
+.ov-fit.left{right:auto;left:6px}
+.tp-res{font-family:monospace;font-size:14px;color:#0cbbcc;margin-top:6px}
+.tp-res:empty{display:none}
 /* ── 1.7.1: labels, button heights, wide header ── */
 .step-lbl{white-space:nowrap}
 .btn-blue{background:#2563eb;color:#fff}
@@ -469,7 +506,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v1.7.4-beta</div>
+  <div id="version-tag">v1.7.5-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -516,13 +553,16 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="canvas-wrap">
     <div id="img-holder">
       <canvas id="img-canvas"></canvas>
+      <div id="ov-res" class="ov-t"></div>
+      <div id="ov-name" class="ov-t"></div>
+      <div id="ov-msg" class="ov-t"></div>
+      <button id="ov-fit" class="ov-fit" title="Reset view" aria-label="Reset view" style="display:none"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 7V3.5A1.5 1.5 0 0 1 3.5 2H7M13 2h3.5A1.5 1.5 0 0 1 18 3.5V7M18 13v3.5a1.5 1.5 0 0 1-1.5 1.5H13M7 18H3.5A1.5 1.5 0 0 1 2 16.5V13"/></svg></button>
       <div id="res-warn-overlay" style="display:none"></div>
+      <div id="phone-actions" class="nav-row" style="display:none"><button class="btn btn-success" id="ov-scale" onclick="confirmScale()" disabled>Confirm scale →</button></div>
     </div>
-    <div id="phone-actions" class="nav-row" style="display:none"></div>
     <div id="zoom-bar">
       <span id="zoom-label">1.0×</span>
       <span class="zb-group">
-      <button class="btn-ghost zb-btn" id="btn-reset-view">Reset<span class="zb-long"> view</span></button>
       <button class="btn-ghost zb-btn" id="btn-line-view" onclick="toggleLineView()" title="Show confirmed lines as bands or thin lines" style="display:none"><span class="zb-long">▭ </span>Bands</button>
       <button class="btn-ghost zb-btn" id="btn-label-place" onclick="cycleLabelPlace()" title="Label position: all labels on one side of the crack, or alternating sides" style="display:none">One side</button>
       <button class="btn-ghost zb-btn" id="btn-label-content" onclick="cycleLabelContent()" title="Label content: full labels or line numbers only" style="display:none">Labels</button>
@@ -557,7 +597,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="card" id="scale-hint">Click <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size</div>
 
     <div id="scale-distance-panel" class="pro-only" style="display:none">
-      <div class="card" style="margin-bottom:12px">Enter the camera-to-crack distance and pick a saved camera profile. Resolution is predicted from the camera's calibration — no reference object needed in the crack photo.</div>
+      <div class="card" id="dist-intro" style="margin-bottom:12px">Enter the camera-to-crack distance and pick a saved camera profile. Resolution is predicted from the camera's calibration — no reference object needed in the crack photo.</div>
       <div class="dist-input-row">
         <label>Distance to crack (m):</label>
         <input type="number" id="dist-inp" step="0.001" min="0" placeholder="e.g. 4.000" oninput="onDistanceInput()">
@@ -573,9 +613,9 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <div id="dist-result"></div>
       <div id="dist-zoom-caution">A profile is only valid at the same zoom/focal length it was calibrated at. Use the lens/zoom the profile name refers to.</div>
       <div class="profile-btns" style="margin-top:12px">
-        <button class="btn-ghost btn-small" onclick="calibrateFromStep2()">+ Calibrate new camera…</button>
-        <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" disabled>Delete profile</button>
-        <button class="btn-ghost btn-small" onclick="exportScaleProfiles()">↓ Export all</button>
+        <button class="btn-ghost btn-small" onclick="calibrateFromStep2()"><span class="t-lg">+ Calibrate new camera…</span><span class="t-sh">+ New camera</span></button>
+        <button class="btn-ghost btn-small" id="btn-scale-prof-delete" onclick="deleteScaleProfile()" disabled><span class="t-lg">Delete profile</span><span class="t-sh">Delete</span></button>
+        <button class="btn-ghost btn-small" onclick="exportScaleProfiles()"><span class="t-lg">↓ Export all</span><span class="t-sh">↓ Export</span></button>
         <button class="btn-ghost btn-small" onclick="importScaleProfilesClick()">↑ Import</button>
         <input type="file" id="scale-import-file" accept=".json,application/json" style="display:none" onchange="importScaleProfiles(event)">
       </div>
@@ -583,16 +623,16 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     </div>
 
     <div class="nav-row">
-      <button class="btn btn-primary" id="btn-confirm-scale" onclick="confirmScale()" disabled>Confirm scale →</button>
-      <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
+      <button class="btn btn-success" id="btn-confirm-scale" onclick="confirmScale()" disabled>Confirm scale →</button>
+      <button class="btn btn-nav" onclick="nextPhoto()">Next photo →</button>
       <button class="btn btn-nav" onclick="startOver()">Start over</button>
-      <span id="scale-display" style="font-family:monospace;font-size:13px;color:#94a3b8"></span>
+      <span id="scale-display" style="display:none"></span>
     </div>
   </div>
 
 
   <div id="panel-3" class="panel">
-    <div class="card" id="draw-hint"><strong>Click and drag across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.</div>
+    <div class="card" id="draw-hint" style="display:none"><strong>Click and drag across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.</div>
 
     <div class="input-row" style="margin-bottom:14px">
       <label style="font-size:13px;color:#64748b" title="More lines = better sampling and noise reduction, but only over a uniform section of the crack">Scan lines:</label>
@@ -629,10 +669,10 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="nav-row">
       <button class="btn btn-success" id="btn-analyze" onclick="runAnalysis()" disabled>Analyze →</button>
       <button class="btn btn-nav" onclick="goBack()">← Back</button>
-      <button class="btn btn-nav" onclick="nextPhoto()">Next photo ↻</button>
-      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none">Save image ↓</button>
-      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none">Save zoomed view ↓</button>
-      <span id="scale-display-3" style="font-family:monospace;font-size:12px;color:#94a3b8"></span>
+      <button class="btn btn-nav" onclick="nextPhoto()">Next photo →</button>
+      <button class="btn btn-nav" id="btn-save-3" onclick="saveImage()" style="display:none"><span class="t-lg">Save image ↓</span><span class="t-sh">Save ↓</span></button>
+      <button class="btn btn-nav" id="btn-save-zoom-3" onclick="saveZoomedImage()" style="display:none"><span class="t-lg">Save zoomed view ↓</span><span class="t-sh">Zoomed ↓</span></button>
+      <span id="scale-display-3" style="display:none"></span>
     </div>
   </div>
 
@@ -664,12 +704,12 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
     <div class="card success-bg" id="confirmed-note" style="display:none"></div>
     <div class="nav-row" id="result-nav-row">
       <button class="btn btn-success" id="btn-confirm-line" onclick="onConfirmBtn()">✓ Confirm</button>
-      <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')">✓ Confirm &amp; next photo</button>
+      <button class="btn btn-primary" id="btn-confirm-photo" onclick="confirmLine('photo')">Next photo →</button>
     </div>
     <div class="nav-row" id="result-nav-row2">
-      <button class="btn btn-nav" id="btn-save" onclick="saveImage()">Save image ↓</button>
-      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()">Save zoomed view ↓</button>
-      <button class="btn btn-nav" onclick="redrawLine()">← Redraw line</button>
+      <button class="btn btn-nav" id="btn-save" onclick="saveImage()"><span class="t-lg">Save image ↓</span><span class="t-sh">Save ↓</span></button>
+      <button class="btn btn-nav" id="btn-save-zoom" onclick="saveZoomedImage()"><span class="t-lg">Save zoomed view ↓</span><span class="t-sh">Zoomed ↓</span></button>
+      <button class="btn btn-nav" onclick="redrawLine()"><span class="t-lg">← Redraw line</span><span class="t-sh">← Redraw</span></button>
       <button class="btn btn-nav" onclick="startOver()">Start over</button>
       <button class="btn btn-nav" id="btn-log-now" style="display:none" onclick="logNow()">＋ Log this measurement</button>
     </div>
@@ -1633,7 +1673,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 10704;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10705;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1846,17 +1886,8 @@ function paintCanvas(){
   drawRefPts(ctx,S.scalePts,iZ);
   ctx.restore();
 
-  if(S.photoName){
-    const rect=canvas.getBoundingClientRect();
-    const scl=rect.width>0?src.dispW/rect.width:1;
-    const fs=11*scl,pad=8*scl;
-    ctx.save();
-    ctx.font=`${fs}px sans-serif`;
-    ctx.textAlign='right';ctx.textBaseline='top';
-    ctx.fillStyle='rgba(232,248,249,0.45)';
-    ctx.fillText(S.photoName,src.dispW-pad,pad);
-    ctx.restore();
-  }
+  updateOverlays();
+  if(S.step===2)updateTwoPtRes();
 }
 
 /* ── reference point hit test and touch magnifier ── */
@@ -2147,7 +2178,7 @@ function showStep(n){
   const showCanvas=n>=2&&S.dispW>0;
   $('canvas-wrap').className=showCanvas?'show':'';
 
-  updateNavHint();syncPhoneActions();
+  updateNavHint();updateResWarn();syncPhoneActions();updateOverlays();
   if(n===2){renderHdPanel();applyHints();updateConfirmBtn();}
   if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();updateNoteHint();}
   renderLineList();
@@ -2191,21 +2222,29 @@ function onHdToneChange(){
   if(S.results){S.results=null;S.live=null;}
 }
 
+function resLevel(){
+  if(!S.pxMm||!(S.pxMm>0))return 0;
+  const working=S.pxMm*(S.resizeFactor||1);
+  return working<0.5?2:working<2?1:0;
+}
+function resPending(){return S.step===3&&resLevel()>(S.resAck||0);}
 function updateResWarn(){
   const el=$('res-warn-overlay');if(!el)return;
-  if(S.step!==3||!S.pxMm||!(S.pxMm>0)){el.style.display='none';return;}
-  const working=S.pxMm*(S.resizeFactor||1);
-  if(working<0.5){
-    el.className='danger';
-    el.textContent='Measurements below 0.5 px/mm are not recommended — proceed only if you know what you are doing.';
-    el.style.display='block';
-  } else if(working<2){
-    el.className='warn';
-    el.textContent='Reliable measurement below 2 px/mm requires a sound understanding of the tool’s limitations and some experience.';
-    el.style.display='block';
-  } else {
-    el.style.display='none';
-  }
+  const lv=resLevel();
+  if(S.step!==3||!resPending()){el.style.display='none';updateFit();return;}
+  el.className=lv===2?'danger':'warn';
+  el.innerHTML=`<span class="rw-txt">${lv===2?'Measurements below 0.5 px/mm are not recommended — proceed only if you know what you are doing.':'Reliable measurement below 2 px/mm requires a sound understanding of the tool’s limitations and some experience.'}</span><button class="rw-ok" id="rw-ok" onclick="ackResWarn()">OK</button>`;
+  el.style.display='flex';
+  updateFit();
+}
+function ackResWarn(){
+  S.resAck=resLevel();updateResWarn();syncPhoneActions();updateDrawHint();paintCanvas();
+}
+function pointResOk(){
+  const b=$('rw-ok');if(!b)return;
+  b.scrollIntoView({block:'nearest',behavior:'smooth'});
+  try{b.focus({preventScroll:true});}catch(e){}
+  b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');
 }
 
 function showErr(msg){
@@ -2219,7 +2258,7 @@ function hdBusy(msg){
   else b.style.display='none';
 }
 
-function updateZoom(){$('zoom-label').textContent=S.zoom.toFixed(1)+'×';}
+function updateZoom(){$('zoom-label').textContent=S.zoom.toFixed(1)+'×';updateFit();}
 
 function updateMetaBar(){
   if(!S.imgMeta)return;
@@ -2262,7 +2301,7 @@ function updateScaleHint(){
   const tap=isTouch?'Tap':'Click';
   if(S.scalePts.length===0)hint.innerHTML=intro+`${tap} <strong>point A</strong> on a known feature — one end of a ruler, scale bar, or element of known size`;
   else if(S.scalePts.length===1)hint.innerHTML=`Now ${tap.toLowerCase()} <strong>point B</strong> at the other end of that known distance`;
-  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:130px"><span>mm</span><button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-real" onclick="useLast('real')" style="display:none">↺ last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div>`;
+  else hint.innerHTML=`<div class="input-row"><span>Real distance A → B:</span><input type="number" id="real-dist-inp" min="0.1" step="any" style="width:130px"><span>mm</span><button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-real" onclick="useLast('real')" style="display:none">↺ last</button></div><div class="pt-tip">Drag A or B to adjust · ${tap.toLowerCase()} elsewhere on the photo to start again</div><div class="tp-res" id="tp-res"></div>`;
   const inp=$('real-dist-inp');
   if(inp){inp.value=S.realDist;inp.oninput=e=>{S.realDist=e.target.value;updateConfirmBtn();};inp.onkeydown=scaleFieldKey;}
   applyHints();updateConfirmBtn();
@@ -2320,7 +2359,22 @@ function scaleReady(){
   }
   return parseFloat(S.directPx)>0;
 }
-function updateConfirmBtn(){const b=$('btn-confirm-scale');if(b)b.disabled=!scaleReady();}
+function updateConfirmBtn(){
+  const ok=scaleReady();
+  ['btn-confirm-scale','ov-scale'].forEach(id=>{const b=$(id);if(b)b.disabled=!ok;});
+  const di=$('dist-intro');if(di)di.style.display=(S.scaleMode==='distance'&&ok)?'none':'';
+  updateTwoPtRes();
+}
+function twoPtRes(){
+  if(S.scaleMode!=='twopoint'||S.scalePts.length<2)return null;
+  const mm=parseFloat(S.realDist);if(!(mm>0))return null;
+  const dx=S.scalePts[1].x-S.scalePts[0].x,dy=S.scalePts[1].y-S.scalePts[0].y;
+  return Math.sqrt(dx*dx+dy*dy)/S.dispScale/S.resizeFactor/mm;
+}
+function updateTwoPtRes(){
+  const el=$('tp-res');if(!el)return;
+  const r=twoPtRes();el.textContent=r?`Resolution: ${r.toFixed(3)} px/mm`:'';
+}
 function focusScaleField(){
   if(isTouch)return;                 // don't raise the on-screen keyboard over the image
   const id=S.scaleMode==='distance'?'dist-inp':(S.scaleMode==='direct'?'direct-px-inp':'real-dist-inp');
@@ -2427,7 +2481,7 @@ function onDistanceInput(){
   if(!(d>0)){out.innerHTML='<span style="color:rgba(232,248,249,0.4)">Enter a distance to compute resolution.</span>';return;}
   const r=resolutionFromProfile(prof,d);
   if(r&&r>0){
-    out.innerHTML=`Predicted resolution: <strong>${r.toFixed(3)} px/mm</strong>`;
+    out.innerHTML=`Resolution: <strong>${r.toFixed(3)} px/mm</strong>`;
   } else {
     out.innerHTML='<span style="color:#f87171">Could not compute resolution.</span>';
   }
@@ -2838,19 +2892,67 @@ function importScaleProfiles(ev){
   reader.readAsText(file);
 }
 
+function overlayMsg(){
+  const verb=isTouch?'Tap and drag':'Click and drag';
+  if(S.step===3){
+    const n=nextLineNo();
+    if(S.measLine)return{t:`✓ Line #${n} set — Analyze`,ok:true};
+    if(!S.lines.length)return{t:`<strong>${verb} across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.`};
+    return{t:`Line #${n} — drag across the crack`};
+  }
+  if(S.step===4&&S.postConfirm)return{t:`✓ Line #${S.postConfirm} confirmed`,ok:true};
+  return{t:''};
+}
+function updateOverlays(){
+  const res=$('ov-res'),nm=$('ov-name'),msg=$('ov-msg');if(!res)return;
+  res.textContent=(S.step>=3&&S.pxMm)?`${S.pxMm.toFixed(3)} px/mm`:'';
+  nm.textContent=S.photoName||'';
+  const m=overlayMsg();msg.innerHTML=m.t;msg.classList.toggle('ok',!!m.ok);
+  updateFit();scheduleTone();
+}
+function updateFit(){
+  const f=$('ov-fit');if(!f)return;
+  f.style.display=S.zoom>1.001?'flex':'none';
+  f.classList.toggle('left',PHONE_MQ.matches);
+  const w=$('res-warn-overlay');
+  f.style.bottom=(w&&w.style.display!=='none')?(w.offsetHeight+8)+'px':'';
+}
+let toneRaf=0;const toneCv=document.createElement('canvas');toneCv.width=8;toneCv.height=4;
+function scheduleTone(){if(!toneRaf)toneRaf=requestAnimationFrame(()=>{toneRaf=0;applyTone();});}
+// light text over dark parts of the photo, dark text over light parts
+function applyTone(){
+  const cv=$('img-canvas');if(!cv||!cv.width)return;
+  const cr=cv.getBoundingClientRect();if(!(cr.width>0))return;
+  const k=cv.width/cr.width,tc=toneCv.getContext('2d',{willReadFrequently:true});
+  ['ov-res','ov-name','ov-msg','ov-fit'].forEach(id=>{
+    const e=$(id);if(!e||e.offsetParent===null||(!e.textContent.trim()&&id!=='ov-fit'))return;
+    const r=e.getBoundingClientRect();
+    const x=Math.max(0,(r.left-cr.left-4)*k),y=Math.max(0,(r.top-cr.top-4)*k);
+    const w=Math.min(cv.width-x,(r.width+8)*k),h=Math.min(cv.height-y,(r.height+8)*k);
+    if(!(w>1&&h>1))return;
+    try{
+      tc.clearRect(0,0,8,4);tc.drawImage(cv,x,y,w,h,0,0,8,4);
+      const d=tc.getImageData(0,0,8,4).data;let L=0;
+      for(let i=0;i<d.length;i+=4)L+=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2];
+      e.classList.toggle('dk',L/(d.length/4)<140);
+    }catch(err){}
+  });
+}
 function updateDrawHint(){
   const verb=isTouch?'Tap and drag':'Click and drag';
   const pre=S.lines.length?`<strong>Line #${nextLineNo()}</strong> — `:'';
   $('draw-hint').innerHTML=S.measLine?
     pre+'<span style="color:#059669">✓ Line set. Adjust options below, then click Analyze.</span>':
     pre+`<strong>${verb} across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.`;
-  $('btn-analyze').disabled=!S.measLine||S.busy;
+  $('btn-analyze').disabled=(!S.measLine||S.busy)&&!resPending();
+  updateOverlays();updateNavHint();
 }
 
 function updateScaleDisplay(){
   const txt=S.pxMm?`${S.pxMm.toFixed(3)} px/mm`:'';
   $('scale-display').textContent=txt;
   $('scale-display-3').textContent=txt;
+  updateOverlays();
 }
 
 function updateResultsDisplay(){
@@ -2935,15 +3037,27 @@ function placeActions(){
   syncPhoneActions();
 }
 function syncPhoneActions(){
-  const pa=$('phone-actions'),a=$('btn-analyze'),r=$('result-nav-row');if(!pa||!a||!r)return;
-  if(PHONE_MQ.matches){a.style.display=S.step===3?'':'none';r.style.display=S.step===4?'':'none';pa.style.display=(S.step===3||S.step===4)?'':'none';}
-  else{a.style.display='';r.style.display='';pa.style.display='none';}
+  const pa=$('phone-actions'),a=$('btn-analyze'),r=$('result-nav-row'),sc=$('ov-scale');if(!pa||!a||!r)return;
+  const wait=resPending();
+  if(PHONE_MQ.matches){
+    if(sc)sc.style.display=S.step===2?'':'none';
+    a.style.display=(S.step===3&&!wait)?'':'none';r.style.display=S.step===4?'':'none';
+    pa.style.display=(S.step>=2&&S.step<=4&&!(S.step===3&&wait))?'flex':'none';
+    a.classList.remove('await-ok');
+  } else {
+    if(sc)sc.style.display='none';
+    a.style.display='';r.style.display='';pa.style.display='none';
+    a.classList.toggle('await-ok',S.step===3&&wait);
+  }
+  updateFit();
 }
+const NARROW_MQ=window.matchMedia('(max-width:379px)');
 function updateNavHint(){
   if(!isTouch)return;
   const h=$('nav-hint');if(!h)return;
-  h.textContent=S.step===3?'Drag across the crack to draw · two fingers to zoom and pan'
-    :(S.step===2&&S.scaleMode==='twopoint')?'Tap to place A / B · drag to pan · pinch to zoom'
+  h.textContent=S.step===3?(S.lines.length?'Drag across the crack':'Drag across the crack · 2 fingers to zoom/pan')
+    :(S.step===2&&S.scaleMode==='twopoint')?'Tap A / B · drag to pan · pinch to zoom'
+    :(S.step===4&&NARROW_MQ.matches)?'Drag · pinch to zoom'
     :'Drag to pan · pinch to zoom';
 }
 function toggleBaseCorr(){
@@ -3777,7 +3891,7 @@ function loadFile(file){
     S.dispW=d.dispW;S.dispH=d.dispH;S.dispScale=d.dispScale;S.resizeFactor=d.resizeFactor;
     S.imgMeta=d.imgMeta;
     S.zoom=1;S.panX=0;S.panY=0;
-    S.iMode='scale';S.scalePts=[];S.ptDrag=null;S.measLine=null;S.results=null;S.lines=[];
+    S.iMode='scale';S.scalePts=[];S.ptDrag=null;S.measLine=null;S.results=null;S.lines=[];S.resAck=0;
     resetAdjustments();
     const canvas=$('img-canvas');
     canvas.style.cursor='crosshair';
@@ -3828,6 +3942,7 @@ function confirmScale(){
 }
 
 function runAnalysis(){
+  if(resPending()){pointResOk();return;}
   if(!S.measLine||!S.pxMm||!S.pixels||S.busy)return;
   S.busy=true;clearErr();
   const seq=decodeSeq,stale=()=>seq!==decodeSeq;   // any reset / back / redraw / new photo invalidates this run
@@ -4477,6 +4592,12 @@ function drawScreenLabels(ctx,u){
   const act=S.step===4?activeLineObj():null;
   if(act)items.push({L:act,p1:act.p1,p2:act.p2,bh:(analysedLines()/2)*S.dispScale,bg:'rgba(8,104,116,0.92)'});
   const m=2*u,Bv={x0:Math.max(0,-S.panX/S.zoom)+m,y0:Math.max(0,-S.panY/S.zoom)+m,x1:Math.min(S.dispW,(S.dispW-S.panX)/S.zoom)-m,y1:Math.min(S.dispH,(S.dispH-S.panY)/S.zoom)-m};Bv.cx=(Bv.x0+Bv.x1)/2;Bv.cy=(Bv.y0+Bv.y1)/2;
+  {const cv=$('img-canvas'),cr=cv.getBoundingClientRect(),k=cr.width>0?S.dispW/cr.width/S.zoom:0;
+   let top=0,bot=0;
+   ['ov-res','ov-name','ov-msg'].forEach(id=>{const e=$(id);if(e&&e.offsetParent!==null&&e.textContent.trim()){const r=e.getBoundingClientRect();top=Math.max(top,r.bottom-cr.top+3);}});
+   ['phone-actions','ov-fit','res-warn-overlay'].forEach(id=>{const e=$(id);if(e&&e.offsetParent!==null&&getComputedStyle(e).display!=='none'){const r=e.getBoundingClientRect();if(r.height>0)bot=Math.max(bot,cr.bottom-r.top+3);}});
+   const y0=Bv.y0+top*k,y1=Bv.y1-bot*k;
+   if(k>0&&y1-y0>30*u){Bv.y0=y0;Bv.y1=y1;Bv.cy=(y0+y1)/2;}}
   const vis=items.filter(it=>{const e=it.bh;return Math.max(it.p1.x,it.p2.x)+e>=Bv.x0&&Math.min(it.p1.x,it.p2.x)-e<=Bv.x1&&Math.max(it.p1.y,it.p2.y)+e>=Bv.y0&&Math.min(it.p1.y,it.p2.y)-e<=Bv.y1;});
   if(!vis.length){S._labelLayout=[];return;}
   ctx.save();
@@ -4557,12 +4678,13 @@ const LOCK_IDS=['chart-wrap','base-panel','calib-panel','formula-panel','meas-no
 function lockStep4(on){
   LOCK_IDS.forEach(id=>{const el=$(id);if(el){el.inert=!!on;el.classList.toggle('pc-locked',!!on);}});
   const note=$('confirmed-note');
-  if(note){note.style.display=on?'':'none';if(on)note.innerHTML=`✓ Line #${S.postConfirm} confirmed · ↺ in the line list to redo`;}
+  if(note)note.style.display='none';
+  updateOverlays();
   updateConfirmBtns();updateLogNowBtn();
 }
 function updateConfirmBtns(){
   const b=$('btn-confirm-line');if(!b)return;
-  if(S.postConfirm){b.textContent='Next line →';b.className='btn btn-primary';b.disabled=S.lines.length>=MAX_LINES;}
+  if(S.postConfirm){b.textContent='+ Next line';b.className='btn btn-primary';b.disabled=S.lines.length>=MAX_LINES;}
   else{b.textContent='✓ Confirm';b.className='btn btn-success';b.disabled=!S.redraw&&S.lines.length>=MAX_LINES;}
 }
 function onConfirmBtn(){confirmLine(S.postConfirm?'next':'stay');}
@@ -4839,7 +4961,7 @@ function resetAll(){
   captureHints();
   S.pendingNext=false;
   S.step=1;S.imgEl=null;S.pixels=null;S.dispW=0;S.dispH=0;S.dispScale=1;S.resizeFactor=1;S.imgMeta=null;
-  S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;
+  S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;S.resAck=0;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
   S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;S.exif=null;S.redraw=null;S.hiLine=null;decodeSeq++;
   if(S.postConfirm){S.postConfirm=null;lockStep4(false);}
@@ -5108,7 +5230,7 @@ imgCanvas.addEventListener('wheel',e=>{
   updateZoom();paintCanvas();
 },{passive:false});
 
-$('btn-reset-view').onclick=()=>{S.zoom=1;S.panX=0;S.panY=0;updateZoom();paintCanvas();};
+$('ov-fit').onclick=()=>{S.zoom=1;S.panX=0;S.panY=0;updateZoom();paintCanvas();};
 
 let pinchStart=null,singleTouchPan=null,touchDraw=false;
 
