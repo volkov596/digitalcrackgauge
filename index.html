@@ -487,42 +487,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   #zoom-bar #img-meta{order:2;margin-left:0}
   #zoom-bar .zb-group{order:3;margin-left:auto}
 }
-/* ── 2.0.0: along-crack traces ── */
-#mode-tabs{margin-bottom:12px}
-#mode-tabs .tab:disabled{opacity:.4;cursor:not-allowed}
-#trace-cfg{margin-bottom:14px}
-#trace-cfg .input-row{gap:6px 10px}
-#trace-cfg input[type=number]{width:62px}
-.tr-dim{font-size:11px;color:rgba(232,248,249,0.4)}
-#tr-info{font-size:12px;color:rgba(232,248,249,0.6);margin-top:8px;line-height:1.5}
-.r-sub{font-size:11px;margin-top:6px;color:rgba(232,248,249,0.45)}
-.r-sub:empty{display:none}
-#trace-stats{padding:10px 14px}
-.tr-head{font-size:11px;font-weight:600;color:#0cbbcc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.tr-tab{width:100%;border-collapse:collapse;font-size:12px}
-.tr-tab th{font-size:10px;font-weight:600;color:rgba(232,248,249,0.45);text-transform:uppercase;letter-spacing:.05em;text-align:right;padding:2px 6px}
-.tr-tab th:first-child{text-align:left}
-.tr-tab td{padding:3px 6px;color:#e8f8f9;border-top:1px solid rgba(255,255,255,0.06)}
-.tr-tab td.num{font-family:monospace;text-align:right}
-.tr-note{font-size:11px;color:rgba(232,248,249,0.5);margin-top:7px;line-height:1.5}
-.tr-warn{font-size:11px;color:#fbbf24;margin-top:4px}
-#trace-sec{padding:10px 14px}
-.tr-sec-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
-.tr-sec-head .btn-ghost{padding:2px 9px;font-size:12px}
-#tr-sec-txt{flex:1 1 200px;min-width:0;font-family:monospace;color:#e8f8f9}
-.tr-excl{display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(232,248,249,0.75);cursor:pointer;white-space:nowrap}
-#tr-bars{display:block;width:100%;height:64px;margin-top:8px;cursor:pointer;touch-action:manipulation}
-#tr-retry{font-size:12px;color:#fbbf24;margin-top:6px}
-#trace-calib-note{font-size:11px;color:#fbbf24;margin:-4px 0 10px}
-.log-exp{background:none;border:none;color:#7fdbe4;font-size:11px;cursor:pointer;padding:0 4px;white-space:nowrap}
-.log-secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 12px;font-family:monospace;font-size:11px;color:rgba(232,248,249,0.7);padding:2px 0 6px 34px}
-.log-secs .x{color:rgba(232,248,249,0.35);text-decoration:line-through}
-.log-secs .f{color:#fbbf24}
-@media(max-width:520px){
-  .tr-tab{font-size:11px}
-  #tr-sec-txt{flex-basis:100%;order:5;font-size:11px}
-  .log-secs{padding-left:0}
-}
 </style>
 </head>
 <body>
@@ -550,7 +514,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v2.0.0-beta</div>
+  <div id="version-tag">v1.7.6-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -677,22 +641,10 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
 
   <div id="panel-3" class="panel">
-    <div class="tab-row" id="mode-tabs">
-      <button class="tab active" id="tab-mode-line" onclick="setMeasMode('line')">Single line</button>
-      <button class="tab pro-feat pf-mini" id="tab-mode-trace" title="Draw along the crack; sections are placed across it" onclick="setMeasMode('trace')">Along crack</button>
-    </div>
-    <div class="avg-section" id="trace-cfg" style="display:none">
-      <div class="avg-title">Along crack</div>
-      <div class="input-row">
-        <label for="tr-n">Sections:</label><input type="number" id="tr-n" min="10" max="50" step="1" value="20"><span class="tr-dim">10–50</span>
-        <label for="tr-len" style="margin-left:6px" title="Minimum section length across the crack; extended automatically for wide cracks">Length ≥</label><input type="number" id="tr-len" min="5" max="100" step="1" value="15"><span>mm</span>
-      </div>
-      <div id="tr-info"></div>
-    </div>
     <div class="card" id="draw-hint" style="display:none"><strong>Click and drag across the crack</strong>, perpendicular to it. Include 5–10 mm of background surface on each side.</div>
 
     <div class="input-row" style="margin-bottom:14px">
-      <label id="nlines-lbl" style="font-size:13px;color:#64748b" title="More lines = better sampling and noise reduction, but only over a uniform section of the crack">Scan lines:</label>
+      <label style="font-size:13px;color:#64748b" title="More lines = better sampling and noise reduction, but only over a uniform section of the crack">Scan lines:</label>
       <input type="range" id="nlines-slider" min="5" max="200" value="40" style="width:140px" oninput="onNlinesChange()">
       <strong id="nlines-val" style="font-family:monospace;font-size:13px;min-width:28px">40</strong>
       <span id="band-width" style="font-size:12px;color:#94a3b8"></span>
@@ -704,7 +656,7 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
       <label class="chk-row">
         <input type="checkbox" id="chk-align">
         <div><div class="chk-main">Align profiles before averaging</div>
-        <div class="chk-sub" id="align-sub">Compensates for cracks that aren't perfectly straight</div></div>
+        <div class="chk-sub">Compensates for cracks that aren't perfectly straight</div></div>
       </label>
       <div class="method-label">Combining method</div>
       <div class="radio-group" style="margin-bottom:12px">
@@ -741,33 +693,17 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
         <button class="info-i card-i" id="a-hint" onclick="showInfo('a')" title="What to do">i</button>
         <div class="r-method" id="a-method">Physical Reference · high accuracy</div>
         <div class="r-val" id="r-a">—.— <span class="r-unit">mm</span></div>
-        <div class="r-sub" id="a-sub"></div>
       </div>
       <div class="result-card b">
         <div class="r-tag">Approach B</div>
         <button class="info-i card-i" onclick="showInfo('b')" title="Accuracy note">i</button>
         <div class="r-method"><span class="info-link" onclick="showInfo('b')" title="Accuracy note">Empirical Formula · estimate only</span></div>
         <div class="r-val" id="r-b">—<span class="r-unit">mm</span></div>
-        <div class="r-sub" id="b-sub"></div>
-      </div>
-    </div>
-
-    <div id="trace-panel" style="display:none">
-      <div class="card" id="trace-stats"></div>
-      <div class="card" id="trace-sec">
-        <div class="tr-sec-head">
-          <button class="btn-ghost" id="tr-prev" onclick="trStep(-1)" title="Previous section (←)">◀</button>
-          <span id="tr-sec-txt"></span>
-          <button class="btn-ghost" id="tr-next" onclick="trStep(1)" title="Next section (→)">▶</button>
-          <label class="tr-excl"><input type="checkbox" id="tr-excl" onchange="trToggleExcl(this.checked)"> Exclude</label>
-        </div>
-        <canvas id="tr-bars" title="Width along the crack — click a bar to inspect that section"></canvas>
-        <div id="tr-retry" style="display:none"><span id="tr-retry-txt"></span> <button class="btn-ghost btn-small" id="tr-retry-btn" onclick="trRetry()">Retry failed</button></div>
       </div>
     </div>
 
     <div id="meas-note-row">
-      <label for="meas-note-inp" id="meas-note-lbl">Measurement name <span id="meas-note-hint" style="font-weight:400;color:rgba(232,248,249,0.4)"></span></label>
+      <label for="meas-note-inp">Measurement name <span id="meas-note-hint" style="font-weight:400;color:rgba(232,248,249,0.4)"></span></label>
       <div class="note-wrap">
         <input type="text" id="meas-note-inp" maxlength="80" placeholder="e.g. north pier, mid-span — saved to the log and file names" oninput="onMeasNoteInput()">
         <button class="btn-ghost btn-small use-last" title="Use the last value" id="ul-note" onclick="useLast('note')" style="display:none">↺ last</button>
@@ -838,7 +774,6 @@ input.readonly-field{background:rgba(255,255,255,0.02);color:#0cbbcc;font-weight
 
       <div id="calib-panel">
       <div class="calib-title">Approach A — Physical Reference Calibration</div>
-      <div id="trace-calib-note" style="display:none">Along crack: Measure mode only — enter a coefficient from an earlier calibration.</div>
       <div class="pro-only"><div class="help"><div class="help-txt">Two steps. <strong>Calibrate:</strong> analyse a photo of a reference crack of known width (same camera, distance and conditions), then enter that width — the tool computes a calibration coefficient. <strong>Measure:</strong> analyse your crack photo with that coefficient entered and the width is read directly. The coefficient survives “Start over”, so calibrate first, then load the crack photo. An inaccurate reference width feeds directly into every result, so measure it as precisely as you can.</div><button class="help-more">more</button></div></div>
       <div class="simple-only"><div class="help"><div class="help-txt">Calibrate once on a crack of known width to get an adjustment coefficient, then switch to Measure and enter that coefficient to read unknown crack widths.</div><button class="help-more">more</button></div></div>
 
@@ -1754,7 +1689,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 20000;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 10706;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -1764,7 +1699,7 @@ function applyInterfaceMode(tier){
   if (INTERFACE_MODE === 'simple') {
     document.body.classList.add('simple');
 
-    S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false; S.fwhmCap = false; S.measMode = 'line';
+    S.doAlign = true; S.avgMethod = 'median'; S.doAdaptive = false; S.fwhmCap = false;
     const fc=$('chk-fwhm-cap'); if(fc)fc.checked=false;
     const sr=$('stats-row'); if(sr)sr.innerHTML='<div>scale · area · calibration</div><div>scan lines · combining method · source</div><div>integration window · FWHM</div>';
     document.querySelectorAll('.pro-feat').forEach(el=>{
@@ -1782,7 +1717,6 @@ function applyInterfaceMode(tier){
   $('pin-overlay').style.display = 'none';
   $('app').style.display = 'block';
   maybeShowBackupReminder();
-  applyMeasModeUI();
   if (S.staleClient) { const vb=$('version-bar'); if(vb) vb.style.display='block'; }
 }
 
@@ -1877,7 +1811,6 @@ function recomputeCalib(){
   updateAResult(aw!==null?parseFloat(aw):null);
   refreshLastLog();
   if(S.step===4&&S.results){renderLineList();paintCanvas();}
-  if(trActive())renderTrace();
 }
 
 function calibAWidth(area){
@@ -1958,8 +1891,7 @@ function paintCanvas(){
 
   const rc=canvas.getBoundingClientRect(),uS=(rc.width>0?src.dispW/rc.width:1)/src.zoom;
   drawConfirmedOnScreen(ctx,uS);
-  if(S.tr||S.trStroke)drawTraceOnScreen(ctx,uS);
-  if(S.measLine){if(!S.postConfirm&&!S.tr)drawBand(S.measLine.p1,S.measLine.p2);}
+  if(S.measLine){if(!S.postConfirm)drawBand(S.measLine.p1,S.measLine.p2);}
   else if(S.drawStart&&S.drawCur)drawBand(S.drawStart,S.drawCur);
   drawScreenLabels(ctx,uS);
 
@@ -2258,7 +2190,7 @@ function showStep(n){
   const showCanvas=n>=2&&S.dispW>0;
   $('canvas-wrap').className=showCanvas?'show':'';
 
-  updateNavHint();updateResWarn();syncPhoneActions();applyMeasModeUI();updateOverlays();
+  updateNavHint();updateResWarn();syncPhoneActions();updateOverlays();
   if(n===2){renderHdPanel();applyHints();updateConfirmBtn();}
   if(n===4){renderFcalibSelect();updateFcalibCount();applyHints();updateLogNowBtn();updateNoteHint();}
   renderLineList();
@@ -2397,7 +2329,7 @@ function captureHints(){
     scaleDist:S.scaleDist||h.scaleDist||'',
     realDist:S.realDist||h.realDist||'',
     pxMm:S.pxMm||h.pxMm||null,
-    note:(S.lines.length&&baseOf(S.lines[0].name))||(S.tr&&S.tr.name)||baseOf(n&&n.value.trim())||h.note||''
+    note:(S.lines.length&&baseOf(S.lines[0].name))||baseOf(n&&n.value.trim())||h.note||''
   };
 }
 function lastPxMm(){const h=S.hints||{};return h.pxMm?(+h.pxMm).toFixed(3):(h.directPx||'');}
@@ -2466,19 +2398,17 @@ function scaleFieldKey(e){
 }
 function cancelLine(){
   decodeSeq++;S.busy=false;
-  S.drawStart=null;S.drawCur=null;S.measLine=null;S.tr=null;S.trStroke=null;S.trPrev=null;
+  S.drawStart=null;S.drawCur=null;S.measLine=null;
   const b=$('btn-analyze');if(b)b.textContent='Analyze →';
   updateDrawHint();paintCanvas();
 }
 function updateLogNowBtn(){
   const b=$('btn-log-now');if(!b)return;
-  if(S.tr&&S.tr.analysed){b.style.display=(S.step===4&&!S.autoLog&&S.tr.confirmed&&!S.tr.logId)?'':'none';return;}
   const L=S.postConfirm?S.lines.find(x=>x.n===S.postConfirm):null;
   b.style.display=(S.step===4&&S.results&&!S.autoLog&&(S.postConfirm?(L&&!L.logId):!S.lastLogId))?'':'none';
 }
 function logNow(){
   if(!S.results)return;
-  if(S.tr&&S.tr.analysed){if(S.tr.confirmed&&!S.tr.logId)addTraceLogEntry();updateLogNowBtn();return;}
   if(S.postConfirm){
     const L=S.lines.find(x=>x.n===S.postConfirm);if(!L||L.logId)return;
     addLogEntry(true,L.n);L.logId=S.lastLogId;S.lastLogId='';
@@ -2637,14 +2567,13 @@ function renderMeasLog(){
     const lines=g.items.map((e,k)=>{
       const A=e.widthA!=null?e.widthA.toFixed(3):'—';
       const B=e.widthB!=null?e.widthB.toFixed(3):'—';
-      const tr=e.type==='trace',open=S.logOpen&&S.logOpen.has(e.id);
       return `<div class="log-line">
-        <span class="log-idx">${tr?escapeHtml(String(e.lineNo||'T1')):'#'+(e.lineNo||k+1)}</span>
+        <span class="log-idx">#${e.lineNo||k+1}</span>
         <span class="log-vals"><strong>A ${A}</strong> · <strong>B ${B}</strong> mm</span>
-        <span class="log-dim">${tr?`mean · ${e.secUsed}/${e.secTotal} sections · `:''}${e.resolution.toFixed(2)} px/mm</span>${tr&&Array.isArray(e.secs)?`<button class="log-exp" id="lb-${e.id}" onclick="toggleLogSecs('${e.id}')">${open?'▾':'▸'} sections</button>`:''}
+        <span class="log-dim">${e.resolution.toFixed(2)} px/mm</span>
         <input class="log-note-inp" type="text" placeholder="Add a note (e.g. north face, mid-span)" value="${escapeHtml(e.note||'')}" oninput="updateLogNote('${e.id}',this.value)">
         <button class="wiz-shot-del" onclick="deleteLogEntry('${e.id}')" title="Delete">✕</button>
-      </div>`+(tr?trLogSecs(e):'');
+      </div>`;
     }).join('');
     return `<div class="log-group"><div class="log-head">${head}</div>${lines}</div>`;
   }).join('');
@@ -2985,13 +2914,6 @@ function importScaleProfiles(ev){
 
 function overlayMsg(){
   const verb=isTouch?'Tap and drag':'Click and drag';
-  if(S.step===3&&isTrace()){
-    if(S.trStroke)return{t:'Drawing along the crack…'};
-    if(!S.tr)return{t:'<strong>Drag along the crack</strong> — draw only the length you want measured.'};
-    if(S.busy)return{t:'Analysing the sections…'};
-    return trSummary();
-  }
-  if(S.step===4&&S.tr&&S.tr.analysed)return{t:S.tr.confirmed?'✓ T1 confirmed':`T1 — ${isTouch?'tap':'click'} a section or bar to inspect it`,ok:S.tr.confirmed};
   if(S.step===3){
     const n=nextLineNo();
     if(S.measLine)return{t:`✓ Line #${n} set — Analyze`,ok:true};
@@ -3039,10 +2961,6 @@ function applyTone(){
   });
 }
 function updateDrawHint(){
-  if(isTrace()&&S.step===3){
-    $('btn-analyze').disabled=(!trReady()||S.busy)&&!resPending();
-    updateOverlays();updateNavHint();updateTraceInfo();return;
-  }
   const verb=isTouch?'Tap and drag':'Click and drag';
   const pre=S.lines.length?`<strong>Line #${nextLineNo()}</strong> — `:'';
   $('draw-hint').innerHTML=S.measLine?
@@ -3094,7 +3012,6 @@ function updateResultsDisplay(){
     `<div>lines: ${r.linesTotal}${r.linesKept!==r.linesTotal?` (${r.linesKept} kept)`:''} · ${r.optsLabel}${src}</div>`+
     `<div>integration: ${(+cL).toFixed(3)}–${(+cR).toFixed(3)} mm${!isAdj?(r.capped?` (auto, capped ${FWHM_CAP_K}×FWHM)`:' (auto)'):''}${r.fwhmMm!=null?` · FWHM ${r.fwhmMm.toFixed(3)} mm`:''} · baseline: ${r.baseMode==='local'?'local':`<span style="color:#fbbf24">${r.baseMode}</span>`}</div>`;
   updateCropUI();updateLogNowBtn();
-  if(trActive()){trSave();renderTrace();}
 }
 
 function updateCropUI(){
@@ -3160,7 +3077,7 @@ const NARROW_MQ=window.matchMedia('(max-width:379px)');
 function updateNavHint(){
   if(!isTouch)return;
   const h=$('nav-hint');if(!h)return;
-  h.textContent=(S.step===3&&isTrace())?'Drag along the crack · 2 fingers to zoom/pan':S.step===3?(S.lines.length?'Drag across the crack':'Drag across the crack · 2 fingers to zoom/pan')
+  h.textContent=S.step===3?(S.lines.length?'Drag across the crack':'Drag across the crack · 2 fingers to zoom/pan')
     :(S.step===2&&S.scaleMode==='twopoint')?'Tap A / B · drag to pan · pinch to zoom'
     :(S.step===4&&NARROW_MQ.matches)?'Drag · pinch to zoom'
     :'Drag to pan · pinch to zoom';
@@ -3349,6 +3266,7 @@ function loadMeasLog(){
   const al=storageGet(AUTO_LOG_KEY);
   if(al!==null&&al!==undefined&&al!=='')S.autoLog=(al==='1'||al===true||al==='true');
 }
+function persistMeasLog(){storageSet(MEAS_LOG_KEY,JSON.stringify(S.measLog));}
 function setAutoLog(on){S.autoLog=!!on;storageSet(AUTO_LOG_KEY,on?'1':'0');updateLogNowBtn();}
 
 function addLogEntry(silent,lineNo){
@@ -3386,7 +3304,7 @@ function addLogEntry(silent,lineNo){
   if(!silent)logMsg(`Added — ${S.measLog.length} in log.`,true);
 }
 function refreshLastLog(){
-  if(S.tr||!S.lastLogId||!S.results)return;
+  if(!S.lastLogId||!S.results)return;
   const e=S.measLog.find(x=>x.id===S.lastLogId);
   if(!e)return;
   const dv=getDisplayValues();
@@ -3421,11 +3339,6 @@ function onMeasNoteInput(){
 }
 function photoStem(){const n=S.photoName||'';const i=n.lastIndexOf('.');return(i>0?n.slice(0,i):n)||'image';}
 function outFileName(zoom){
-  if(S.tr&&S.tr.analysed){
-    const raw=(S.tr.confirmed?S.tr.name:measNoteValue())||'';
-    const b=raw.replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60)||'crack';
-    return `${photoStem()}_${b}_trace${zoom?'_zoom':''}.png`;
-  }
   if(S.lines.length){
     const b=baseOf(S.lines[0].name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,60)||'measured_crack';
     return `${photoStem()}_${b}_lines${zoom?'_zoom':''}.png`;
@@ -3455,22 +3368,9 @@ function exportMeasLogCSV(){
     ['windowEdited','Window edited'],['baselineAdjusted','Baseline adjusted'],['baselineMode','Baseline mode'],
     ['windowCap','Window cap'],['fwhm','FWHM (mm)'],
     ['x1','Line x1 (px)'],['y1','Line y1 (px)'],['x2','Line x2 (px)'],['y2','Line y2 (px)'],
-    ['resolutionMP','Image MP'],['bitDepth','Source depth'],['toneResponse','Tone response'],['note','Note'],
-    ['type','Type'],['secNo','Section #'],['secUsed','Sections used'],['secTotal','Sections total'],['traceLen','Trace length (mm)'],['spacing','Spacing (mm)'],
-    ['secWidth','Section width (lines)'],['secLen','Section length (mm)'],
-    ['aMedian','A median (mm)'],['aSd','A SD (mm)'],['aMin','A min (mm)'],['aMax','A max (mm)'],['aP95','A P95 (mm)'],
-    ['bMedian','B median (mm)'],['bSd','B SD (mm)'],['bMin','B min (mm)'],['bMax','B max (mm)'],['bP95','B P95 (mm)'],
-    ['flags','Flags'],['excluded','Excluded']];
+    ['resolutionMP','Image MP'],['bitDepth','Source depth'],['toneResponse','Tone response'],['note','Note']];
   const header=cols.map(c=>csvEscape(c[1])).join(',');
-  const flat=[];
-  S.measLog.forEach(e=>{
-    flat.push(Object.assign({},e,{type:e.type||'line'}));
-    if(Array.isArray(e.secs))e.secs.forEach(q=>flat.push({timestamp:e.timestamp,photoName:e.photoName,lineNo:e.lineNo,type:'section',secNo:q.k,
-      resolution:e.resolution,scaleMode:e.scaleMode,distance:e.distance,cameraProfile:e.cameraProfile,
-      widthA:q.a,widthB:q.b,flags:q.st||q.fl||'',excluded:q.ex?'yes':'',windowEdited:q.ed?'yes':'',x1:q.x,y1:q.y,
-      resolutionMP:e.resolutionMP,bitDepth:e.bitDepth,toneResponse:e.toneResponse,note:e.note}));
-  });
-  const rows=flat.map(e=>cols.map(c=>csvEscape(e[c[0]])).join(','));
+  const rows=S.measLog.map(e=>cols.map(c=>csvEscape(e[c[0]])).join(','));
   const csv=[header,...rows].join('\r\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -3894,7 +3794,7 @@ function importProfiles(ev){
   reader.readAsText(file);
 }
 
-function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();if(S.tr&&!S.tr.analysed)trRelayout();else paintCanvas();}
+function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();paintCanvas();}
 
 /* Decode an image file into working pixels + geometry.
    High-bit-depth files (16-bit PNG, TIFF) are decoded here in JS, because the
@@ -4014,7 +3914,6 @@ function loadFile(file){
     S.imgMeta=d.imgMeta;
     S.zoom=1;S.panX=0;S.panY=0;
     S.iMode='scale';S.scalePts=[];S.ptDrag=null;S.measLine=null;S.results=null;S.lines=[];S.resAck=0;
-    S.tr=null;S.trStroke=null;S.trPrev=null;
     resetAdjustments();
     const canvas=$('img-canvas');
     canvas.style.cursor='crosshair';
@@ -4065,7 +3964,6 @@ function confirmScale(){
 }
 
 function runAnalysis(){
-  if(isTrace()&&S.step===3){runTraceAnalysis();return;}
   if(resPending()){pointResOk();return;}
   if(!S.measLine||!S.pxMm||!S.pixels||S.busy)return;
   S.busy=true;clearErr();
@@ -4144,8 +4042,8 @@ function fwhmInfo(prof,base,isDep,L,R){
   const xr=b<n-1?b+(sm[b]-h)/(sm[b]-sm[b+1]):b;
   return{fwhm:xr-xl,centre:(xl+xr)/2};
 }
-function applyAutoBounds(res){
-  const r=res||S.results;if(!r||!r.prof)return;
+function applyAutoBounds(){
+  const r=S.results;if(!r||!r.prof)return;
   const n=r.prof.length;
   let L=r.workerLeftIdx,R=r.workerRightIdx,capped=false;
   const f=fwhmInfo(r.prof,r.baseArr,r.isDep,L,R);
@@ -4497,7 +4395,6 @@ function pxLineSheet(x,meta){
   return xml;
 }
 async function exportLineProfiles(){
-  if(S.tr&&S.tr.analysed){exportTraceXlsx();return;}
   if(pxBusy)return;
   const items=S.lines.filter(L=>L.exp).map(L=>Object.assign({},L.exp,{n:L.n,name:L.name||'',confirmed:true}));
   if(S.step===4&&S.results&&S.measLine&&!S.postConfirm){
@@ -4547,7 +4444,7 @@ function windowEdited(){return (S.cropLeft!==null||S.cropRight!==null)?'yes':'';
 function fmtW(v){return v==null?'—':(v<0.001?'<0.001':v.toFixed(3));}
 function analysedLines(){return(S.results&&S.results.nLinesSetting)||S.nLines;}
 function activeLineObj(){
-  if(S.tr||!S.measLine||!S.results||S.postConfirm)return null;
+  if(!S.measLine||!S.results||S.postConfirm)return null;
   const dv=getDisplayValues();
   return{n:nextLineNo(),p1:S.measLine.p1,p2:S.measLine.p2,nLines:analysedLines(),
     widthA:(dv.aWidth!=null&&dv.aWidth!=='')?+dv.aWidth:null,widthB:+dv.bWidth,active:true};
@@ -4559,9 +4456,8 @@ function lineStats(list){
   return{n:list.length,maxA:A.length?Math.max(...A):null,maxB:B.length?Math.max(...B):null,meanA:mean(A),meanB:mean(B)};
 }
 function labelText(L,num){
-  const id=L.tid||`#${L.n}`;
-  if(num)return id;
-  return L.widthA!=null?`${id}  A ${L.widthA.toFixed(3)} · B ${fmtW(L.widthB)} mm`:`${id}  B ${fmtW(L.widthB)} mm`;
+  if(num)return `#${L.n}`;
+  return L.widthA!=null?`#${L.n}  A ${L.widthA.toFixed(3)} · B ${fmtW(L.widthB)} mm`:`#${L.n}  B ${fmtW(L.widthB)} mm`;
 }
 function lineLabel(L){return labelText(L,false);}
 const LABEL_PLACE_KEY='dcg_label_place_v1',LABEL_CONTENT_KEY='dcg_label_content_v1';
@@ -4717,7 +4613,6 @@ function drawScreenLabels(ctx,u){
   if(S.step>=3)S.lines.forEach(L=>items.push({L,p1:L.p1,p2:L.p2,bh:band?L.nLines/2*S.dispScale:0,bg:L.n===S.hiLine?'rgba(180,83,9,0.95)':'rgba(76,29,149,0.88)'}));
   const act=S.step===4?activeLineObj():null;
   if(act)items.push({L:act,p1:act.p1,p2:act.p2,bh:(analysedLines()/2)*S.dispScale,bg:'rgba(8,104,116,0.92)'});
-  if(S.step===4){const ti=trLabelItem(p=>p);if(ti)items.push(ti);}
   const m=2*u,Bv={x0:Math.max(0,-S.panX/S.zoom)+m,y0:Math.max(0,-S.panY/S.zoom)+m,x1:Math.min(S.dispW,(S.dispW-S.panX)/S.zoom)-m,y1:Math.min(S.dispH,(S.dispH-S.panY)/S.zoom)-m};Bv.cx=(Bv.x0+Bv.x1)/2;Bv.cy=(Bv.y0+Bv.y1)/2;
   {const cv=$('img-canvas'),cr=cv.getBoundingClientRect(),k=cr.width>0?S.dispW/cr.width/S.zoom:0;
    let top=0,bot=0;
@@ -4745,12 +4640,6 @@ function infoStrip(ctx,W,H,s,head,draw=true){
     segs.push(`max${st.maxA!=null?` A ${fmtW(st.maxA)} ·`:''} B ${fmtW(st.maxB)} mm`);
     segs.push(`mean${st.meanA!=null?` A ${fmtW(st.meanA)} ·`:''} B ${fmtW(st.meanB)} mm`);
   }
-  if(S.tr&&S.tr.analysed&&S.tr.st){
-    const t=S.tr.st,hasA=t.A&&t.A.n,ab=k=>`${hasA?`A ${fmtW(t.A[k])} · `:''}B ${fmtW(t.B[k])} mm`;
-    segs.push(`T1 · ${t.used.length}/${t.total} sections · ${(S.tr.lay.lengthPx/trPd()).toFixed(0)} mm`);
-    segs.push('mean '+ab('mean'),'SD '+ab('sd'),'median '+ab('median'),'min '+ab('min'),'max '+ab('max'));
-    if(t.B.p95!=null)segs.push('P95 '+ab('p95'));
-  }
   const fs=14*s,pad=7*s,lh=fs*1.45,sep='   |   ';
   ctx.save();ctx.font=`${fs}px monospace`;
   const rows=[];let cur='';
@@ -4767,8 +4656,8 @@ function infoStrip(ctx,W,H,s,head,draw=true){
 }
 function updateNoteHint(){
   const h=$('meas-note-hint');if(!h)return;
-  const ln=S.tr?(S.postConfirm?'· T1 confirmed':'· T1'):(S.postConfirm?`· line #${S.postConfirm} confirmed`:`· line #${nextLineNo()}`);
-  h.textContent=isTouch?ln:(S.tr?`${ln} · ⏎ confirm · ⇧⏎ next photo · ←/→ section`:`${ln} · ⏎ confirm, ⏎ next line · ⇧⏎ next photo`);
+  const ln=S.postConfirm?`· line #${S.postConfirm} confirmed`:`· line #${nextLineNo()}`;
+  h.textContent=isTouch?ln:`${ln} · ⏎ confirm, ⏎ next line · ⇧⏎ next photo`;
   updateConfirmBtns();
 }
 function applyLineViewBtn(){const b=$('btn-line-view');if(b)b.innerHTML=S.lineView==='band'?'<span class="zb-long">▭ </span>Bands':'<span class="zb-long">─ </span>Lines';}
@@ -4779,7 +4668,6 @@ function toggleLineView(){
 }
 function renderLineList(){
   const el=$('line-list');if(!el)return;
-  if(S.tr&&S.tr.analysed&&S.tr.st&&(S.step===3||S.step===4)){renderTraceRow(el);return;}
   const show=S.lines.length>0&&(S.step===3||S.step===4);
   const act=(show&&S.step===4)?activeLineObj():null;
   const items=act?S.lines.concat([act]):S.lines;
@@ -4818,8 +4706,7 @@ function lockStep4(on){
 }
 function updateConfirmBtns(){
   const b=$('btn-confirm-line');if(!b)return;
-  b.title=S.tr?'One trace per photo — use Next photo':'';
-  if(S.postConfirm){b.textContent='+ Next line';b.className='btn btn-primary';b.disabled=S.lines.length>=MAX_LINES||!!S.tr;}
+  if(S.postConfirm){b.textContent='+ Next line';b.className='btn btn-primary';b.disabled=S.lines.length>=MAX_LINES;}
   else{b.textContent='✓ Confirm';b.className='btn btn-success';b.disabled=!S.redraw&&S.lines.length>=MAX_LINES;}
 }
 function onConfirmBtn(){confirmLine(S.postConfirm?'next':'stay');}
@@ -4853,12 +4740,10 @@ function redrawConfirmed(n){
 }
 function photoLogIds(){
   const ids=S.lines.map(L=>L.logId).filter(Boolean);
-  if(S.tr&&S.tr.logId)ids.push(S.tr.logId);
   if(S.lastLogId&&!ids.includes(S.lastLogId))ids.push(S.lastLogId);
   return ids;
 }
 function confirmLine(mode){
-  if(S.tr&&S.tr.analysed){confirmTrace(mode==='next'?'stay':mode);return;}
   if(S.postConfirm){if(mode==='photo')nextPhoto();else if(mode==='next')finishLine();return;}
   if(!S.results||!S.measLine||S.busy)return;
   if(!S.redraw&&S.lines.length>=MAX_LINES){showErr(`Maximum ${MAX_LINES} lines per photo.`);return;}
@@ -4886,7 +4771,7 @@ function confirmLine(mode){
 function guardActive(fn){
   if(!(S.step===4&&S.results)||S.postConfirm){fn();return;}
   const m=$('modal');
-  $('modal-msg').textContent=S.tr?'Trace T1 is not confirmed yet.':`Line #${nextLineNo()} is not confirmed yet.`+(S.lastLogId?' Discard also removes its log row.':'');
+  $('modal-msg').textContent=`Line #${nextLineNo()} is not confirmed yet.`+(S.lastLogId?' Discard also removes its log row.':'');
   m.style.display='flex';
   const close=()=>{m.style.display='none';};
   $('modal-ok').onclick=()=>{close();confirmLine('none');fn();};
@@ -4972,9 +4857,7 @@ function drawLinesOut(ctx,toP,kw,s,drawLabel,Bo){
     [p1,p2].forEach(pt=>{ctx.fillStyle='#fff';ctx.strokeStyle=`rgb(${c})`;ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(pt.x,pt.y,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();});
     ctx.restore();
   });
-  if(S.tr&&S.tr.analysed)drawTraceGeom(ctx,toP,s,{});
   const items=allLineItems().map(L=>({L,p1:toP(L.p1),p2:toP(L.p2),bh:band?L.nLines/2*kw:0,bg:'rgba(124,58,237,.90)'}));
-  {const ti=trLabelItem(toP);if(ti){ti.bg='rgba(124,58,237,.90)';items.push(ti);}}
   const fs=15*s,pad=6*s;
   ctx.save();ctx.font=`600 ${fs}px monospace`;
   const lay=layoutLabels(items,t=>({w:ctx.measureText(t).width+pad*2,h:fs+pad*2}),10*s,Bo);
@@ -5104,7 +4987,6 @@ function resetAll(){
   S.zoom=1;S.panX=0;S.panY=0;S.iMode=null;S.scalePts=[];S.ptDrag=null;S.realDist='';S.directPx='';S.pxMm=null;S.resAck=0;
   S.drawStart=null;S.drawCur=null;S.measLine=null;S.results=null;S.busy=false;
   S.scaleDist='';S.photoName='';S.lastLogId='';S.lines=[];S.planum=null;S.exif=null;S.redraw=null;S.hiLine=null;decodeSeq++;
-  S.tr=null;S.trStroke=null;S.trPrev=null;
   if(S.postConfirm){S.postConfirm=null;lockStep4(false);}
   hideLoupe();
   const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
@@ -5122,7 +5004,6 @@ function resetAll(){
 }
 
 function goBack(){
-  S.tr=null;S.trStroke=null;S.trPrev=null;
   if(S.lines.length){
     const n=S.lines.length;
     if(!confirm(`Changing the scale discards the ${n} confirmed line${n===1?'':'s'} on this photo (they stay in the log). Continue?`))return;
@@ -5153,7 +5034,6 @@ function dropUnconfirmedLog(){
   persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();
 }
 function redrawLine(){
-  if(S.tr&&S.tr.analysed){trRedrawAsk();return;}
   if(S.postConfirm){redrawConfirmed(S.postConfirm);return;}
   if(S.lastLogId){if(!confirm('Redraw this line? Its log row is removed too.'))return;dropUnconfirmedLog();}
   decodeSeq++;S.busy=false;
@@ -5164,808 +5044,9 @@ function redrawLine(){
   showStep(3);updateDrawHint();paintCanvas();
 }
 
-/* ── along-crack geometry ── */
-/* ── along-crack trace: snap, sections, statistics ── */
-const TR_MIN_N=10,TR_MAX_N=50,TR_DEF_N=20,TR_DEF_LEN=15,TR_MIN_W=10,TR_HARD_W=5;
-function trDist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
-function trResample(pts,step){
-  if(!pts||!pts.length)return[];
-  const out=[{x:pts[0].x,y:pts[0].y}];let carry=0;
-  for(let i=1;i<pts.length;i++){
-    const a=pts[i-1],b=pts[i],d=trDist(a,b);if(!(d>0))continue;
-    let t=step-carry;
-    while(t<=d){out.push({x:a.x+(b.x-a.x)*t/d,y:a.y+(b.y-a.y)*t/d});t+=step;}
-    carry=d-(t-step);
-  }
-  const last=pts[pts.length-1];
-  if(trDist(out[out.length-1],last)>step*0.3)out.push({x:last.x,y:last.y});
-  return out;
-}
-function trSmooth(pts,h){
-  const n=pts.length;if(h<1||n<3)return pts.map(p=>({x:p.x,y:p.y}));
-  return pts.map((_,i)=>{
-    const k=Math.min(h,i,n-1-i);let sx=0,sy=0;
-    for(let j=i-k;j<=i+k;j++){sx+=pts[j].x;sy+=pts[j].y;}
-    return{x:sx/(2*k+1),y:sy/(2*k+1)};
-  });
-}
-function trTangents(pts,h){
-  const n=pts.length;
-  return pts.map((_,i)=>{
-    const a=pts[Math.max(0,i-h)],b=pts[Math.min(n-1,i+h)];
-    const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1;return{x:dx/l,y:dy/l};
-  });
-}
-function trSegX(a,b,c,d){
-  const o=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);
-  const d1=o(c,d,a),d2=o(c,d,b),d3=o(a,b,c),d4=o(a,b,d);
-  return((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));
-}
-function trSelfCross(pts){
-  const n=pts.length;
-  for(let i=0;i<n-1;i++)for(let j=i+3;j<n-1;j++)if(trSegX(pts[i],pts[i+1],pts[j],pts[j+1]))return true;
-  return false;
-}
-function trMedian(a){if(!a.length)return NaN;const s=Float64Array.from(a).sort(),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;}
-// stroke (analysis px) → crack centreline; lumAt(x,y) samples the photo
-function trSnap(lumAt,stroke,pxmm,W,H){
-  const ds=Math.max(1,0.5*pxmm);
-  const raw=trResample(stroke,ds);
-  if(raw.length<5)return{err:'short'};
-  const st=trSmooth(raw,Math.max(2,Math.round(1.5*pxmm/ds)));
-  const tg=trTangents(st,Math.max(1,Math.round(2*pxmm/ds)));
-  const dec=Math.max(1,Math.round(1*pxmm/ds)),pc=st.filter((_,i)=>i%dec===0);
-  if(trSelfCross(pc))return{err:'loop'};
-  const kb=Math.max(2,Math.round(3*pxmm/ds));
-  for(let i=0;i+kb<tg.length;i++)if(tg[i].x*tg[i+kb].x+tg[i].y*tg[i+kb].y<-0.5)return{err:'back'};
-  const R=Math.max(3*pxmm,15),Rp=Math.round(R+Math.max(3*pxmm,15)),a=Math.min(4,Math.max(2,Math.round(0.5*pxmm)));
-  const n=st.length,nu=2*Rp+1;
-  const rs=[],sig=[];let dark=0,bright=0;
-  const prof=new Float64Array(nu);
-  for(let i=0;i<n;i++){
-    const t=tg[i],nx=-t.y,ny=t.x,c=st[i];
-    for(let u=-Rp;u<=Rp;u++){
-      let s=0;
-      for(let v=-a;v<=a;v++)s+=lumAt(c.x+nx*u+t.x*v,c.y+ny*u+t.y*v);
-      prof[u+Rp]=s/(2*a+1);
-    }
-    const med=trMedian(prof),mad=trMedian(Array.from(prof,v=>Math.abs(v-med)));
-    const r=new Float64Array(nu);
-    for(let k=0;k<nu;k++){let s=0,c2=0;for(let j=Math.max(0,k-1);j<=Math.min(nu-1,k+1);j++){s+=med-prof[j];c2++;}r[k]=s/c2;}
-    let mx=0,mn=0;for(let k=Math.round(Rp-R);k<=Math.round(Rp+R);k++){if(r[k]>mx)mx=r[k];if(r[k]<mn)mn=r[k];}
-    dark+=mx;bright+=-mn;
-    rs.push(r);sig.push(Math.max(0.5,1.4826*mad));
-  }
-  const sign=dark>=bright?1:-1;
-  if(sign<0)rs.forEach(r=>{for(let k=0;k<nu;k++)r[k]=-r[k];});
-  // strong peaks (4σ) start or resume the trace; weak ones (2.5σ) only continue it
-  const peaks=rs.map((r,i)=>{
-    const p=[],lo=Math.max(2.5*sig[i],2),hi=Math.max(4*sig[i],3);
-    for(let k=Math.max(1,Math.round(Rp-R));k<=Math.min(nu-2,Math.round(Rp+R));k++)
-      if(r[k]>lo&&r[k]>=r[k-1]&&r[k]>=r[k+1])p.push({u:k-Rp,v:r[k],strong:r[k]>hi});
-    return p;
-  });
-  let anc=-1,best=0;
-  peaks.forEach((p,i)=>p.forEach(q=>{const sc=q.v/sig[i];if(q.strong&&sc>best){best=sc;anc=i;}}));
-  if(anc<0)return{err:'nocrack'};
-  const T=new Float64Array(n),F=new Uint8Array(n),FW=new Float64Array(n);
-  const jump=ds+1;
-  const refine=(i,u0)=>{
-    const r=rs[i],k0=u0+Rp,h=r[k0]/2;
-    let l=k0;while(l>0&&r[l-1]>h)l--;
-    let q=k0;while(q<nu-1&&r[q+1]>h)q++;
-    let sw=0,sx=0;for(let k=l;k<=q;k++){sw+=r[k];sx+=r[k]*k;}
-    FW[i]=q-l+1;
-    return sw>0?sx/sw-Rp:u0;
-  };
-  const pick=(i,prev,win,weakOk)=>{
-    let bq=null;peaks[i].forEach(q=>{if((q.strong||weakOk)&&Math.abs(q.u-prev)<=win&&(!bq||q.v>bq.v))bq=q;});return bq;
-  };
-  {const q=peaks[anc].filter(x=>x.strong).reduce((x,y)=>y.v>x.v?y:x);T[anc]=refine(anc,q.u);F[anc]=1;}
-  for(const dir of[1,-1]){
-    let prev=T[anc],miss=0;
-    for(let i=anc+dir;i>=0&&i<n;i+=dir){
-      const q=pick(i,prev,Math.min(R,jump*(miss+1)),miss<=2);
-      if(q){T[i]=refine(i,q.u);F[i]=1;prev=T[i];miss=0;}
-      else{T[i]=prev;miss++;}
-    }
-  }
-  const tol=Math.max(2,0.3*pxmm);
-  const fi=[];for(let i=0;i<n;i++)if(F[i])fi.push(i);
-  const drop=[];
-  fi.forEach((i,j)=>{const nb=fi.slice(Math.max(0,j-2),j+3).map(k=>T[k]);if(nb.length>=3&&Math.abs(T[i]-trMedian(nb))>tol)drop.push(i);});
-  drop.forEach(i=>{F[i]=0;});
-  let f0=-1,f1=-1;for(let i=0;i<n;i++)if(F[i]){if(f0<0)f0=i;f1=i;}
-  if(f0<0||f1-f0<2)return{err:'nocrack'};
-  for(let i=f0;i<=f1;i++)if(!F[i]){
-    let a2=i-1;while(!F[a2])a2--;let b2=i+1;while(!F[b2])b2++;
-    T[i]=T[a2]+(T[b2]-T[a2])*(i-a2)/(b2-a2);
-  }
-  // short gaps (≤ 10 mm) are faint stretches of the same crack: bridged and measured; longer gaps are skipped
-  const G=new Uint8Array(n);
-  for(let i=f0;i<=f1;i++){
-    if(F[i]){G[i]=1;continue;}
-    let j=i;while(j<=f1&&!F[j])j++;
-    const v=(j-i)*ds<=10*pxmm?2:0;for(let k=i;k<j;k++)G[k]=v;i=j-1;
-  }
-  const C=[];for(let i=f0;i<=f1;i++){const t=tg[i];C.push({x:st[i].x-t.y*T[i],y:st[i].y+t.x*T[i],f:G[i]});}
-  const Cs=trSmooth(C,Math.max(1,Math.round(0.75*pxmm/ds)));
-  Cs.forEach((p,i)=>{p.f=C[i].f;});
-  const fws=[];for(let i=f0;i<=f1;i++)if(F[i])fws.push(FW[i]);
-  fws.sort((x,y)=>x-y);
-  const fw90=fws.length?fws[Math.min(fws.length-1,Math.floor(fws.length*0.9))]:0;
-  const strokeLen=(raw.length-1)*ds;
-  let nf=0,nw=0;for(let i=f0;i<=f1;i++){if(G[i]===0)nf++;else if(G[i]===2)nw++;}
-  const missPct=strokeLen>0?Math.min(100,100*((n-1-(f1-f0))*ds+nf*ds)/strokeLen):0;
-  const weakPct=strokeLen>0?100*nw*ds/strokeLen:0;
-  return{cl:Cs,ds,sign,fw90,strokeLen,missPct,weakPct,stroke:raw};
-}
-function trArc(cl){const s=[0];for(let i=1;i<cl.length;i++)s.push(s[i-1]+trDist(cl[i-1],cl[i]));return s;}
-function trAt(cl,s,arc){
-  if(s<=0)return{x:cl[0].x,y:cl[0].y,i:0};
-  const L=arc[arc.length-1];if(s>=L){const p=cl[cl.length-1];return{x:p.x,y:p.y,i:cl.length-1};}
-  let lo=0,hi=arc.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(arc[m]<=s)lo=m;else hi=m;}
-  const f=(s-arc[lo])/((arc[hi]-arc[lo])||1);
-  return{x:cl[lo].x+(cl[hi].x-cl[lo].x)*f,y:cl[lo].y+(cl[hi].y-cl[lo].y)*f,i:f<0.5?lo:hi};
-}
-function trDir(cl,arc,s,D){
-  const L=arc[arc.length-1],a=trAt(cl,Math.max(0,s-D),arc),b=trAt(cl,Math.min(L,s+D),arc);
-  const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1;return{x:dx/l,y:dy/l};
-}
-// sections along the centreline (analysis px)
-function trLayout(sn,o){
-  const cl=sn.cl,arc=trArc(cl),L=arc[arc.length-1],px=o.pxmm;
-  let N=Math.max(TR_MIN_N,Math.min(TR_MAX_N,Math.round(o.count)||TR_DEF_N)),reducedN=false;
-  let w=Math.min(o.width,Math.floor(L/N));
-  if(w<TR_MIN_W&&o.width>=TR_MIN_W){const N2=Math.max(TR_MIN_N,Math.floor(L/TR_MIN_W));if(N2<N){N=N2;reducedN=true;}w=Math.min(o.width,Math.floor(L/N));}
-  if(w<TR_HARD_W)return{tooShort:true,lengthPx:L,N,w};
-  const sp=L/N;
-  const lenPx=Math.max((o.lenMm||TR_DEF_LEN)*px,15*sn.fw90,40);
-  const D=Math.max(2.5*px,w);
-  const secs=[];
-  for(let k=0;k<N;k++){
-    const s=sp*(k+0.5),c=trAt(cl,s,arc),t=trDir(cl,arc,s,D),nx=-t.y,ny=t.x;
-    const p1={x:c.x-nx*lenPx/2,y:c.y-ny*lenPx/2},p2={x:c.x+nx*lenPx/2,y:c.y+ny*lenPx/2};
-    let status='ok';
-    if(cl[c.i].f===0)status='nocrack';
-    const hw=w/2,corners=[p1,p2].flatMap(p=>[{x:p.x+t.x*hw,y:p.y+t.y*hw},{x:p.x-t.x*hw,y:p.y-t.y*hw}]);
-    if(status==='ok'&&corners.some(q=>q.x<0||q.y<0||q.x>o.W-1||q.y>o.H-1))status='edge';
-    const h=Math.max(hw,1*px),t1=trDir(cl,arc,s-h,h),t2=trDir(cl,arc,s+h,h);
-    const dth=Math.acos(Math.max(-1,Math.min(1,t1.x*t2.x+t1.y*t2.y)));
-    const rad=dth>1e-6?2*h/dth:Infinity;
-    const curved=rad<Math.max(3*w,lenPx/2)||dth>Math.PI/6;
-    secs.push({k:k+1,c:{x:c.x,y:c.y},t,p1,p2,s,status,curved,ang:Math.atan2(ny,nx)*180/Math.PI});
-  }
-  return{secs,N,w,spacingPx:sp,lengthPx:L,lenPx,reducedN,widthReduced:w<o.width};
-}
-function trStats(v){
-  const a=v.filter(x=>x!=null&&isFinite(x)).sort((x,y)=>x-y),n=a.length;
-  if(!n)return{n:0};
-  const mean=a.reduce((s,x)=>s+x,0)/n;
-  const sd=n>1?Math.sqrt(a.reduce((s,x)=>s+(x-mean)*(x-mean),0)/(n-1)):null;
-  const q=p=>{const h=(n-1)*p,l=Math.floor(h);return a[l]+(a[Math.min(n-1,l+1)]-a[l])*(h-l);};
-  return{n,mean,sd,cv:sd!=null&&mean>0?100*sd/mean:null,median:q(0.5),min:a[0],max:a[n-1],p95:n>=20?q(0.95):null};
-}
-// robust outlier threshold on section areas: 3 robust SD, never below 15% of the median
-function trThreshold(areas){
-  const med=trMedian(areas),mad=trMedian(areas.map(x=>Math.abs(x-med)));
-  return{med,thr:Math.max(3*1.4826*mad,0.15*Math.abs(med))};
-}
-function trColour(dev){
-  const t=Math.max(0,Math.min(1,dev));
-  const g=[34,197,94],y=[234,179,8],r=[239,68,68];
-  const m=(p,q,f)=>p.map((v,i)=>Math.round(v+(q[i]-v)*f));
-  return t<0.5?m(g,y,t*2):m(y,r,(t-0.5)*2);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   ALONG CRACK (Pro): trace → sections → per-section analysis → statistics
-═══════════════════════════════════════════════════════════ */
-const MEAS_MODE_KEY='dcg_meas_mode_v1',TRACE_CFG_KEY='dcg_trace_cfg_v1';
-function trLoadCfg(){
-  let c={};try{c=JSON.parse(storageGet(TRACE_CFG_KEY)||'{}')||{};}catch(e){c={};}
-  S.trCfg={n:Math.max(TR_MIN_N,Math.min(TR_MAX_N,Math.round(+c.n)||TR_DEF_N)),len:(+c.len>=5&&+c.len<=100)?+c.len:TR_DEF_LEN};
-  S.measMode=storageGet(MEAS_MODE_KEY)==='trace'?'trace':'line';
-}
-function trSaveCfg(){storageSet(TRACE_CFG_KEY,JSON.stringify(S.trCfg));}
-function isTrace(){return S.measMode==='trace'&&INTERFACE_MODE==='pro';}
-function trActive(){return !!(S.tr&&S.tr.analysed&&S.step===4&&S.results);}
-function trD(p){return{x:p.x*S.dispScale,y:p.y*S.dispScale};}
-function trPd(){return S.pxMm*(S.resizeFactor||1);}
-function trReady(){return !!(S.tr&&!S.tr.err&&!S.tr.analysed&&S.tr.secs.some(s=>s.status==='ok'));}
-function measModeLocked(){return S.lines.length>0||!!(S.tr&&(S.tr.confirmed||S.tr.analysed));}
-
-function setMeasMode(m){
-  if(m==='trace'&&INTERFACE_MODE==='simple'){showInfo('pro');return;}
-  if(m===S.measMode||measModeLocked()||S.busy)return;
-  S.measLine=null;S.drawStart=null;S.drawCur=null;S.tr=null;S.trStroke=null;S.trPrev=null;
-  S.measMode=m;storageSet(MEAS_MODE_KEY,m);
-  applyMeasModeUI();updateDrawHint();paintCanvas();
-}
-function applyMeasModeUI(){
-  const tr=isTrace(),a=$('tab-mode-line'),b=$('tab-mode-trace');
-  if(a)a.className='tab'+(tr?'':' active');
-  if(b)b.className='tab pro-feat pf-mini'+(tr?' active':'');
-  const lock=measModeLocked();
-  [a,b].forEach(x=>{if(!x)return;const off=lock&&!x.classList.contains('active');x.disabled=off;
-    x.title=off?(S.lines.length?'This photo has single lines — use Next photo to measure along a crack':'One trace per photo'):(x===b?'Draw along the crack; sections are placed across it':'');});
-  const cfg=$('trace-cfg');if(cfg)cfg.style.display=tr?'':'none';
-  const al=$('chk-align');
-  if(al&&INTERFACE_MODE==='pro'){
-    if(tr){if(!al.disabled)S.alignPrev=al.checked;al.checked=true;al.disabled=true;}
-    else if(al.disabled){al.disabled=false;if(S.alignPrev!=null)al.checked=S.alignPrev;S.alignPrev=null;}
-  }
-  const as=$('align-sub');if(as)as.textContent=tr?'Always on for sections along a crack':'Compensates for cracks that aren\'t perfectly straight';
-  const nl=$('nlines-lbl');if(nl)nl.textContent=tr?'Section width ≤':'Scan lines:';
-  const tn=$('tr-n'),tl=$('tr-len');
-  if(tn&&document.activeElement!==tn)tn.value=S.trCfg.n;
-  if(tl&&document.activeElement!==tl)tl.value=S.trCfg.len;
-  updateTraceInfo();applyTraceStep4UI();
-}
-function applyTraceStep4UI(){
-  const on=!!(S.tr&&S.tr.analysed);
-  const tp=$('trace-panel');if(tp)tp.style.display=(on&&S.step===4)?'':'none';
-  if(!on)['a-sub','b-sub'].forEach(id=>{const e=$(id);if(e)e.textContent='';});
-  const ct=$('calib-mode-toggle-pro');if(ct){ct.inert=on;ct.classList.toggle('pc-locked',on);}
-  const fc=$('fcalib-panel');if(fc&&INTERFACE_MODE==='pro'){fc.inert=on;fc.classList.toggle('pc-locked',on);}
-  const cn=$('trace-calib-note');if(cn)cn.style.display=on?'':'none';
-  if(on&&calibMode!=='measure')setCalibMode('measure');
-  const lb=$('meas-note-lbl');if(lb&&lb.firstChild)lb.firstChild.textContent=on?'Trace name ':'Measurement name ';
-  if(!on){const t=$('chart-title');if(t)t.textContent='Luminance profile across crack';}
-}
-function onTraceCfg(){
-  const n=parseInt($('tr-n').value),l=parseFloat($('tr-len').value);
-  if(isFinite(n))S.trCfg.n=Math.max(TR_MIN_N,Math.min(TR_MAX_N,n));
-  if(isFinite(l))S.trCfg.len=Math.max(5,Math.min(100,l));
-  trSaveCfg();trRelayout();
-}
-
-/* ── drawing the stroke ── */
-function trStrokeStart(pos){
-  if(S.busy)return false;
-  S.trPrev=S.tr&&!S.tr.analysed?S.tr:null;S.tr=null;S.trStroke=[{x:pos.x,y:pos.y}];S.measLine=null;paintCanvas();return true;
-}
-function trStrokeAdd(pos){
-  const s=S.trStroke;if(!s)return;const l=s[s.length-1];
-  if(Math.hypot(pos.x-l.x,pos.y-l.y)*S.zoom>=1.5){s.push({x:pos.x,y:pos.y});paintCanvas();}
-}
-function trStrokeCancel(){if(!S.trStroke)return;S.trStroke=null;S.tr=S.trPrev;S.trPrev=null;updateDrawHint();paintCanvas();}
-function trStrokeEnd(){
-  const s=S.trStroke;if(!s)return;
-  S.trStroke=null;
-  let len=0;for(let i=1;i<s.length;i++)len+=Math.hypot(s[i].x-s[i-1].x,s[i].y-s[i-1].y);
-  if(len*S.zoom<8||s.length<2){S.tr=S.trPrev;S.trPrev=null;updateDrawHint();paintCanvas();return;}
-  S.trPrev=null;
-  trBuild(s);
-}
-function trBuild(stroke){
-  const k=S.dispScale,pix=S.pixels;
-  const a=stroke.map(p=>({x:p.x/k,y:p.y/k}));
-  let sn;
-  try{sn=trSnap((x,y)=>bilinearLum(pix,x,y),a,trPd(),pix.width,pix.height);}catch(e){sn={err:'nocrack'};}
-  S.tr={stroke:stroke.map(p=>({x:p.x,y:p.y})),sn:sn.err?null:sn,err:sn.err||null,analysed:false,confirmed:false,secs:[],sel:0,name:'',logId:''};
-  trRelayout();
-}
-function trRelayout(){
-  const tr=S.tr;
-  if(tr&&tr.sn&&!tr.analysed){
-    const pix=S.pixels;
-    const lay=trLayout(tr.sn,{count:S.trCfg.n,width:S.nLines,lenMm:S.trCfg.len,pxmm:trPd(),W:pix.width,H:pix.height});
-    tr.lay=lay;tr.err=lay.tooShort?'tooshort':null;
-    tr.secs=lay.tooShort?[]:lay.secs.map(s=>({k:s.k,a1:s.p1,a2:s.p2,c:s.c,t:s.t,ang:s.ang,status:s.status,curved:s.curved,
-      res:null,area:null,adj:null,excluded:false,failed:false,flags:[],dev:0}));
-  }
-  updateDrawHint();updateTraceInfo();paintCanvas();
-}
-const TR_ERR={loop:'⚠ The trace crosses itself — redraw it',back:'⚠ The trace doubles back — redraw it in one direction',
-  nocrack:'⚠ No crack found along the trace — redraw closer to the crack, or use Single line',
-  short:'⚠ Trace too short — draw longer or use Single line',tooshort:'⚠ Trace too short for 10 sections — draw longer or use Single line'};
-function trSummary(){
-  const tr=S.tr;if(!tr)return{t:''};
-  if(tr.err)return{t:TR_ERR[tr.err]||TR_ERR.nocrack,warn:true};
-  const L=tr.lay,pd=trPd(),cnt=st=>tr.secs.filter(s=>s.status===st).length,ok=cnt('ok'),nc=cnt('nocrack'),ed=cnt('edge');
-  if(!ok)return{t:'⚠ No usable sections — redraw the trace',warn:true};
-  let t=`✓ T1 — ${L.N} sections · ${(L.lengthPx/pd).toFixed(0)} mm · spacing ${(L.spacingPx/pd).toFixed(1)} mm · width ${L.w} lines`;
-  if(L.reducedN)t+=' (fewer sections to fit)';else if(L.widthReduced)t+=' (width reduced to fit)';
-  t+=' — Analyze';
-  const ex=[];
-  if(tr.sn.missPct>=2)ex.push(`crack not found on ${Math.round(tr.sn.missPct)}% of the stroke — not measured`);
-  if(nc)ex.push(`${nc} section${nc>1?'s':''} skipped (no crack)`);
-  if(ed)ex.push(`${ed} section${ed>1?'s':''} off the photo — skipped`);
-  return{t:t+(ex.length?'<br>⚠ '+ex.join(' · '):''),ok:!ex.length,warn:!!ex.length};
-}
-function updateTraceInfo(){
-  const el=$('tr-info');if(!el)return;
-  const tr=S.tr,pd=S.pxMm?trPd():0;
-  if(tr&&tr.lay&&!tr.err&&pd){
-    const L=tr.lay;
-    el.textContent=`Spacing ${(L.spacingPx/pd).toFixed(1)} mm · width ${L.w} lines (${(L.w/pd).toFixed(1)} mm) · section length ${(L.lenPx/pd).toFixed(1)} mm`+(L.lenPx/pd>S.trCfg.len+0.05?' (extended for a wide crack)':'');
-  } else el.textContent='Drag along the crack. Sections are spread evenly and drawn across it; draw only the length you want measured.';
-}
-
-/* ── sections on the photo (screen and saved images) ── */
-function trCorners(s,w){
-  const k=S.dispScale,h=w/2,t=s.t;
-  return[{x:(s.a1.x+t.x*h)*k,y:(s.a1.y+t.y*h)*k},{x:(s.a2.x+t.x*h)*k,y:(s.a2.y+t.y*h)*k},
-         {x:(s.a2.x-t.x*h)*k,y:(s.a2.y-t.y*h)*k},{x:(s.a1.x-t.x*h)*k,y:(s.a1.y-t.y*h)*k}];
-}
-function drawTraceGeom(ctx,toP,u,o){
-  const tr=S.tr;if(!tr)return;
-  o=o||{};
-  ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
-  if(o.stroke&&tr.stroke&&tr.stroke.length>1){
-    ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2*u;ctx.beginPath();
-    tr.stroke.forEach((p,i)=>{const q=toP(p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});ctx.stroke();
-  }
-  if(tr.sn){
-    const cl=tr.sn.cl,an=tr.analysed;
-    const col={1:an?'rgba(255,255,255,0.7)':'#0cbbcc',2:'#f59e0b',0:'#ef4444'};
-    let i=0;
-    while(i<cl.length-1){
-      const f=cl[i].f;let j=i;while(j<cl.length-1&&cl[j+1].f===f)j++;
-      const end=Math.min(cl.length-1,j+1);
-      ctx.strokeStyle=col[f];ctx.lineWidth=(an?1.2:2)*u;ctx.setLineDash(f===1?[]:[5*u,4*u]);
-      ctx.beginPath();for(let k=i;k<=end;k++){const q=toP(trD(cl[k]));k===i?ctx.moveTo(q.x,q.y):ctx.lineTo(q.x,q.y);}ctx.stroke();
-      i=end;
-    }
-    ctx.setLineDash([]);
-  }
-  const w=tr.lay&&tr.lay.w||0,sel=tr.analysed?tr.sel:-1;
-  const poly=c=>{ctx.beginPath();c.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.closePath();};
-  tr.secs.forEach((s,i)=>{
-    const c=trCorners(s,w).map(toP);
-    ctx.setLineDash([]);
-    if(s.status!=='ok'||s.failed){
-      ctx.strokeStyle='rgba(239,68,68,0.85)';ctx.lineWidth=u;ctx.setLineDash([3*u,3*u]);poly(c);ctx.stroke();
-    } else if(!tr.analysed){
-      ctx.fillStyle='rgba(12,187,204,0.10)';ctx.strokeStyle='rgba(12,187,204,0.85)';ctx.lineWidth=u;poly(c);ctx.fill();ctx.stroke();
-    } else if(!s.res){
-      ctx.strokeStyle='rgba(148,163,184,0.7)';ctx.lineWidth=u;poly(c);ctx.stroke();
-    } else if(s.excluded){
-      ctx.strokeStyle='rgba(148,163,184,0.9)';ctx.lineWidth=1.2*u;ctx.setLineDash([4*u,3*u]);poly(c);ctx.stroke();
-    } else {
-      const rgb=trColour(s.dev||0).join(',');
-      ctx.fillStyle=`rgba(${rgb},0.30)`;ctx.strokeStyle=`rgb(${rgb})`;ctx.lineWidth=1.2*u;poly(c);ctx.fill();ctx.stroke();
-      if(s.flags&&s.flags.length){
-        const m=2.5*u,cx=(c[0].x+c[2].x)/2,cy=(c[0].y+c[2].y)/2;
-        const g=c.map(q=>{const dx=q.x-cx,dy=q.y-cy,l=Math.hypot(dx,dy)||1;return{x:q.x+dx/l*m,y:q.y+dy/l*m};});
-        ctx.strokeStyle='#f59e0b';ctx.lineWidth=1.5*u;ctx.setLineDash([4*u,2*u]);poly(g);ctx.stroke();ctx.setLineDash([]);
-      }
-    }
-    if(i===sel){ctx.setLineDash([]);ctx.strokeStyle='#fff';ctx.lineWidth=2.5*u;poly(c);ctx.stroke();}
-  });
-  ctx.setLineDash([]);
-  // numbers on section 1 and every 5th, beyond the section end
-  if(tr.secs.length&&!tr.err){
-    const fs=10*u;ctx.font=`600 ${fs}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
-    tr.secs.forEach(s=>{
-      if(!(s.k===1||s.k%5===0))return;
-      const n={x:s.a2.x-s.c.x,y:s.a2.y-s.c.y},l=Math.hypot(n.x,n.y)||1;
-      const q=toP(trD(s.a2)),q2=toP(trD({x:s.a2.x+n.x/l,y:s.a2.y+n.y/l})),dl=Math.hypot(q2.x-q.x,q2.y-q.y)||1;
-      const off=fs*1.1,x=q.x+(q2.x-q.x)/dl*off,y=q.y+(q2.y-q.y)/dl*off;
-      const tw=ctx.measureText(String(s.k)).width+5*u;
-      ctx.fillStyle='rgba(15,23,42,0.75)';ctx.fillRect(x-tw/2,y-fs*0.7,tw,fs*1.4);
-      ctx.fillStyle='#fff';ctx.fillText(String(s.k),x,y);
-    });
-  }
-  ctx.restore();
-}
-function drawTraceOnScreen(ctx,u){
-  if(S.tr&&S.step>=3)drawTraceGeom(ctx,p=>p,u,{stroke:S.step===3});
-  const s=S.trStroke;
-  if(s&&s.length>1){
-    ctx.save();ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=2*u;ctx.lineJoin='round';ctx.lineCap='round';
-    ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=3*u;
-    ctx.beginPath();s.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.restore();
-  }
-}
-function trLabelItem(toP){
-  const tr=S.tr;if(!tr||!tr.analysed||!tr.st||!tr.sn)return null;
-  const cl=tr.sn.cl,st=tr.st;
-  return{L:{n:1,tid:'T1',widthA:st.A&&st.A.n?st.A.mean:null,widthB:st.B.n?st.B.mean:null},
-    p1:toP(trD(cl[0])),p2:toP(trD(cl[cl.length-1])),bh:0,bg:tr.confirmed?'rgba(76,29,149,0.88)':'rgba(8,104,116,0.92)'};
-}
-
-/* ── analysis ── */
-function makeResults(r,nProf,o){
-  const prof=r.prof,base=r.base,area=r.area,isDep=r.isDep,left=r.left,right=r.right,pd=o.pd;
-  if(!prof||prof.length<10)return null;
-  const{width,calib}=approachB(area,S.pxMm);
-  const stride=Math.max(1,Math.floor(prof.length/1500));
-  const chartData=prof.reduce((acc,v,i)=>{if(i%stride===0)acc.push({mm:+(i/pd).toFixed(3),Profile:+v.toFixed(1),Baseline:+base[i].toFixed(1)});return acc;},[]);
-  let minIdx=0;
-  if(isDep){let mv=Infinity;prof.forEach((v,i)=>{if(v<mv){mv=v;minIdx=i;}});}
-  else{let mv=-Infinity;prof.forEach((v,i)=>{if(v>mv){mv=v;minIdx=i;}});}
-  const opts=[];
-  if(o.doAlign)opts.push('aligned');
-  opts.push({mean:'mean',median:'median',gaussian:'gaussian weighted'}[o.avgMethod]);
-  if(o.doAdaptive)opts.push('adaptive');
-  const res={
-    area:+area.toFixed(4),width:+width.toFixed(4),calib:+calib.toFixed(2),
-    chartData,isDep,crackMm:+(minIdx/pd).toFixed(3),
-    boundLeft:+(left/pd).toFixed(3),boundRight:+(right/pd).toFixed(3),
-    boundLeftIdx:left,boundRightIdx:right,workerLeftIdx:left,workerRightIdx:right,workerArea:area,
-    prof:[...prof],baseArr:[...base],pxMm_pd:pd,midIdx:minIdx,
-    optsLabel:opts.join(' · '),
-    linesTotal:nProf,nLinesSetting:o.nLinesSetting,
-    linesKept:o.doAdaptive?Math.max(2,Math.round(nProf*0.7)):nProf,
-    sourceDepth:(S.imgMeta&&S.imgMeta.depth)||'',
-    sourceTone:isHdSource()?S.pixels.tone:'',
-    baseMode:baseModeLabel(r.baseMode),
-  };
-  applyAutoBounds(res);
-  return res;
-}
-async function trRunSections(list,seq){
-  const tr=S.tr,stale=()=>seq!==decodeSeq||S.tr!==tr;
-  const pd=trPd(),o={doAlign:true,method:tr.opts.method,doAdaptive:tr.opts.doAdaptive};
-  let done=0,next=0;const tot=list.length;
-  const prog=()=>{
-    const t=`Analyzing ${done}/${tot}…`;
-    const b=$('btn-analyze');if(b&&S.step===3)b.textContent=t;
-    const rt=$('tr-retry-txt');if(rt&&S.step===4)rt.textContent=t;
-  };
-  prog();
-  const one=async s=>{
-    for(let at=0;at<2;at++){
-      if(stale())return;
-      try{
-        const prof=extractAllProfiles(S.pixels,s.a1,s.a2,tr.lay.w);
-        if(!prof||!prof.length)throw new Error('section too short');
-        const rp=prof.map(l=>l.map(v=>Math.round(v*100)/100));
-        const r=await analyzeViaWorker(rp,o,pd);
-        if(stale())return;
-        const res=makeResults(r,rp.length,{pd,doAlign:true,avgMethod:o.method,doAdaptive:o.doAdaptive,nLinesSetting:tr.lay.w});
-        if(!res)throw new Error('profile too short');
-        s.res=res;s.area=res.area;s.failed=false;s.adj=null;return;
-      }catch(e){if(at===1){s.failed=true;s.err=(e&&e.message)||'failed';}}
-    }
-  };
-  const runners=Array.from({length:Math.min(4,tot)},async()=>{
-    while(next<tot){const s=list[next++];await one(s);done++;if(!stale())prog();}
-  });
-  await Promise.all(runners);
-}
-async function runTraceAnalysis(){
-  if(resPending()){pointResOk();return;}
-  const tr=S.tr;if(!trReady()||S.busy||!S.pxMm||!S.pixels)return;
-  S.busy=true;clearErr();
-  const seq=decodeSeq;
-  const method=document.querySelector('input[name="avgMethod"]:checked')?.value||'mean',doAdaptive=$('chk-adaptive').checked;
-  S.doAlign=true;S.avgMethod=method;S.doAdaptive=doAdaptive;
-  tr.opts={method,doAdaptive};
-  const b=$('btn-analyze');if(b)b.disabled=true;
-  await trRunSections(tr.secs.filter(s=>s.status==='ok'),seq);
-  if(seq!==decodeSeq||S.tr!==tr)return;
-  S.busy=false;if(b)b.textContent='Analyze →';
-  const first=tr.secs.findIndex(s=>s.res);
-  if(first<0){
-    tr.secs.forEach(s=>{s.failed=false;});
-    showErr('Analysis failed for every section — '+((tr.secs.find(s=>s.err)||{}).err||'no response')+'. Check your connection and try again.');
-    updateDrawHint();return;
-  }
-  tr.analysed=true;tr.sel=first;
-  S.lastLogId='';S.chartView=null;S.hiLine=null;
-  resetAdjustments();
-  trLoad(tr.secs[first]);
-  showStep(4);
-  trShow();
-  requestAnimationFrame(drawChart);
-}
-async function trRetry(){
-  const tr=S.tr;if(!tr||!tr.analysed||tr.confirmed||S.busy)return;
-  const list=tr.secs.filter(s=>s.failed);if(!list.length)return;
-  trSave();S.busy=true;
-  const seq=decodeSeq;
-  await trRunSections(list,seq);
-  if(seq!==decodeSeq||S.tr!==tr)return;
-  S.busy=false;renderTrace();
-}
-
-/* ── selected section: its own window and baseline ── */
-function trLoad(s){
-  S.results=s.res;S.live=null;S.chartView=null;
-  S.measLine={p1:trD(s.a1),p2:trD(s.a2)};
-  const a=s.adj||{};
-  S.cropLeft=a.cropLeft!=null?a.cropLeft:null;S.cropRight=a.cropRight!=null?a.cropRight:null;
-  S.cropLeftStr=(S.cropLeft!=null?S.cropLeft:+s.res.boundLeft).toFixed(3);
-  S.cropRightStr=(S.cropRight!=null?S.cropRight:+s.res.boundRight).toFixed(3);
-  $('crop-l-inp').value=S.cropLeftStr;$('crop-r-inp').value=S.cropRightStr;
-  S.tilt=a.tilt||0;S.bow=a.bow||0;S.shift=a.shift||0;
-  ['tilt','bow','shift'].forEach(k=>{$(k+'-slider').value=S[k];$(k+'-val').textContent=(S[k]>0?'+':'')+S[k].toFixed(1);});
-  updateBaseActive();
-}
-function trShow(){
-  const adj=S.cropLeft!==null||S.cropRight!==null||S.tilt!==0||S.bow!==0||S.shift!==0;
-  if(adj||formulaModified())recompute();else{updateResultsDisplay();drawChart();}
-}
-function trSave(){
-  const tr=S.tr;if(!tr||!tr.analysed||!S.results)return;
-  const s=tr.secs[tr.sel];if(!s||!s.res||S.results!==s.res)return;
-  s.adj={cropLeft:S.cropLeft,cropRight:S.cropRight,tilt:S.tilt,bow:S.bow,shift:S.shift};
-  s.area=+getDisplayValues().area;
-  s.edited=S.cropLeft!==null||S.cropRight!==null;
-  s.baseAdj=S.tilt!==0||S.bow!==0||S.shift!==0;
-}
-function trSelect(i){
-  const tr=S.tr;if(!tr||!tr.analysed||i===tr.sel||!tr.secs[i]||!tr.secs[i].res)return;
-  trSave();tr.sel=i;trLoad(tr.secs[i]);trShow();
-}
-function trStep(d){
-  const tr=S.tr;if(!tr||!tr.analysed)return;
-  for(let i=tr.sel+d;i>=0&&i<tr.secs.length;i+=d)if(tr.secs[i].res){trSelect(i);return;}
-}
-function trToggleExcl(on){
-  const tr=S.tr;if(!tr||!tr.analysed||tr.confirmed)return;
-  const s=tr.secs[tr.sel];if(!s||!s.res)return;
-  s.excluded=!!on;renderTrace();
-}
-function trHit(pos){
-  const tr=S.tr;if(!tr||!tr.analysed)return -1;
-  const k=S.dispScale,w=tr.lay.w,tol=4/(S.zoom||1);
-  let best=-1,bd=Infinity;
-  tr.secs.forEach((s,i)=>{
-    if(!s.res)return;
-    const rx=pos.x/k-s.c.x,ry=pos.y/k-s.c.y,n={x:-s.t.y,y:s.t.x};
-    const along=Math.abs(rx*s.t.x+ry*s.t.y)*k,across=Math.abs(rx*n.x+ry*n.y)*k,hl=trDist(s.a1,s.a2)/2*k;
-    if(along<=w/2*k+tol&&across<=hl+tol){const d=along+across*0.01;if(d<bd){bd=d;best=i;}}
-  });
-  return best;
-}
-function trHitSelect(pos){const i=trHit(pos);if(i>=0)trSelect(i);}
-
-/* ── statistics and step 4 display ── */
-function trCoeffA(){const f=calibFields(),el=$(f.coeffId),v=el?parseFloat(el.value):NaN;return calibMode==='measure'&&v>0?v:null;}
-function trK(){return S.bCoeff*256*Math.pow(S.pxMm,S.bExp);}
-function trCompute(){
-  const tr=S.tr;if(!tr)return null;
-  const an=tr.secs.filter(s=>s.res),used=an.filter(s=>!s.excluded);
-  const areas=used.map(s=>s.area);
-  const th=areas.length?trThreshold(areas):{med:0,thr:1};
-  an.forEach(s=>{
-    s.dev=th.thr>0?Math.abs(s.area-th.med)/th.thr:0;
-    s.outlier=!s.excluded&&s.dev>1;
-    s.fallback=/^fallback/.test(s.res.baseMode||'');
-    s.flags=[s.outlier?'outlier':'',s.fallback?'fallback baseline':'',s.curved?'curved':''].filter(Boolean);
-  });
-  const cA=trCoeffA(),K=trK();
-  return{an,used,total:tr.secs.length,excl:an.filter(s=>s.excluded).length,
-    failed:tr.secs.filter(s=>s.failed).length,skipped:tr.secs.filter(s=>s.status!=='ok').length,
-    flagged:used.filter(s=>s.flags.length).length,med:th.med,thr:th.thr,
-    A:cA?trStats(areas.map(a=>a/cA)):null,B:trStats(areas.map(a=>a/K)),cA,K};
-}
-function renderTrace(){
-  if(!trActive())return;
-  const tr=S.tr,st=trCompute();tr.st=st;
-  const pd=trPd(),L=tr.lay;
-  updateAResult(st.A&&st.A.n?st.A.mean:null);
-  const rb=$('r-b');if(rb)rb.innerHTML=st.B.n?`${fmtW(st.B.mean)}<span class="r-unit">mm</span>`:'—<span class="r-unit">mm</span>';
-  const sub=`mean of ${st.used.length}/${st.total} sections`;
-  $('a-sub').textContent=st.A&&st.A.n?sub:'';$('b-sub').textContent=sub;
-  const f3=v=>v==null?'—':fmtW(v),f1=v=>v==null?'—':v.toFixed(1);
-  const row=(lbl,k,fn)=>`<tr><td>${lbl}</td><td class="num">${st.A&&st.A.n?fn(st.A[k]):'—'}</td><td class="num">${st.B.n?fn(st.B[k]):'—'}</td></tr>`;
-  const notes=[`${st.used.length}/${st.total} sections used`];
-  if(st.excl)notes.push(`${st.excl} excluded`);
-  if(st.skipped)notes.push(`${st.skipped} skipped`);
-  if(st.failed)notes.push(`${st.failed} failed`);
-  if(st.flagged)notes.push(`${st.flagged} flagged`);
-  notes.push(`${(L.lengthPx/pd).toFixed(0)} mm traced · spacing ${(L.spacingPx/pd).toFixed(1)} mm · width ${L.w} lines · length ${(L.lenPx/pd).toFixed(1)} mm`);
-  const warns=[];
-  if(st.used.length<TR_MIN_N)warns.push(`⚠ Fewer than ${TR_MIN_N} sections used — treat SD and range with caution`);
-  if(st.failed&&tr.confirmed)warns.push(`⚠ ${st.failed} section${st.failed>1?'s':''} could not be analysed — statistics are incomplete`);
-  $('trace-stats').innerHTML=`<div class="tr-head">T1 — along the crack</div><table class="tr-tab"><tr><th></th><th>A mm</th><th>B mm</th></tr>`+
-    row('Mean','mean',f3)+row('SD','sd',f3)+row('CV %','cv',f1)+row('Median','median',f3)+row('Min','min',f3)+row('Max','max',f3)+row('P95','p95',f3)+
-    `</table><div class="tr-note">${notes.join(' · ')}${st.used.length<20?' · P95 shown from 20 sections':''}</div>`+warns.map(w=>`<div class="tr-warn">${w}</div>`).join('');
-  const s=tr.secs[tr.sel];
-  if(s&&s.res){
-    const a=st.cA?s.area/st.cA:null,b=s.area/st.K;
-    const fl=s.flags.length?` · <span style="color:#fbbf24">⚠ ${s.flags.join(', ')}</span>`:'';
-    $('tr-sec-txt').innerHTML=`Section ${s.k}/${tr.secs.length} · ${a!=null?'A '+fmtW(a)+' · ':''}B ${fmtW(b)} mm · baseline ${escapeHtml(s.res.baseMode)}${s.excluded?' · <span style="color:#94a3b8">excluded</span>':''}${fl}`;
-    const ex=$('tr-excl');ex.checked=!!s.excluded;ex.disabled=!!tr.confirmed;
-    const t=$('chart-title');if(t)t.textContent=`Section ${s.k} — luminance profile across crack`;
-  }
-  const rt=$('tr-retry');
-  if(rt){rt.style.display=(st.failed&&!tr.confirmed)?'':'none';if(st.failed&&!S.busy)$('tr-retry-txt').textContent=`⚠ ${st.failed} section${st.failed>1?'s':''} failed to analyse`;}
-  drawTraceBars();renderLineList();paintCanvas();
-}
-function drawTraceBars(){
-  const cv=$('tr-bars'),tr=S.tr;if(!cv||!tr||!tr.analysed)return;
-  const dpr=Math.min(window.devicePixelRatio||1,2),W=cv.offsetWidth,H=cv.offsetHeight||64;if(!W)return;
-  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
-  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
-  const secs=tr.secs,n=secs.length,an=secs.filter(s=>s.res);
-  const mx=Math.max(1e-9,...an.map(s=>Math.max(0,s.area)));
-  const bw=W/n,top=6,bot=H-12;
-  c.fillStyle='rgba(255,255,255,0.04)';c.fillRect(0,top,W,bot-top);
-  secs.forEach((s,i)=>{
-    const x=i*bw+1,w=Math.max(1,bw-2),cx=x+w/2;
-    if(!s.res){c.strokeStyle='rgba(248,113,113,0.85)';c.lineWidth=1;c.beginPath();c.moveTo(cx-3,bot-6);c.lineTo(cx+3,bot);c.moveTo(cx+3,bot-6);c.lineTo(cx-3,bot);c.stroke();return;}
-    const h=Math.max(1,(bot-top)*Math.max(0,s.area)/mx);
-    if(s.excluded){c.strokeStyle='rgba(148,163,184,0.9)';c.setLineDash([2,2]);c.strokeRect(x+0.5,bot-h+0.5,w-1,h-1);c.setLineDash([]);}
-    else{c.fillStyle=`rgb(${trColour(s.dev||0).join(',')})`;c.fillRect(x,bot-h,w,h);}
-    if(s.flags&&s.flags.length&&!s.excluded){c.fillStyle='#f59e0b';c.beginPath();c.arc(cx,top-2,2.2,0,Math.PI*2);c.fill();}
-    if(i===tr.sel){c.strokeStyle='#fff';c.lineWidth=1.5;c.strokeRect(x-1,top-1,w+2,bot-top+2);c.lineWidth=1;}
-  });
-  const st=tr.st;
-  if(st&&st.used.length){const y=bot-(bot-top)*Math.max(0,st.med)/mx;c.strokeStyle='rgba(255,255,255,0.6)';c.setLineDash([4,3]);c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();c.setLineDash([]);}
-  c.fillStyle='rgba(232,248,249,0.5)';c.font='9px monospace';c.textAlign='center';c.textBaseline='bottom';
-  secs.forEach((s,i)=>{if(s.k===1||s.k%5===0)c.fillText(String(s.k),i*bw+bw/2,H);});
-}
-function trBarsClick(e){
-  const tr=S.tr;if(!tr||!tr.analysed)return;
-  const cv=$('tr-bars'),r=cv.getBoundingClientRect(),x=(e.clientX!=null?e.clientX:(e.changedTouches&&e.changedTouches[0].clientX))-r.left;
-  const i=Math.floor(x/(r.width/tr.secs.length));
-  if(i>=0&&i<tr.secs.length)trSelect(i);
-}
-
-/* ── confirm, redraw, delete ── */
-function confirmTrace(mode){
-  const tr=S.tr;if(!tr||!tr.analysed)return;
-  if(tr.confirmed){if(mode==='photo')nextPhoto();return;}
-  if(S.busy)return;
-  trSave();clearErr();
-  tr.name=measNoteValue();
-  tr.st=trCompute();
-  if(S.autoLog)addTraceLogEntry();
-  tr.confirmed=true;S.postConfirm='T1';
-  const ae=document.activeElement;if(ae&&ae.blur)ae.blur();
-  lockStep4(true);updateNoteHint();applyMeasModeUI();renderTrace();
-  if(mode==='photo')nextPhoto();
-}
-function trDiscard(){
-  const tr=S.tr;if(!tr)return;
-  if(tr.logId){S.measLog=S.measLog.filter(e=>e.id!==tr.logId);persistMeasLog();updateLogAux();if(S.screen==='log')renderMeasLog();}
-  const nm=tr.name;
-  decodeSeq++;S.busy=false;
-  S.tr=null;S.trStroke=null;S.trPrev=null;S.results=null;S.live=null;S.measLine=null;S.lastLogId='';
-  if(S.postConfirm){S.postConfirm=null;lockStep4(false);}
-  resetAdjustments();
-  const ni=$('meas-note-inp');if(ni&&nm&&!ni.value)ni.value=nm;
-  const ab=$('btn-analyze');if(ab)ab.textContent='Analyze →';
-  clearErr();S.iMode='draw';$('img-canvas').style.cursor='crosshair';
-  showStep(3);updateDrawHint();paintCanvas();
-}
-function trRedrawAsk(){
-  const tr=S.tr;if(!tr)return;
-  const m=tr.confirmed?`Redraw T1? Its measurement${tr.logId?' and log entry are':' is'} removed; draw the replacement next.`:'Redraw T1? Its results are discarded.';
-  if(!confirm(m))return;
-  trDiscard();
-}
-function trDeleteAsk(){
-  const tr=S.tr;if(!tr)return;
-  if(!confirm(`Delete T1?${tr.logId?' Its log entry is removed too.':''}`))return;
-  trDiscard();
-}
-
-/* ── log ── */
-function trStatFields(st,pre,src){
-  const r=v=>v==null?null:+(+v).toFixed(4);
-  const o={};
-  ['median','sd','min','max','p95'].forEach(k=>{o[pre+k[0].toUpperCase()+k.slice(1)]=src?r(src[k]):null;});
-  return o;
-}
-function addTraceLogEntry(){
-  const tr=S.tr;if(!tr||!tr.analysed)return;
-  const st=tr.st||trCompute(),pd=trPd(),prof=S.scaleProfiles.find(p=>p.id===S.activeScaleProfile);
-  const o=p=>({x:+(p.x/(S.resizeFactor||1)).toFixed(1),y:+(p.y/(S.resizeFactor||1)).toFixed(1)});
-  const cl=tr.sn.cl,a0=o(cl[0]),a1=o(cl[cl.length-1]);
-  const r4=v=>v==null?null:+(+v).toFixed(4);
-  const modes={};st.used.forEach(s=>{modes[s.res.baseMode]=(modes[s.res.baseMode]||0)+1;});
-  const edited=st.an.filter(s=>s.edited).length,badj=st.an.filter(s=>s.baseAdj).length;
-  const entry=Object.assign({
-    id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-    timestamp:new Date().toISOString(),
-    photoName:S.photoName||'',type:'trace',lineNo:'T1',
-    resolution:+(+S.pxMm).toFixed(3),scaleMode:S.scaleMode||'',
-    distance:(S.scaleMode==='distance'&&S.scaleDist)?+S.scaleDist:null,
-    cameraProfile:prof?prof.name:'',
-    widthA:st.A&&st.A.n?r4(st.A.mean):null,widthB:st.B.n?r4(st.B.mean):null,
-    secUsed:st.used.length,secTotal:st.total,
-    traceLen:+(tr.lay.lengthPx/pd).toFixed(2),spacing:+(tr.lay.spacingPx/pd).toFixed(3),
-    secWidth:tr.lay.w,secLen:+(tr.lay.lenPx/pd).toFixed(2),
-    cropLeft:null,cropRight:null,
-    windowEdited:edited?`${edited} section${edited>1?'s':''}`:'',baselineAdjusted:badj?`${badj} section${badj>1?'s':''}`:'',
-    baselineMode:Object.entries(modes).map(([k,v])=>`${k} ${v}`).join(', '),
-    windowCap:'',fwhm:null,
-    x1:a0.x,y1:a0.y,x2:a1.x,y2:a1.y,
-    resolutionMP:S.imgMeta?S.imgMeta.mp:'',bitDepth:(S.imgMeta&&S.imgMeta.depth)||'8-bit',
-    toneResponse:isHdSource()?S.pixels.tone:'',
-    note:tr.name||'',
-    secs:tr.secs.map(s=>{
-      const c=o(s.c),q={k:s.k,x:c.x,y:c.y};
-      if(s.res){q.a=st.cA?r4(s.area/st.cA):null;q.b=r4(s.area/st.K);if(s.flags.length)q.fl=s.flags.join(', ');if(s.excluded)q.ex=1;if(s.edited||s.baseAdj)q.ed=1;}
-      else q.st=s.failed?'failed':(s.status==='edge'?'off photo':(s.status==='nocrack'?'no crack':s.status));
-      return q;
-    })
-  },trStatFields(st,'a',st.A),trStatFields(st,'b',st.B));
-  S.measLog.push(entry);
-  tr.logId=entry.id;
-  persistMeasLog();updateLogNowBtn();
-  if(S.screen==='log')renderMeasLog();
-  updateLogAux();
-}
-const LOG_WARN_CHARS=3.5e6;let logWarned=false;
-function persistMeasLog(){
-  const txt=JSON.stringify(S.measLog);
-  const ok=storageSet(MEAS_LOG_KEY,txt);
-  if(!ok)showErr('The measurement log could not be saved — browser storage is full. Export the CSV from the log screen, then clear old entries.');
-  else if(txt.length>LOG_WARN_CHARS&&!logWarned){logWarned=true;showErr('Browser storage for the log is nearly full — export the CSV from the log screen and clear old entries soon.');}
-  return ok;
-}
-
-/* ── hidden Pro export for a trace ── */
-async function exportTraceXlsx(){
-  if(pxBusy)return;
-  const tr=S.tr;if(!tr||!tr.analysed)return;
-  pxBusy=true;
-  try{
-    trSave();
-    const st=trCompute(),pd=trPd(),rf=S.resizeFactor||1;
-    const d=new Date(),p2=v=>String(v).padStart(2,'0');
-    const day=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-    const ver=(($('version-tag')||{}).textContent||'').trim(),when=`${day} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
-    const L=tr.lay,sv=(k,src)=>src&&src.n?src[k]:null;
-    const sum=[['Item','Value'],['File',S.photoName||''],['Trace','T1'],['Name',tr.confirmed?tr.name:measNoteValue()],['Confirmed',yn(tr.confirmed)],
-      ['Sections total',st.total],['Sections used',st.used.length],['Excluded',st.excl],['Skipped',st.skipped],['Failed',st.failed],['Flagged',st.flagged],
-      ['Trace length (mm)',L.lengthPx/pd],['Spacing (mm)',L.spacingPx/pd],['Section width (lines)',L.w],['Section length (mm)',L.lenPx/pd],
-      ['Crack not found (% of stroke)',tr.sn.missPct],['Faint, bridged (% of stroke)',tr.sn.weakPct],
-      ['Combining',[S.avgMethod,'aligned',S.doAdaptive?'adaptive':''].filter(Boolean).join(' · ')],
-      ['px/mm (image)',S.pxMm],['px/mm (analysis)',pd],['Scale mode',S.scaleMode],
-      ['A coefficient (lum·mm/mm)',st.cA],['B coefficient c',S.bCoeff],['B exponent α',S.bExp],['B calibration K (lum·mm/mm)',st.K],
-      [null],['Statistic','Width A (mm)','Width B (mm)']];
-    [['Mean','mean'],['SD','sd'],['CV %','cv'],['Median','median'],['Min','min'],['Max','max'],['P95','p95']].forEach(([l,k])=>sum.push([l,sv(k,st.A),sv(k,st.B)]));
-    sum.push([null],['DCG version',ver],['Exported',when]);
-    const head=['Section #','Status','Used','Excluded','Flags','Centre x (px)','Centre y (px)','Section angle (°)','Area (lum·mm)','Width A (mm)','Width B (mm)',
-      'Window from (mm)','Window to (mm)','Window edited','Baseline adjusted','Baseline mode','FWHM (mm)','Scan lines'];
-    const rows=[head];
-    tr.secs.forEach(s=>{
-      const r=s.res,a=s.adj||{};
-      const status=r?'analysed':(s.failed?'failed':(s.status==='edge'?'off photo':(s.status==='nocrack'?'no crack':s.status)));
-      rows.push([s.k,status,yn(!!r&&!s.excluded),yn(!!s.excluded),(s.flags||[]).join(', '),+(s.c.x/rf).toFixed(1),+(s.c.y/rf).toFixed(1),+s.ang.toFixed(2),
-        r?s.area:null,r&&st.cA?s.area/st.cA:null,r?s.area/st.K:null,
-        r?(a.cropLeft!=null?a.cropLeft:r.boundLeft):null,r?(a.cropRight!=null?a.cropRight:r.boundRight):null,
-        r?yn(!!s.edited):null,r?yn(!!s.baseAdj):null,r?r.baseMode:null,r?r.fwhmMm:null,r?r.linesTotal:null]);
-    });
-    const mm=new Set([9,10,11,12,16]);
-    const sheets=[
-      {name:'Summary',xml:xlSheet(sum,[30,16,16],(r,c)=>(r===0||sum[r]&&sum[r][0]==='Statistic')?1:(c>0&&typeof sum[r][c]==='number'&&!Number.isInteger(sum[r][c])?2:0))},
-      {name:'T1 sections',xml:xlSheet(rows,head.map(h=>Math.max(9,Math.min(20,h.length+2))),(r,c)=>r===0?1:(mm.has(c)?2:0))}
-    ];
-    const blob=await xlBook(sheets);
-    saveBlobAs(blob,`${photoStem().replace(/[\\\/:*?"<>|]+/g,'_')}_trace_${day}.xlsx`);
-  }catch(e){showErr('Trace export failed: '+((e&&e.message)||'unknown error'));}
-  pxBusy=false;
-}
-
-function renderTraceRow(el){
-  const tr=S.tr,st=tr.st,conf=tr.confirmed;
-  el.style.display='block';
-  const vb=$('btn-line-view');if(vb)vb.style.display='none';
-  ['btn-label-place','btn-label-content'].forEach(id=>{const b=$(id);if(b)b.style.display='';});
-  ['btn-save-3','btn-save-zoom-3'].forEach(id=>{const b=$(id);if(b)b.style.display='none';});
-  const nm=conf?tr.name:measNoteValue();
-  el.innerHTML='<table><tr><th>#</th><th>Name</th><th class="num">A mm</th><th class="num">B mm</th><th></th></tr>'+
-    `<tr class="${conf?'row':'act'}" title="${conf?'Confirmed':'Not confirmed yet'} · mean of ${st.used.length}/${st.total} sections"><td><span class="ln${conf?'':' act'}">T1</span></td><td class="nm">${escapeHtml(nm||'')} <span class="tr-dim">(${st.used.length}/${st.total})</span></td><td class="num">${st.A&&st.A.n?fmtW(st.A.mean):'—'}</td><td class="num">${st.B.n?fmtW(st.B.mean):'—'}</td><td style="text-align:right;white-space:nowrap"><button class="ln-redo" onclick="trRedrawAsk()" title="Redraw the trace">↺</button><button class="wiz-shot-del" onclick="trDeleteAsk()" title="Delete the trace">✕</button></td></tr></table>`;
-}
-function trLogSecs(e){
-  if(!Array.isArray(e.secs))return '';
-  const open=S.logOpen&&S.logOpen.has(e.id);
-  return `<div class="log-secs" id="ls-${e.id}" style="display:${open?'grid':'none'}">`+e.secs.map(q=>{
-    const v=q.st?escapeHtml(q.st):`${q.a!=null?'A '+(+q.a).toFixed(3)+' · ':''}B ${q.b!=null?(+q.b).toFixed(3):'—'}`;
-    return `<span class="${q.ex||q.st?'x':(q.fl?'f':'')}" title="${escapeHtml(q.fl||'')}">${q.k}: ${v}${q.fl&&!q.ex?' ⚠':''}</span>`;
-  }).join('')+'</div>';
-}
-function toggleLogSecs(id){
-  if(!S.logOpen)S.logOpen=new Set();
-  if(S.logOpen.has(id))S.logOpen.delete(id);else S.logOpen.add(id);
-  const d=$('ls-'+id);if(d)d.style.display=S.logOpen.has(id)?'grid':'none';
-  const b=$('lb-'+id);if(b)b.textContent=(S.logOpen.has(id)?'▾':'▸')+' sections';
-}
-
 const imgCanvas=$('img-canvas');
 const zoomRef={current:1},panXRef={current:0},panYRef={current:0};
 let autoNext=null;   // press after Confirm: a drag from here starts the next line
-let trClick=null;
 const dispWRef={current:0},dispHRef={current:0};
 
 function getImgCanvasPos(e){
@@ -6129,7 +5210,6 @@ imgCanvas.addEventListener('mousedown',e=>{
   if(e.button===2){const raw=getRawImgPos(e);S.isPanning=true;S.panAnchor={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY};e.preventDefault();return;}
   if(e.button!==0)return;
   if(S.step===4){
-    if(S.tr&&S.tr.analysed){trClick=getImgCanvasPos(e);return;}
     if(S.postConfirm&&S.lines.length<MAX_LINES){e.preventDefault();autoNext=getImgCanvasPos(e);}
     return;
   }
@@ -6139,8 +5219,6 @@ imgCanvas.addEventListener('mousedown',e=>{
     const hit=hitPt(S.scalePts,pos,S,imgCanvas,12);
     if(hit>=0){S.ptDrag={i:hit,touch:false};imgCanvas.style.cursor='grabbing';return;}
     placeScalePt(pos);
-  } else if(S.iMode==='draw'&&S.step===3&&isTrace()){
-    trStrokeStart(pos);
   } else if(S.iMode==='draw'){
     if(S.lines.length>=MAX_LINES){showErr(`Maximum ${MAX_LINES} lines per photo.`);return;}
     S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;
@@ -6149,7 +5227,6 @@ imgCanvas.addEventListener('mousedown',e=>{
 
 imgCanvas.addEventListener('mousemove',e=>{
   if(S.isPanning&&S.panAnchor){const raw=getRawImgPos(e);S.panX=S.panAnchor.px+(raw.x-S.panAnchor.rx);S.panY=S.panAnchor.py+(raw.y-S.panAnchor.ry);panXRef.current=S.panX;panYRef.current=S.panY;paintCanvas();return;}
-  if(S.trStroke){trStrokeAdd(getImgCanvasPos(e));return;}
   if(autoNext&&!S.drawStart){const pos=getImgCanvasPos(e),d=Math.hypot(pos.x-autoNext.x,pos.y-autoNext.y)*S.zoom;if(d>5){const st=autoNext;autoNext=null;finishLine();S.drawStart={...st};S.drawCur=pos;paintCanvas();}return;}
   if(S.ptDrag&&!S.ptDrag.touch){S.scalePts[S.ptDrag.i]=getImgCanvasPos(e);paintCanvas();return;}
   if(S.iMode==='draw'&&S.drawStart){S.drawCur=getImgCanvasPos(e);paintCanvas();return;}
@@ -6159,8 +5236,6 @@ imgCanvas.addEventListener('mousemove',e=>{
 imgCanvas.addEventListener('mouseup',e=>{
   autoNext=null;
   if(S.isPanning){S.isPanning=false;S.panAnchor=null;return;}
-  if(trClick){const p=getImgCanvasPos(e),d=Math.hypot(p.x-trClick.x,p.y-trClick.y)*S.zoom;trClick=null;if(d<5)trHitSelect(p);return;}
-  if(S.trStroke){trStrokeEnd();return;}
   if(S.iMode==='draw'&&S.drawStart){
     const pos=getImgCanvasPos(e);
     const dx=pos.x-S.drawStart.x,dy=pos.y-S.drawStart.y;
@@ -6169,14 +5244,13 @@ imgCanvas.addEventListener('mouseup',e=>{
   }
 });
 window.addEventListener('mouseup',()=>{
-  if(S.trStroke)trStrokeEnd();
   if(S.ptDrag&&!S.ptDrag.touch){
     S.ptDrag=null;imgCanvas.style.cursor='crosshair';
     if(S.scalePts.length===2)focusScaleField();
   }
 });
 
-imgCanvas.addEventListener('mouseleave',()=>{autoNext=null;trClick=null;if(!S.isPanning){S.drawStart=null;S.drawCur=null;}});
+imgCanvas.addEventListener('mouseleave',()=>{autoNext=null;if(!S.isPanning){S.drawStart=null;S.drawCur=null;}});
 imgCanvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 imgCanvas.addEventListener('wheel',e=>{
@@ -6208,7 +5282,7 @@ function getImgTouchPos(t){
 imgCanvas.addEventListener('touchstart',e=>{
   e.preventDefault();
   if(e.touches.length>=2){
-    S.ptDrag=null;hideLoupe();autoNext=null;trStrokeCancel();
+    S.ptDrag=null;hideLoupe();autoNext=null;
     const t1=e.touches[0],t2=e.touches[1];
     const r=imgCanvas.getBoundingClientRect();
     const midRawX=((t1.clientX+t2.clientX)/2-r.left)*(S.dispW/r.width);
@@ -6232,15 +5306,10 @@ imgCanvas.addEventListener('touchstart',e=>{
 
   singleTouchPan={rx:raw.x,ry:raw.y,px:S.panX,py:S.panY,moved:false};
   autoNext=null;
-  if(S.step===4&&S.postConfirm&&!S.tr&&S.lines.length<MAX_LINES){
+  if(S.step===4&&S.postConfirm&&S.lines.length<MAX_LINES){
     autoNext={...getImgTouchPos(touch),rx:raw.x,ry:raw.y};singleTouchPan=null;touchDraw=false;return;
   }
 
-  if(S.step===3&&S.iMode==='draw'&&isTrace()){
-    touchDraw=trStrokeStart(getImgTouchPos(touch));
-    if(touchDraw)singleTouchPan=null;
-    return;
-  }
   if(S.step===3&&S.iMode==='draw'&&S.lines.length<MAX_LINES){
     const pos=getImgTouchPos(touch);
     S.drawStart={...pos};S.drawCur={...pos};S.measLine=null;touchDraw=true;
@@ -6282,7 +5351,6 @@ imgCanvas.addEventListener('touchmove',e=>{
     }
     return;
   }
-  if(touchDraw&&S.trStroke){trStrokeAdd(getImgTouchPos(touch));return;}
   if(touchDraw&&S.drawStart){
     S.drawCur=getImgTouchPos(touch);paintCanvas();
   } else if(singleTouchPan){
@@ -6303,7 +5371,6 @@ imgCanvas.addEventListener('touchend',e=>{
     pinchStart=null;singleTouchPan=null;touchDraw=false;
     return;
   }
-  if(touchDraw&&S.trStroke){trStrokeEnd();pinchStart=null;singleTouchPan=null;touchDraw=false;autoNext=null;return;}
   if(touchDraw&&S.drawStart&&S.drawCur){
 
     const dx=S.drawCur.x-S.drawStart.x,dy=S.drawCur.y-S.drawStart.y;
@@ -6311,11 +5378,10 @@ imgCanvas.addEventListener('touchend',e=>{
     S.drawStart=null;S.drawCur=null;touchDraw=false;paintCanvas();
   } else if(singleTouchPan&&!singleTouchPan.moved){
     if(twoPointActive())placeScalePt(getImgTouchPos(e.changedTouches[0]));
-    else if(S.step===4&&S.tr&&S.tr.analysed)trHitSelect(getImgTouchPos(e.changedTouches[0]));
   }
   pinchStart=null;singleTouchPan=null;touchDraw=false;autoNext=null;
 },{passive:false});
-imgCanvas.addEventListener('touchcancel',()=>{autoNext=null;trStrokeCancel();S.ptDrag=null;hideLoupe();pinchStart=null;singleTouchPan=null;touchDraw=false;});
+imgCanvas.addEventListener('touchcancel',()=>{autoNext=null;S.ptDrag=null;hideLoupe();pinchStart=null;singleTouchPan=null;touchDraw=false;});
 
 const chartCanvas=$('chart-canvas');
 
@@ -6519,10 +5585,9 @@ document.addEventListener('keydown',e=>{
   const control=!!(t&&(tag==='BUTTON'||tag==='A'||(tag==='INPUT'&&/^(button|submit|file|reset)$/.test(type))));
   const textField=!!(t&&((tag==='INPUT'&&!/^(range|checkbox|radio)$/.test(type)&&!control)||tag==='TEXTAREA'||tag==='SELECT'||t.isContentEditable));
   if(e.key==='Escape'){
-    if(S.step===3&&(S.drawStart||S.measLine||S.tr||S.trStroke||S.busy)){cancelLine();e.preventDefault();}
+    if(S.step===3&&(S.drawStart||S.measLine)){cancelLine();e.preventDefault();}
     return;
   }
-  if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&trActive()&&!textField&&tag!=='INPUT'&&!e.altKey&&!e.ctrlKey&&!e.metaKey){e.preventDefault();trStep(e.key==='ArrowRight'?1:-1);return;}
   if(e.key!=='Enter')return;
   if(control)return;
   if(textField){
@@ -6533,10 +5598,10 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(S.step===4&&S.results&&!S.busy){e.preventDefault();if(e.repeat)return;confirmLine(e.shiftKey?'photo':(S.postConfirm?'next':'stay'));return;}
-  if(S.step===3&&(S.measLine||(isTrace()&&trReady()))&&!S.busy){e.preventDefault();runAnalysis();}
+  if(S.step===3&&S.measLine&&!S.busy){e.preventDefault();runAnalysis();}
 });
 
-window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);if(trActive())requestAnimationFrame(drawTraceBars);});
+window.addEventListener('resize',()=>{if(S.step===4&&S.results)requestAnimationFrame(drawChart);});
 
 document.documentElement.style.setProperty('--chrome',isTouch?'200px':'150px');
 window.addEventListener('resize',()=>{if(S.screen==='workflow'||S.screen==='calibrate')requestAnimationFrame(paintCanvas);});
@@ -6545,9 +5610,6 @@ S.labelPlace=storageGet(LABEL_PLACE_KEY)==='stagger'?'stagger':'beside';
 {const lc=storageGet(LABEL_CONTENT_KEY);S.labelContent=lc==='num'?'num':'full';}
 applyLabelBtns();
 applyLineViewBtn();
-trLoadCfg();
-['tr-n','tr-len'].forEach(id=>{const el=$(id);if(el){el.addEventListener('change',onTraceCfg);el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();onTraceCfg();el.blur();}});}});
-{const bc=$('tr-bars');if(bc)bc.addEventListener('click',trBarsClick);}
 buildStepBar();
 buildAuxBar();
 updateStepBar();
