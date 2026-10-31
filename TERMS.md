@@ -29,7 +29,7 @@ Photos stay on your device. Only readings along your measurement line are sent t
 The app is a beta, provided "as is" and "as available". The author does not guarantee that it is error-free, uninterrupted or fit for a particular purpose.
 
 ## 8. Liability
-To the extent permitted by law, the author is not liable for any indirect or consequential loss, or for loss arising from reliance on results. Nothing in these terms excludes rights that cannot be excluded under the Australian Consumer Law.
+To the extent permitted by law, the author is not liable for any indirect or consequential loss, or for loss arising from reliance on results.
 
 ## 9. Changes
 These terms may be updated. Continued use after an update means you accept the new terms.
