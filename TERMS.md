@@ -12,7 +12,7 @@ Codes are issued for a particular purpose and may be changed, limited or withdra
 
 ## 3. What you must not do
 - Copy, modify, republish, host, frame or redistribute the app or any part of its code.
-- Decompile, reverse engineer or de-obfuscate the app or the analysis service, except to the extent the law expressly allows.
+- Decompile, reverse engineer the app or the analysis service.
 - Access the analysis service other than through the app, use automated or bulk requests, or try to get around access controls or limits.
 - Use the app, its code or its outputs to develop or train a competing product or method.
 
