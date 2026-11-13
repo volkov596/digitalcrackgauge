@@ -632,7 +632,7 @@ input.f-bad{outline:2px solid #f87171;outline-offset:1px}
   <div id="topbar">
   <div id="brand">
   <h1>Digital Crack Gauge <span id="mode-badge"></span></h1>
-  <div id="version-tag">v2.5.0-beta</div>
+  <div id="version-tag">v2.5.1-beta</div>
   </div>
 
   <div id="backup-bar" style="display:none">
@@ -1794,7 +1794,8 @@ function extractAllProfiles(pixels,p1,p2,nLines){
 }
 
 /* ── straighten a drawn line to the crack (single lines, optional) ── */
-const ST_BAND=40,ST_KEY='dcg_straighten_v1';
+const ST_BAND=40,ST_BAND_MIN=21,ST_KEY='dcg_straighten_v1';
+function stBand(){const n=+S.nLines||ST_BAND;return Math.min(ST_BAND,Math.max(ST_BAND_MIN,n));}
 const ST_RULES={minFound:0.7,maxDbl:0.2,maxSpan:50,maxHalves:25,maxSE:1.5,maxAngle:60};
 function stMed(a){const s=Float64Array.from(a).sort(),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;}
 function stRollMed(p,M){
@@ -1895,7 +1896,7 @@ function stDecide(e){
 function stPass(pix,p1,p2){
   const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.hypot(dx,dy);
   if(len<20)return{why:'short'};
-  const prof=extractAllProfiles(pix,p1,p2,ST_BAND);if(!prof)return{why:'short'};
+  const prof=extractAllProfiles(pix,p1,p2,stBand());if(!prof)return{why:'short'};
   const n=prof[0].length,e=stEstimate(prof,len/(n-1)),d=stDecide(e);
   if(d!=='ok')return{why:d};
   const u={x:dx/len,y:dy/len},nv={x:-dy/len,y:dx/len},b=e.slope;
@@ -1920,11 +1921,16 @@ function straightenLine(pix,p1,p2){
 function stOn(){const c=$('chk-straighten');return !!(c&&c.checked)&&!isTrace();}
 function maybeStraighten(){
   if(!S.measLine||!stOn()||!S.pixels)return;
-  const k=S.dispScale,orig={p1:{...S.measLine.p1},p2:{...S.measLine.p2}};
+  const k=S.dispScale,orig={p1:{...S.measLine.p1},p2:{...S.measLine.p2}},band=stBand();
   let r;try{r=straightenLine(S.pixels,{x:orig.p1.x/k,y:orig.p1.y/k},{x:orig.p2.x/k,y:orig.p2.y/k});}catch(e){r={ok:false};}
-  if(r.ok&&Math.abs(r.turned)<1){S.straight=null;return;}
-  if(r.ok){S.measLine={p1:{x:r.p1.x*k,y:r.p1.y*k},p2:{x:r.p2.x*k,y:r.p2.y*k}};S.straight={line:S.measLine,orig,turned:r.turned};}
-  else S.straight={line:S.measLine,fail:true};
+  if(r.ok&&Math.abs(r.turned)>=1){S.measLine={p1:{x:r.p1.x*k,y:r.p1.y*k},p2:{x:r.p2.x*k,y:r.p2.y*k}};S.straight={line:S.measLine,orig,turned:r.turned};}
+  else S.straight=r.ok?null:{line:S.measLine,fail:true};
+  S.stSrc={line:S.measLine,orig,band};
+}
+function restraightenForBand(){
+  const q=S.stSrc;
+  if(!q||q.line!==S.measLine||S.step!==3||!stOn()||q.band===stBand())return;
+  S.measLine={p1:{...q.orig.p1},p2:{...q.orig.p2}};S.straight=null;maybeStraighten();updateDrawHint();
 }
 function stCurrent(){return S.straight&&S.straight.line===S.measLine&&S.step===3?S.straight:null;}
 function undoStraighten(ev){
@@ -2171,7 +2177,7 @@ let decodeSeq=0;
 let INTERFACE_MODE = null;   // 'simple' (lite) | 'pro' — set by applyInterfaceMode()
 
 const WORKER_URL = 'https://crack-gate.egor-volkov.workers.dev/';
-const CLIENT_VERSION = 20500;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
+const CLIENT_VERSION = 20501;   // major*10000 + minor*100 + patch; Worker's MIN_CLIENT_VERSION uses the same scheme
 const DEMO_IMAGE_URL = 'https://cdn.jsdelivr.net/gh/volkov596/digitalcrackgauge@main/images/example-photo.jpg';
 
 function applyInterfaceMode(tier){
@@ -4520,7 +4526,7 @@ function importProfiles(ev){
   reader.readAsText(file);
 }
 
-function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();if(S.tr&&!S.tr.analysed)trRelayout();else paintCanvas();}
+function onNlinesChange(){S.nLines=parseInt($('nlines-slider').value);$('nlines-val').textContent=S.nLines;updateBandWidth();updateQualityIndicator();restraightenForBand();if(S.tr&&!S.tr.analysed)trRelayout();else paintCanvas();}
 
 /* Decode an image file into working pixels + geometry.
    High-bit-depth files (16-bit PNG, TIFF) are decoded here in JS, because the
